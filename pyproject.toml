@@ -1,0 +1,24 @@
+[project]
+name = "proxon-hesp-homeassistant"
+version = "0.1.0"
+description = "Read-only PROXON HESP custom integration for Home Assistant"
+requires-python = ">=3.14.2"
+
+[dependency-groups]
+dev = ["pytest-homeassistant-custom-component==0.13.365", "ruff>=0.12"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.ruff.lint.per-file-ignores]
+# These are protocol inactivity windows, implemented with asyncio.timeout.
+"custom_components/proxon_hesp/hesp/transport.py" = ["ASYNC109"]

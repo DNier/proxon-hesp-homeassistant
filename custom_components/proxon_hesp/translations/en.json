@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up PROXON HESP",
+        "description": "Receive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "profile": "Installation profile"
+        },
+        "data_description": {
+          "profile": "LT-ZIM V1.6: four passive BDE values; no controls."
+        }
+      },
+      "reconfigure": {
+        "title": "Set up PROXON HESP",
+        "description": "Receive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "profile": "Installation profile"
+        },
+        "data_description": {
+          "profile": "LT-ZIM V1.6: four passive BDE values; no controls."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect.",
+      "no_supported_data": "TCP reachable, but no supported checksum-verified HESP data received.",
+      "invalid_input": "Host and name must not be empty."
+    },
+    "abort": {
+      "already_configured": "Already configured.",
+      "reconfigure_successful": "Connection updated."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "fan_level": {
+        "name": "Fan level"
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "off": "Off",
+          "eco_summer": "Eco summer",
+          "eco_winter": "Eco winter",
+          "comfort": "Comfort",
+          "stove": "Stove"
+        }
+      }
+    }
+  }
+}

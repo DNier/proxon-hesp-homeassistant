@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PROXON HESP einrichten",
+        "description": "Rein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "profile": "Anlagenprofil"
+        },
+        "data_description": {
+          "profile": "LT-ZIM V1.6: vier passiv empfangene BDE-Werte; keine Steuerung."
+        }
+      },
+      "reconfigure": {
+        "title": "PROXON HESP einrichten",
+        "description": "Rein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "profile": "Anlagenprofil"
+        },
+        "data_description": {
+          "profile": "LT-ZIM V1.6: vier passiv empfangene BDE-Werte; keine Steuerung."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen.",
+      "no_supported_data": "TCP erreichbar, aber keine unterstützten, prüfsummenbestätigten HESP-Daten empfangen.",
+      "invalid_input": "Host und Name dürfen nicht leer sein."
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet.",
+      "reconfigure_successful": "Verbindung aktualisiert."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "room_temperature": {
+        "name": "Raumtemperatur"
+      },
+      "target_temperature": {
+        "name": "Solltemperatur"
+      },
+      "fan_level": {
+        "name": "Luftstufe"
+      },
+      "operating_mode": {
+        "name": "Betriebsart",
+        "state": {
+          "off": "Aus",
+          "eco_summer": "Eco Sommer",
+          "eco_winter": "Eco Winter",
+          "comfort": "Komfort",
+          "stove": "Ofen"
+        }
+      }
+    }
+  }
+}
