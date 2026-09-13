@@ -1,4 +1,4 @@
-"""Diagnostics deliberately exclude endpoint, identifiers and raw payloads."""
+"""Diagnostics include raw payloads only after explicit capture activation."""
 
 from homeassistant.core import HomeAssistant
 

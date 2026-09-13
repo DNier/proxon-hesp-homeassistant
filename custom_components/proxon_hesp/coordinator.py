@@ -9,6 +9,7 @@ from dataclasses import asdict
 
 from homeassistant.core import HomeAssistant, callback
 
+from .capture import Capture
 from .const import STALE_SECONDS
 from .hesp.decoder import Decoder, Reading, Statistics
 from .hesp.transport import NoSupportedData, open_receiver, receive
@@ -20,6 +21,7 @@ class ProxonRuntime:
     """Own network lifecycle; all UI properties read cached values only."""
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+        self.capture = Capture()
         self.hass = hass
         self.host = host
         self.port = port
@@ -47,6 +49,7 @@ class ProxonRuntime:
             raise
 
     async def stop(self) -> None:
+        self.capture.clear()
         if self.timer:
             self.timer.cancel()
             self.timer = None
@@ -65,7 +68,9 @@ class ProxonRuntime:
                 async with open_receiver(self.host, self.port) as reader:
                     self.connected = True
                     self._notify()
-                    async for readings in receive(reader, self.decoder):
+                    async for readings in receive(
+                        reader, self.decoder, on_data=self.capture.feed
+                    ):
                         now = time.monotonic()
                         for reading in readings:
                             self.values[reading.key] = (reading, now)
@@ -78,6 +83,7 @@ class ProxonRuntime:
                 self.last_error = type(err).__name__
                 _LOGGER.debug("Receiver reconnect: %s", self.last_error)
             finally:
+                self.capture.stop("disconnected")
                 self.connected = False
                 self.values.clear()
                 self._notify()
@@ -126,6 +132,7 @@ class ProxonRuntime:
             for name, value in asdict(self.decoder.stats).items()
         }
         return {
+            "capture": self.capture.export(),
             "connected": self.connected,
             "last_error": self.last_error,
             "reconnects": self.reconnects,

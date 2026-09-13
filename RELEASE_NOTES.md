@@ -1,11 +1,12 @@
-Read-only development version of PROXON HESP for Home Assistant 2026.9+.
+## Investigation capture (receive-only)
 
-- Eight BDE-verified operating-hour sensors, with descriptive names and hours.
-- Four panel sensors and filter remaining time.
-- Unknown counter 0x032E is neutral and has no assumed unit.
-- Unknown hexadecimal diagnostics remain disabled by default.
-- Existing entity IDs are preserved; no control commands are sent.
+Three device diagnostic buttons start a two-minute capture, stop it, or clear it.
+Download through the device's Home Assistant diagnostics action.
 
-After installation or update, restart Home Assistant. When migrating from a
-manually downloaded main branch, select this tagged version in HACS once.
-Future published releases can then be offered through HACS update checks.
+- Uses the existing TCP connection; no transmitted commands or second client.
+- Raw bytes, including unknown frames, with UTC start and relative timestamps.
+- Bounded to 120 seconds, 1 MiB and 4096 chunks; stops on disconnect.
+- In-memory only; reload/restart clears data. Explicit start is required.
+- Raw recordings can contain measurements/device information; review before sharing.
+
+Update through HACS and restart Home Assistant. Existing sensor IDs are preserved.

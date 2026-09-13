@@ -66,8 +66,21 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 32
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 35
         runtime = entry.runtime_data
+        start_id = registry.async_get_entity_id(
+            "button", DOMAIN, "stable-unit_capture_start"
+        )
+        await hass.services.async_call(
+            "button", "press", {"entity_id": start_id}, blocking=True
+        )
+        reader.feed_data(b"unrecognized_capture_data")
+        await hass.async_block_till_done()
+        assert (
+            runtime.capture.export()["chunks"][0]["hex"]
+            == b"unrecognized_capture_data".hex()
+        )
+        runtime.capture.clear()
         # One value expires while another remains fresh.
         reading, timestamp = runtime.values["fan_level"]
         runtime.values["fan_level"] = (reading, timestamp - 31)

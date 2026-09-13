@@ -143,6 +143,17 @@
       "raw_051d": {
         "name": "DP 0x051D (Hex)"
       }
+    },
+    "button": {
+      "capture_start": {
+        "name": "Start capture (2 minutes)"
+      },
+      "capture_stop": {
+        "name": "Stop capture"
+      },
+      "capture_clear": {
+        "name": "Clear capture"
+      }
     }
   }
 }

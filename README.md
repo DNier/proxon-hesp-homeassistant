@@ -3,7 +3,7 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.2.1 development preview
+## Status: 0.3.0 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. It is not a
@@ -29,7 +29,7 @@ The HA-independent protocol modules currently ship inside the component's
 `hesp` directory. Extraction into a separately versioned library is planned;
 no unpublished external package is required to install this preview.
 
-## Controller telemetry (0.2.1)
+## Controller telemetry (0.3.0)
 
 Filter remaining time uses days (reference mapping, local display check pending).
 Eight operating-hour counters were matched exactly against the installation's
@@ -53,7 +53,7 @@ See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.2.1 is a receive-only development preview.
+Version 0.3.0 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
@@ -113,7 +113,8 @@ Different aliases for the same host cannot currently be identified as duplicates
 - An open but silent/unsupported stream triggers reconnection. Reconnect uses
   bounded backoff, and unloading closes the connection and cancels tasks/timers.
 - Downloadable HA diagnostics contain counters and freshness information, not
-  IP addresses, identifiers, temperatures or raw traffic. Counter names describe
+  IP addresses or identifiers. An explicitly started capture includes raw bus
+  bytes, which may contain measurements and device information. Counter names describe
   candidate extraction, not validation of every bus telegram.
 
 ## Development and verification
@@ -161,3 +162,22 @@ push does not publish a release. Existing releases must not be overwritten.
 HACS checks for updates periodically; GitHub does not push an immediate install
 into Home Assistant. For an installation previously tracking main, select a
 published version once in HACS. Updates still require installation and restart.
+
+## Investigation capture
+
+On the PROXON device page use **Start capture (2 minutes)**. Open the desired
+BDE measurement page during the recording and note the time or take a photo.
+Then press **Stop capture** and **Download diagnostics** on the same device.
+The JSON contains `capture.started_utc`, a status/reason, byte count, and
+`capture.chunks` with relative milliseconds and hexadecimal TCP receive blocks.
+These blocks are not telegram boundaries. The capture may start mid-frame.
+
+Only the existing TCP receiver is used; no requests are sent. Unknown and
+checksum-rejected bytes are included for investigation. Recording ends after
+120 seconds, 1 MiB, 4096 chunks or disconnect. Starting again replaces the old
+capture. **Clear capture**, integration reload or HA restart removes it.
+Download before updating/reloading. A stopped capture stays in memory until
+cleared or replaced, and is included in subsequent diagnostic downloads.
+Raw captures may contain device information and measurements: review before
+sharing publicly. Ordinary diagnostics have an empty capture until activated.
+No raw data is written into entity attributes, the recorder or log files.

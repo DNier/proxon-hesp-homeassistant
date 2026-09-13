@@ -1,7 +1,7 @@
 """Receive-only TCP session. No writes, polling requests or gateway changes."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 
 from .decoder import Decoder, Reading
@@ -26,7 +26,10 @@ async def open_receiver(host: str, port: int):
 
 
 async def receive(
-    reader: asyncio.StreamReader, decoder: Decoder, timeout: float = 30
+    reader: asyncio.StreamReader,
+    decoder: Decoder,
+    timeout: float = 30,
+    on_data: Callable[[bytes], None] | None = None,
 ) -> AsyncIterator[list[Reading]]:
     """Require supported data periodically, not merely an open socket."""
     loop = asyncio.get_running_loop()
@@ -42,6 +45,8 @@ async def receive(
             raise NoSupportedData from err
         if not data:
             raise ConnectionError("Gateway closed the connection")
+        if on_data is not None:
+            on_data(data)
         readings = decoder.feed(data)
         if readings:
             deadline = loop.time() + timeout
