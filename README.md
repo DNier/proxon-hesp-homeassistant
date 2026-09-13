@@ -150,3 +150,14 @@ Connector labels and pin assignments can differ between board revisions.
 This project does not yet provide verified wiring instructions.
 
 This is an independent project and is not affiliated with the manufacturer.
+
+## Publishing updates
+
+Maintainers bump the manifest and project version, update `uv.lock` and
+`RELEASE_NOTES.md`, then push the changes. Run the **Publish release** workflow
+on main to test and publish a matching GitHub tag/release. A plain development
+push does not publish a release. Existing releases must not be overwritten.
+
+HACS checks for updates periodically; GitHub does not push an immediate install
+into Home Assistant. For an installation previously tracking main, select a
+published version once in HACS. Updates still require installation and restart.

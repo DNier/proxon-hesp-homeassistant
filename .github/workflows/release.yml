@@ -1,0 +1,28 @@
+name: Publish release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.14'
+      - run: uv sync --locked --group dev
+      - run: uv run ruff check custom_components tests
+      - run: uv run pytest -q
+      - name: Publish matching version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python -c 'import json; print(json.load(open("custom_components/proxon_hesp/manifest.json"))["version"])')
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "PROXON HESP $VERSION" --notes-file RELEASE_NOTES.md --latest
