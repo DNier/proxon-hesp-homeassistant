@@ -1,4 +1,4 @@
-"""Four observed panel values; no write-capable entities in this release."""
+"""Read-only panel and controller sensors."""
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -6,16 +6,26 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
 from .const import DOMAIN
-from .hesp.decoder import MODES
+from .hesp.decoder import MODES, RAW_POINTS
 
 DESCRIPTIONS = (
+    *(
+        SensorEntityDescription(
+            key=f"raw_{dp:04x}",
+            translation_key=f"raw_{dp:04x}",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            icon="mdi:code-braces",
+        )
+        for dp in RAW_POINTS
+    ),
     SensorEntityDescription(
         key="room_temperature",
         translation_key="room_temperature",
@@ -41,6 +51,32 @@ DESCRIPTIONS = (
         translation_key="operating_mode",
         device_class=SensorDeviceClass.ENUM,
         options=list(MODES.values()),
+    ),
+    SensorEntityDescription(
+        key="filter_days",
+        translation_key="filter_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=0,
+        icon="mdi:air-filter",
+    ),
+    SensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+    ),
+    *(
+        SensorEntityDescription(
+            key=f"counter_{dp:04x}",
+            translation_key=f"counter_{dp:04x}",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            icon="mdi:counter",
+        )
+        for dp in (0x02D0, 0x02D1, 0x02D2, 0x02D3, 0x02D4, 0x02D5, 0x02D7, 0x02D9)
     ),
 )
 

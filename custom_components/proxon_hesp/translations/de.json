@@ -11,7 +11,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: vier passiv empfangene BDE-Werte; keine Steuerung."
+          "profile": "LT-ZIM V1.6: passive BDE- und Controllerwerte; keine Steuerung."
         }
       },
       "reconfigure": {
@@ -24,7 +24,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: vier passiv empfangene BDE-Werte; keine Steuerung."
+          "profile": "LT-ZIM V1.6: passive BDE- und Controllerwerte; keine Steuerung."
         }
       }
     },
@@ -58,6 +58,90 @@
           "comfort": "Komfort",
           "stove": "Ofen"
         }
+      },
+      "filter_days": {
+        "name": "Filterrestlaufzeit (Referenz)"
+      },
+      "uptime": {
+        "name": "Laufzeit seit Start (Referenz)"
+      },
+      "counter_02d0": {
+        "name": "Zähler 0x02D0 (Rohwert)"
+      },
+      "counter_02d1": {
+        "name": "Zähler 0x02D1 (Rohwert)"
+      },
+      "counter_02d2": {
+        "name": "Zähler 0x02D2 (Rohwert)"
+      },
+      "counter_02d3": {
+        "name": "Zähler 0x02D3 (Rohwert)"
+      },
+      "counter_02d4": {
+        "name": "Zähler 0x02D4 (Rohwert)"
+      },
+      "counter_02d5": {
+        "name": "Zähler 0x02D5 (Rohwert)"
+      },
+      "counter_02d7": {
+        "name": "Zähler 0x02D7 (Rohwert)"
+      },
+      "counter_02d9": {
+        "name": "Zähler 0x02D9 (Rohwert)"
+      },
+      "raw_051e": {
+        "name": "DP 0x051E (Hex)"
+      },
+      "raw_006c": {
+        "name": "DP 0x006C (Hex)"
+      },
+      "raw_00ee": {
+        "name": "DP 0x00EE (Hex)"
+      },
+      "raw_0168": {
+        "name": "DP 0x0168 (Hex)"
+      },
+      "raw_0120": {
+        "name": "DP 0x0120 (Hex)"
+      },
+      "raw_01f5": {
+        "name": "DP 0x01F5 (Hex)"
+      },
+      "raw_0110": {
+        "name": "DP 0x0110 (Hex)"
+      },
+      "raw_0105": {
+        "name": "DP 0x0105 (Hex)"
+      },
+      "raw_0115": {
+        "name": "DP 0x0115 (Hex)"
+      },
+      "raw_011c": {
+        "name": "DP 0x011C (Hex)"
+      },
+      "raw_0116": {
+        "name": "DP 0x0116 (Hex)"
+      },
+      "raw_0206": {
+        "name": "DP 0x0206 (Hex)"
+      },
+      "raw_0519": {
+        "name": "DP 0x0519 (Hex)"
+      },
+      "raw_051c": {
+        "name": "DP 0x051C (Hex)"
+      },
+      "raw_0330": {
+        "name": "DP 0x0330 (Hex)"
+      },
+      "raw_0123": {
+        "name": "DP 0x0123 (Hex)"
+      },
+      "raw_020f": {
+        "name": "DP 0x020F (Hex)"
+      },
+      "raw_051d": {
+        "name": "DP 0x051D (Hex)"
       }
     }
   }

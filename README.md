@@ -3,14 +3,14 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.1.0 development preview
+## Status: 0.2.0 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. It is not a
 production release and has not been installed on the user's live HA instance.
 
 Supported profile: the observed LT-ZIM V1.6 / PTC 4× V1.2 installation, with
-four BDE values received from its HESP bus:
+four BDE values plus controller telemetry received from its HESP bus:
 
 | Entity | Meaning |
 |---|---|
@@ -29,10 +29,25 @@ The HA-independent protocol modules currently ship inside the component's
 `hesp` directory. Extraction into a separately versioned library is planned;
 no unpublished external package is required to install this preview.
 
+## Controller telemetry (0.2.0)
+
+Two additional sensors are enabled: filter remaining time (days, DP 0x00ED)
+and uptime (seconds, DP 0x032E). Their meanings come from the reference system;
+labels mark this explicitly until compared on this installation.
+
+Eight unsigned counter slots and 18 other short response payloads are available
+as **disabled-by-default diagnostic sensors**. Enable individual entities in the
+HA entity settings if needed. Counter labels identify the DP, not an assumed
+component. Unknown payloads retain hexadecimal bytes without guessed units.
+They are not intended as inputs for automations until their meaning is verified.
+All values still require a matching supported checksum and expire after 30 seconds.
+
+See [data-point coverage](docs/DATENPUNKTE.md) for supported and blocked values.
+
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.1.0 is a receive-only development preview.
+Version 0.2.0 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
@@ -80,7 +95,7 @@ Different aliases for the same host cannot currently be identified as duplicates
 
 ## Data quality and limitations
 
-- Only four exact panel SET frame shapes are extracted. Unknown frames are
+- Only catalogued panel SET and controller response shapes are extracted. Other frames are
   skipped; this is not yet a general HESP frame parser.
 - Values are published only when their short-frame checksum is covered by the
   reference model and matches, and type/range validation succeeds.
