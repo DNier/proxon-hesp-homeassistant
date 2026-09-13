@@ -3,7 +3,7 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.2.0 development preview
+## Status: 0.2.1 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. It is not a
@@ -29,25 +29,31 @@ The HA-independent protocol modules currently ship inside the component's
 `hesp` directory. Extraction into a separately versioned library is planned;
 no unpublished external package is required to install this preview.
 
-## Controller telemetry (0.2.0)
+## Controller telemetry (0.2.1)
 
-Two additional sensors are enabled: filter remaining time (days, DP 0x00ED)
-and uptime (seconds, DP 0x032E). Their meanings come from the reference system;
-labels mark this explicitly until compared on this installation.
+Filter remaining time uses days (reference mapping, local display check pending).
+Eight operating-hour counters were matched exactly against the installation's
+BDE: fan levels 1–4, heat pump heating/cooling, controller and preheating.
+They now use hours and descriptive names, retaining their existing unique IDs.
+No long-term statistics class is assigned until reset behavior is understood.
+Previously disabled entries remain disabled on upgrade; user settings are preserved.
 
-Eight unsigned counter slots and 18 other short response payloads are available
-as **disabled-by-default diagnostic sensors**. Enable individual entities in the
-HA entity settings if needed. Counter labels identify the DP, not an assumed
-component. Unknown payloads retain hexadecimal bytes without guessed units.
-They are not intended as inputs for automations until their meaning is verified.
-All values still require a matching supported checksum and expire after 30 seconds.
+DP 0x032E remains a neutral diagnostic counter without a unit: its previously
+assumed meaning as seconds since startup is not established on this installation.
+Its internal key stays `uptime` solely to preserve entity identity.
 
-See [data-point coverage](docs/DATENPUNKTE.md) for supported and blocked values.
+18 unknown short response payloads remain disabled-by-default hexadecimal
+diagnostic sensors. Do not use them as measurements or automation inputs.
+Enable individual entries only for a targeted comparison with normal BDE changes;
+record before/after, time and the corresponding display. A zero payload does not
+prove that a component is off or that no fault exists. No arbitrary bus writes.
+
+See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.2.0 is a receive-only development preview.
+Version 0.2.1 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.

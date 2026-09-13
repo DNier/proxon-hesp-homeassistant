@@ -48,3 +48,28 @@ Registry-Einträge, Einheiten, standardmäßig deaktivierte Rohsensoren,
 Controller-Identität, Fragmentierung, Prüfsummenfehler und Ausschluss unprüfbarer
 Telegramme. Offline-Wiedergabe mit 37-Byte-Blöcken: 186 akzeptierte Werte für
 32 Schlüssel. Kein zusätzlicher Live-TCP-Client wurde geöffnet.
+
+## Abgleich am 13.09.2026 und Korrektur in 0.2.1
+
+BDE-Fotos und HA-Anzeige stimmen für alle acht Zähler exakt überein:
+
+| DP | BDE-Zuordnung | Stunden |
+|---|---|---:|
+| 02D0 | Luftstufe 1 | 42236 |
+| 02D1 | Luftstufe 2 | 9607 |
+| 02D2 | Luftstufe 3 | 38483 |
+| 02D3 | Luftstufe 4 | 2414 |
+| 02D4 | Wärmepumpe Heizen | 26708 |
+| 02D5 | Wärmepumpe Kühlen | 5 |
+| 02D7 | Steuerung | 95284 |
+| 02D9 | Vorwärme | 1818 |
+
+Dies ersetzt die vorläufige Rohwertzuordnung oben für diese Anlage.
+Die IDs bleiben unverändert. Einheit h und Geräteklasse duration; noch keine
+Statistikklasse, da Rücksetzverhalten nicht geprüft. Bei neuen Einrichtungen
+aktiviert; bestehende Deaktivierungen bleiben erhalten.
+
+032E mit 35831976 ist kein belegter Sekunden-seit-Neustart-Wert. Die Anlage
+war laut Nutzer am selben Tag ausgeschaltet. Daher ab 0.2.1 neutraler Zähler
+ohne Einheit und ohne Geräte-/Statistikklasse; Bedeutung bleibt offen.
+Die 18 Hex-Sensoren bleiben ungeklärt und standardmäßig deaktiviert.

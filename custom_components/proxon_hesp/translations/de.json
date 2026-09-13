@@ -63,31 +63,31 @@
         "name": "Filterrestlaufzeit (Referenz)"
       },
       "uptime": {
-        "name": "Laufzeit seit Start (Referenz)"
+        "name": "Zähler 0x032E (Bedeutung ungeklärt)"
       },
       "counter_02d0": {
-        "name": "Zähler 0x02D0 (Rohwert)"
+        "name": "Betriebsstunden Luftstufe 1"
       },
       "counter_02d1": {
-        "name": "Zähler 0x02D1 (Rohwert)"
+        "name": "Betriebsstunden Luftstufe 2"
       },
       "counter_02d2": {
-        "name": "Zähler 0x02D2 (Rohwert)"
+        "name": "Betriebsstunden Luftstufe 3"
       },
       "counter_02d3": {
-        "name": "Zähler 0x02D3 (Rohwert)"
+        "name": "Betriebsstunden Luftstufe 4"
       },
       "counter_02d4": {
-        "name": "Zähler 0x02D4 (Rohwert)"
+        "name": "Betriebsstunden Wärmepumpe Heizen"
       },
       "counter_02d5": {
-        "name": "Zähler 0x02D5 (Rohwert)"
+        "name": "Betriebsstunden Wärmepumpe Kühlen"
       },
       "counter_02d7": {
-        "name": "Zähler 0x02D7 (Rohwert)"
+        "name": "Betriebsstunden Steuerung"
       },
       "counter_02d9": {
-        "name": "Zähler 0x02D9 (Rohwert)"
+        "name": "Betriebsstunden Vorwärme"
       },
       "raw_051e": {
         "name": "DP 0x051E (Hex)"

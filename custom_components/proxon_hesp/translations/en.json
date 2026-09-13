@@ -63,31 +63,31 @@
         "name": "Filter remaining time (reference)"
       },
       "uptime": {
-        "name": "Uptime (reference)"
+        "name": "Counter 0x032E (meaning unverified)"
       },
       "counter_02d0": {
-        "name": "Counter 0x02D0 (raw)"
+        "name": "Operating hours fan level 1"
       },
       "counter_02d1": {
-        "name": "Counter 0x02D1 (raw)"
+        "name": "Operating hours fan level 2"
       },
       "counter_02d2": {
-        "name": "Counter 0x02D2 (raw)"
+        "name": "Operating hours fan level 3"
       },
       "counter_02d3": {
-        "name": "Counter 0x02D3 (raw)"
+        "name": "Operating hours fan level 4"
       },
       "counter_02d4": {
-        "name": "Counter 0x02D4 (raw)"
+        "name": "Operating hours heat pump heating"
       },
       "counter_02d5": {
-        "name": "Counter 0x02D5 (raw)"
+        "name": "Operating hours heat pump cooling"
       },
       "counter_02d7": {
-        "name": "Counter 0x02D7 (raw)"
+        "name": "Operating hours controller"
       },
       "counter_02d9": {
-        "name": "Counter 0x02D9 (raw)"
+        "name": "Operating hours preheating"
       },
       "raw_051e": {
         "name": "DP 0x051E (Hex)"

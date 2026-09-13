@@ -56,6 +56,15 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         raw_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_raw_0116")
         assert registry.async_get(raw_id).disabled_by is not None
         assert hass.states.get(raw_id) is None
+        hours_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, "stable-unit_counter_02d4"
+        )
+        assert hass.states.get(hours_id).state == "26708"
+        assert hass.states.get(hours_id).attributes["unit_of_measurement"] == "h"
+        assert hass.states.get(hours_id).attributes["device_class"] == "duration"
+        uptime_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_uptime")
+        assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
+        assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
         assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 32
         runtime = entry.runtime_data

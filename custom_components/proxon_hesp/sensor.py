@@ -63,8 +63,6 @@ DESCRIPTIONS = (
     SensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
     ),
@@ -73,7 +71,9 @@ DESCRIPTIONS = (
             key=f"counter_{dp:04x}",
             translation_key=f"counter_{dp:04x}",
             entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            suggested_display_precision=0,
             icon="mdi:counter",
         )
         for dp in (0x02D0, 0x02D1, 0x02D2, 0x02D3, 0x02D4, 0x02D5, 0x02D7, 0x02D9)
