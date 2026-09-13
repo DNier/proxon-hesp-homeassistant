@@ -1,12 +1,8 @@
-## Investigation capture (receive-only)
+## Project and integration logo
 
-Three device diagnostic buttons start a two-minute capture, stop it, or clear it.
-Download through the device's Home Assistant diagnostics action.
+- Use the supplied PROXON logo as the Home Assistant integration icon and logo.
+- Display the same logo in the project README.
+- Remove the previous high-resolution airflow icon to prevent mixed branding.
 
-- Uses the existing TCP connection; no transmitted commands or second client.
-- Raw bytes, including unknown frames, with UTC start and relative timestamps.
-- Bounded to 120 seconds, 1 MiB and 4096 chunks; stops on disconnect.
-- In-memory only; reload/restart clears data. Explicit start is required.
-- Raw recordings can contain measurements/device information; review before sharing.
-
-Update through HACS and restart Home Assistant. Existing sensor IDs are preserved.
+No changes to sensors, capture or bus communication. Update via HACS and restart
+Home Assistant; browser refresh may be needed for cached images.

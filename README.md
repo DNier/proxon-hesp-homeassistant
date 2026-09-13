@@ -1,9 +1,13 @@
+<p align="center">
+  <img src="custom_components/proxon_hesp/brand/logo.png" alt="PROXON HESP" width="160" height="160">
+</p>
+
 # PROXON HESP for Home Assistant
 
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.3.0 development preview
+## Status: 0.3.1 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. It is not a
@@ -29,7 +33,7 @@ The HA-independent protocol modules currently ship inside the component's
 `hesp` directory. Extraction into a separately versioned library is planned;
 no unpublished external package is required to install this preview.
 
-## Controller telemetry (0.3.0)
+## Controller telemetry (0.3.1)
 
 Filter remaining time uses days (reference mapping, local display check pending).
 Eight operating-hour counters were matched exactly against the installation's
@@ -53,7 +57,7 @@ See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.3.0 is a receive-only development preview.
+Version 0.3.1 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
@@ -130,8 +134,8 @@ Tests use captured frame fixtures and a simulated gateway; the test suite never
 connects to real equipment. HA config-flow, registry, sensor and lifecycle tests
 run against the actual Home Assistant test harness.
 
-The integration icon is an original, generic airflow symbol, not the
-manufacturer's logo. Repository topics and issues are enabled. GitHub Actions
+The project uses the supplied PROXON logo for its integration icon and README.
+The logo is excluded from the project code license; see NOTICE.md. Repository topics and issues are enabled. GitHub Actions
 validate HACS compatibility on pushes and pull requests.
 
 See [development plan](docs/ENTWICKLUNGSPLAN.md) and [attribution](NOTICE.md).

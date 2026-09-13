@@ -19,3 +19,10 @@ Unknown checksum contributions remain unknown; no general encoder is provided.
 Original project code is licensed under the MIT License; see LICENSE.
 The adapted source material identified above remains subject to CC BY 4.0.
 The MIT License does not replace those attribution and license obligations.
+
+## Logo
+
+The supplied PROXON logo in `custom_components/proxon_hesp/brand/` is used
+to identify the integration. It is not licensed under the project MIT License.
+All rights in the logo remain with its respective rights holders. Its use does
+not imply manufacturer endorsement of this independent integration.
