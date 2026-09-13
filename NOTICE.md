@@ -16,5 +16,6 @@ and validation for four observed panel SET data points. This implementation is
 independent and is not endorsed by Markus Mauch or the equipment manufacturer.
 Unknown checksum contributions remain unknown; no general encoder is provided.
 
-No project-wide license for original code has been selected yet. This attribution
-does not relicense the rest of the project. Select a code license before a public release.
+Original project code is licensed under the MIT License; see LICENSE.
+The adapted source material identified above remains subject to CC BY 4.0.
+The MIT License does not replace those attribution and license obligations.

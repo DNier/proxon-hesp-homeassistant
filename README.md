@@ -109,12 +109,12 @@ connects to real equipment. HA config-flow, registry, sensor and lifecycle tests
 run against the actual Home Assistant test harness.
 
 The integration icon is an original, generic airflow symbol, not the
-manufacturer's logo. Before publication, settle licensing, publish the component
-files, enable issues and add repository topics such as `home-assistant`, `hacs`
-and `proxon`. Then run the HACS validation workflow.
+manufacturer's logo. Repository topics and issues are enabled. GitHub Actions
+validate HACS compatibility on pushes and pull requests.
 
 See [development plan](docs/ENTWICKLUNGSPLAN.md) and [attribution](NOTICE.md).
-No project-wide code license has been selected yet; settle this before a licensed release.
+Original code is licensed under [MIT](LICENSE). Adapted reference material
+remains under CC BY 4.0 as described in [NOTICE.md](NOTICE.md).
 
 ## References
 

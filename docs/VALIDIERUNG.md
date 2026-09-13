@@ -28,7 +28,12 @@ liegen als reproduzierbare Test-Fixtures bei.
 - Weitere Anlagenvarianten, Programme und Datenpunkte.
 - Allgemeines Framing und vollständiger Prüfsummenalgorithmus.
 - Steuerung einschließlich Buszugriff, Bestätigung und Zusammenspiel mit dem BDE.
-- Veröffentlichung und projektweite Lizenzentscheidung.
+- HACS-Installation auf der echten Home-Assistant-Instanz.
 
 Bei dieser Implementierung wurden weder Live-HA noch das Gateway verändert.
 Es wurden keine Steuertelegramme gesendet und keine Änderungen gepusht.
+
+## Veröffentlichungsstand
+
+Das Repository ist inzwischen öffentlich. Der eigene Code ist unter MIT lizenziert;
+übernommenes Referenzmaterial bleibt gemäß NOTICE.md unter CC BY 4.0.
