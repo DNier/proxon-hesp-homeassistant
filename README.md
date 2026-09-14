@@ -4,20 +4,21 @@
 
 # PROXON HESP for Home Assistant
 
-Project foundation for a Home Assistant custom integration for the PROXON
-P-series HESP bus via a transparent RS485-to-TCP gateway.
+A local Home Assistant custom integration for the PROXON P-series HESP bus
+via a transparent RS485-to-TCP gateway.
 
-## Status: 0.7.1 development preview
+## Status: 0.8.0 read-only release
 
-An installable **passive-by-default** custom integration for Home Assistant 2026.9+.
-Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
-development preview validated against recordings from the supported installation.
+An installable **read-only** custom integration for Home Assistant 2026.9+.
+Development tests use Home Assistant 2026.9.2 / Python 3.14. Compatibility is
+validated against recordings and observations from the supported installation;
+this is not a compatibility claim for every PROXON variant.
 
-**New in 0.7.0:** an explicitly armed, admin-only, one-shot temperature
-experiment for a supervised test. Normal setup,
-reconnect and sensor operation still send nothing. This is not a production control
-or verified BDE synchronization. See the [test procedure](docs/SOLLTEMPERATUR_TEST.md).
-Version 0.7.0 contains these actions; their effect on real hardware remains untested.
+Version 0.8.0 removes the completed experimental temperature-write actions.
+The integration receives telemetry and provides optional passive captures.
+It sends no HESP requests or control commands during setup, operation or reconnect.
+See [upgrading from 0.7.x](#upgrading-from-07x) and the
+[BDE investigation results](docs/BDE_ZUGRIFF_UNTERSUCHUNG.md).
 
 Supported profile: the observed LT-ZIM V1.6 / PTC 4× V1.2 installation, with
 four BDE values plus controller telemetry received from its HESP bus.
@@ -56,7 +57,7 @@ They now use hours and descriptive names, retaining their existing unique IDs.
 No long-term statistics class is assigned until reset behavior is understood.
 Previously disabled entries remain disabled on upgrade; user settings are preserved.
 
-Version 0.4.0 adds two actual fan speeds (supply/extract, rpm) and ten
+The integration includes two actual fan speeds (supply/extract, rpm) and ten
 controller temperatures (T1, T3–T8, T10, T12, T13, °C) as enabled sensors on
 the same device. Temperatures display one decimal place; fan speeds display
 whole rpm while retaining the received precision. Both use measurement
@@ -69,7 +70,7 @@ Valid sibling channels continue updating; rejected channels expire after the
 normal 30-second freshness interval. Fan readings must be finite and within
 0–10000 rpm. These are sanity limits, not manufacturer operating limits.
 The unused eleventh temperature slot is not published. DP 0x00D7 is treated
-separately as raw fan control values, not target rpm (see 0.6.0 additions).
+separately as raw fan control values, not target rpm (see optional fan diagnostics).
 
 DP 0x032E remains a neutral diagnostic counter without a unit: its previously
 assumed meaning as seconds since startup is not established on this installation.
@@ -84,10 +85,10 @@ prove that a component is off or that no fault exists. No arbitrary bus writes.
 
 See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 
-### New in 0.5.0: three additional read-only entities
+### Operating state and compressor speed
 
-Version 0.5.0 adds an enabled, read-only **Intensive ventilation active**
-binary sensor. It reads bit 6 (`0x40`) of the BDE's 32-bit little-endian flags
+An enabled, read-only **Intensive ventilation active**
+binary sensor reads bit 6 (`0x40`) of the BDE's 32-bit little-endian flags
 at DP `0x01F8`. Local recordings distinguish timed intensive ventilation in
 Comfort from manual fan level 4 in Eco Summer. Other flag bits are ignored.
 The sensor becomes unavailable without fresh data after 30 seconds or on
@@ -112,7 +113,7 @@ invalid updates do not become zero/off: each last valid value expires after
 The temperature setpoint receive guard now accepts the observed 30 °C setting;
 the local BDE supports 18–30 °C. All these changes remain passive.
 
-### New in 0.6.0: optional fan diagnostics
+### Optional fan diagnostics
 
 Three additional sensors are disabled by default and categorized as diagnostics:
 
@@ -135,8 +136,7 @@ See [SD and capture evidence](docs/SD_KARTEN_ABGLEICH.md).
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.7.1 is passive by default and includes separately confirmed experimental
-test actions. Installing or restarting does not initiate a write.
+Version 0.8.0 receives data only; there are no write-test actions.
 
 [![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
@@ -158,6 +158,22 @@ validation workflow. Check the GitHub Actions results before installing a new de
 
 See [HACS requirements](https://www.hacs.xyz/docs/publish/integration/) and
 [public repository requirement](https://www.hacs.xyz/docs/publish/start/).
+
+## Upgrading from 0.7.x
+
+1. Download any recording you still need before restarting; captures are held
+   only in memory and are cleared by reload/restart.
+2. Update to **0.8.0** in HACS and **restart Home Assistant**.
+3. Keep the existing PROXON integration entry. All 54 entity registrations,
+   unique IDs, history, names and enabled/disabled preferences are retained.
+
+The experimental `prepare_target_temperature_test` and
+`send_target_temperature_test` actions are removed. Any saved calls to these
+retired actions must be removed; there is no replacement write action.
+The experimental `target_temperature_test` diagnostics section is also removed.
+Ordinary diagnostics, their zero `application_bytes_sent` field, and all three
+passive capture buttons remain available. The completed test and its limits are
+recorded in the [test archive](docs/SOLLTEMPERATUR_TEST.md).
 
 ## Manual installation
 

@@ -1,4 +1,4 @@
-"""Local PROXON HESP reception with an explicit one-shot test action."""
+"""Read-only local PROXON HESP reception."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -7,15 +7,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_PROFILE, PROFILE
 from .coordinator import ProxonRuntime
-from .services import register_services
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    register_services(hass)
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bool:

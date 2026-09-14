@@ -1,8 +1,9 @@
 # BDE und externe Steuerung: Ergebnis der Vorprüfung
 
-Stand: 14.09.2026, nach Veröffentlichung von 0.6.0. Untersuchung ausschließlich
-offline anhand der Aufzeichnungen (1)–(18) und öffentlich verfügbarer Quellen.
-Kein zusätzlicher TCP-Client, kein eigenes QUERY/SET, keine Anlagenänderung.
+Vorprüfung vom 14.09.2026 anhand der Aufzeichnungen (1)–(18).
+Nachtrag nach dem vom Nutzer ausgeführten Schreibtest mit 0.7.1:
+[Testergebnis und Untersuchung des direkten BDE-Zugangs](BDE_ZUGRIFF_UNTERSUCHUNG.md).
+Die Auswertung selbst erfolgt offline, ohne zusätzliche Anlagenbefehle.
 
 ## Entscheidung
 
@@ -12,9 +13,12 @@ nachgebildetes SET mit anschließendem ACK genügt dafür nicht. Schnelleres
 Gegenschreiben über den bestehenden parallelen Gateway wird nicht implementiert.
 
 Das ist keine Aussage, dass Synchronisierung technisch unmöglich wäre. Die
-vorliegenden Daten enthalten keinen extern ausgelösten Schreibversuch und
-keinen Mitschnitt der separaten BDE/PTC-Verbindung. Sie zeigen die wiederholte
-Übertragung des vom BDE vorgegebenen Zustands auf der HESP-Seite.
+ursprünglichen 18 Aufzeichnungen enthalten keinen extern ausgelösten
+Schreibversuch und keinen Mitschnitt der separaten BDE/PTC-Verbindung. Sie zeigen
+die wiederholte Übertragung des vom BDE vorgegebenen Zustands auf der HESP-Seite.
+Der inzwischen ausgewertete Versuch (21) bestätigt keine dauerhafte
+BDE-Übernahme: Die regulären Vorgaben und die später überprüfte Anzeige blieben
+bei 22 °C. Eine kurzzeitige Wirkung des gesendeten 22,5-°C-Werts bleibt offen.
 
 ## Eigene Aufzeichnungen: Wiederholung und Rückmeldung
 
@@ -71,7 +75,8 @@ Geprüfter Stand: `0c5151342299084db0f57836f5bbd140822e7e33` (13.09.2026).
 Die Referenz beschreibt einen PTC-Master, der den Panelzustand etwa alle fünf
 Sekunden erneut überträgt. Ein fremdes einmaliges SET wird dort wieder verdrängt;
 häufigere Wiederholung konnte eine Wirkung erzielen. Unsere passiven Daten
-bestätigen den Wiederholungstakt, nicht bereits das Verhalten nach Fremd-SETs.
+bestätigen den Wiederholungstakt. Die spätere aktive Einzelprobe wird im oben
+verlinkten Nachtrag getrennt bewertet.
 
 Die Dokumentation enthält kein hier verwendbares Verfahren für mehrere Master,
 keine bestätigte Rückschreibfunktion in den BDE-Speicher und keinen belegten
@@ -100,9 +105,9 @@ vermitteln, ohne den gespeicherten BDE-Sollwert zu ändern. Diese beiden Ziele
 dürfen nicht gleichgesetzt werden.
 
 Quelle: [Beitrag 21](https://community.simon42.com/t/proxon-p2-anschluss-modbus/65378/21).
-Die bereits vorhandene Nachfrage in Beitrag 22 bittet um Code, Module,
-Vorrangregeln und Ausfallverhalten. Beim Abruf endet das Thema mit Beitrag 22;
-keine zusätzliche Nachricht wurde gesendet.
+Der zuletzt geprüfte öffentliche Abruf enthält Beiträge bis Nummer 21.
+Eine zuvor hier erwähnte Nachfrage in Beitrag 22 ist darin nicht nachprüfbar.
+Es wurde keine zusätzliche Nachricht gesendet.
 
 ### Modbus-Projekte
 
@@ -117,11 +122,10 @@ Quellen:
 
 ## Nächste konkrete Voraussetzung
 
-Vor einer Hardwareentscheidung fehlt die Antwort auf die schon gestellten
-Fragen in [Upstream-Issue 1](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-5659731209)
-und [Forumsbeitrag 22](https://community.simon42.com/t/proxon-p2-anschluss-modbus/65378/22).
-Beim aktuellen Abruf hat Issue 1 nur unsere vorhandene Nachfrage als Kommentar.
-Ein fehlender Antwortbeleg ist kein Nachweis, dass der Autor keine Lösung hat.
+Die Fragen in [Upstream-Issue 1](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-5659731209)
+bleiben relevant. Unabhängig von einer Antwort ist die USB-Geräteidentifikation
+der nächste konkrete Zugangstest; danach gegebenenfalls eine passive Aufnahme
+der BDE/PTC-Seite. Details und Erfolgskriterien stehen im Nachtrag.
 
 Ein angebotener Schreib-/Bridge-Weg ist anhand folgender Punkte zu prüfen:
 
@@ -141,10 +145,11 @@ Ein angebotener Schreib-/Bridge-Weg ist anhand folgender Punkte zu prüfen:
    Ist-Drehzahlen helfen bei Lüftung, ersetzen aber keine BDE-Sollwertübernahme.
 
 Diese Voraussetzungen gelten für die Entscheidung über eine dauerhafte Steuerung.
-Auf gesonderten Nutzerwunsch ist inzwischen ein
-[einmaliger Solltemperatur-Test](SOLLTEMPERATUR_TEST.md) in Version 0.7.0 enthalten.
+Auf gesonderten Nutzerwunsch war ein
+[einmaliger Solltemperatur-Test](SOLLTEMPERATUR_TEST.md) in Version 0.7.x enthalten.
 Er untersucht die Reaktion auf einen einzelnen Befehl und setzt keinen kooperativen
-Buszugriff voraus; eine Kollision bleibt möglich. Ein Live-Versuch steht aus.
+Buszugriff voraus; eine Kollision bleibt möglich. Ein Live-Versuch wurde mit
+0.7.1 vom Nutzer ausgeführt und in Export (21) ausgewertet.
 Keine Wiederholung der bisherigen Intensivversuche allein für mehr
 gleichartige Daten nötig. USB kann später über Geräteklasse/Identifikation geprüft
 werden; ein passendes Kabel allein erschließt noch keinen Steuerzugriff.
@@ -169,4 +174,5 @@ durchgehenden Aufnahme zusammengefügt werden.
 Prüfung des ergänzten Offline-Werkzeugs vor Vorbereitung des Solltemperatur-Tests:
 149 Tests bestanden, Ruff-Lint/Formatprüfung und `git diff --check` erfolgreich.
 Das bestehende Release 0.6.0 bleibt unverändert. Version 0.7.0 enthält zusätzlich
-die oben verlinkte, separat freizugebende Testfunktion.
+die oben verlinkte, separat freizugebende Testfunktion. Ab 0.8.0 ist diese
+entfernt; der Betrieb der Integration ist wieder ausschließlich lesend.

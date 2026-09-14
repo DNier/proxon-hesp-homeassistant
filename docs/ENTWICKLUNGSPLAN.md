@@ -4,10 +4,13 @@ Stand: 13. September 2026. Zielplan; die erste lesende Entwicklungsfassung ist i
 Historischer Ausgangsstand; das am 14.09.2026 anhand der Serviceberichte ergänzte
 [Anlagenprofil](ANLAGENPROFIL.md) beschreibt Hardware, Firmware und Variantenabgrenzung.
 Aktuelle Datenpunktabdeckung: siehe DATENPUNKTE.md.
-Version 0.7.0 ergänzt den ausdrücklich angeforderten
-[einmaligen Solltemperatur-Test](SOLLTEMPERATUR_TEST.md).
-Eine Live-Schreibprobe steht weiterhin aus. Dies ersetzt
-nicht die unten beschriebenen Voraussetzungen für eine dauerhafte Steuerung.
+Aktueller Stand 0.8.0: rein lesende Integration mit 54 Entitäten einschließlich
+Diagnose- und Aufzeichnungsfunktionen. Der einmalige Schreibversuch aus 0.7.x
+ist abgeschlossen; die Testaktionen wurden entfernt. Eine dauerhafte
+BDE-Synchronisierung wurde nicht belegt. Siehe
+[Untersuchungsbericht](BDE_ZUGRIFF_UNTERSUCHUNG.md) und
+[Testarchiv](SOLLTEMPERATUR_TEST.md). Die folgende Ausgangslage ist historisch;
+sie ersetzt nicht die aktuellen Datenpunktnachweise.
 
 ## 1. Ziel und Umfang
 

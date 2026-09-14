@@ -11,7 +11,7 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passive by default; experimental write action requires separate confirmation."
+          "profile": "LT-ZIM V1.6: read-only integration; no control commands."
         }
       },
       "reconfigure": {
@@ -24,7 +24,7 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passive by default; experimental write action requires separate confirmation."
+          "profile": "LT-ZIM V1.6: read-only integration; no control commands."
         }
       }
     },
@@ -212,37 +212,6 @@
       },
       "bypass_status": {
         "name": "Bypass switching state"
-      }
-    }
-  },
-  "services": {
-    "prepare_target_temperature_test": {
-      "name": "Prepare target temperature test (experimental)",
-      "description": "Records for 120 seconds without sending. Comfort only, ±0.5 °C. Request response data for the confirmation token. Send separately after 10 and before 60 seconds. Follow the test guide.",
-      "fields": {
-        "config_entry_id": {
-          "name": "PROXON integration"
-        },
-        "expected_temperature": {
-          "name": "Current setpoint on BDE",
-          "description": "Read and confirm on the physical BDE."
-        },
-        "delta": {
-          "name": "Temperature change",
-          "description": "Only −0.5 or +0.5 °C."
-        }
-      }
-    },
-    "send_target_temperature_test": {
-      "name": "Send target temperature test once (experimental)",
-      "description": "Sends once over the existing connection. Watch the BDE. No retry or automatic restoration; acceptance and BDE synchronization are unverified. One attempt per integration load.",
-      "fields": {
-        "config_entry_id": {
-          "name": "PROXON integration"
-        },
-        "confirmation_token": {
-          "name": "Confirmation token from preparation"
-        }
       }
     }
   }

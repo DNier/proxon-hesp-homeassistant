@@ -1,4 +1,4 @@
-"""One connection, passive by default, and per-value freshness per entry."""
+"""One receive-only connection and per-value freshness per entry."""
 
 import asyncio
 import logging
@@ -13,7 +13,6 @@ from .capture import Capture
 from .const import STALE_SECONDS
 from .hesp.decoder import Decoder, Reading, Statistics
 from .hesp.transport import NoSupportedData, open_receiver, receive
-from .write_test import TargetTemperatureTest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +22,6 @@ class ProxonRuntime:
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         self.capture = Capture()
-        self.temperature_test = TargetTemperatureTest(self)
         self.hass = hass
         self.host = host
         self.port = port
@@ -52,7 +50,6 @@ class ProxonRuntime:
 
     async def stop(self) -> None:
         self.capture.clear()
-        self.temperature_test.close()
         if self.timer:
             self.timer.cancel()
             self.timer = None
@@ -68,9 +65,7 @@ class ProxonRuntime:
         delay = 1
         while True:
             try:
-                async with open_receiver(
-                    self.host, self.port, self.temperature_test.connection_changed
-                ) as reader:
+                async with open_receiver(self.host, self.port) as reader:
                     self.connected = True
                     self._notify()
                     async for readings in receive(
@@ -79,7 +74,6 @@ class ProxonRuntime:
                         now = time.monotonic()
                         for reading in readings:
                             self.values[reading.key] = (reading, now)
-                            self.temperature_test.observe()
                         delay = 1
                         self.last_error = None
                         self.ready.set()
@@ -90,7 +84,6 @@ class ProxonRuntime:
                 _LOGGER.debug("Receiver reconnect: %s", self.last_error)
             finally:
                 self.capture.stop("disconnected")
-                self.temperature_test.connection_changed(None)
                 self.connected = False
                 self.values.clear()
                 self._notify()
@@ -108,7 +101,6 @@ class ProxonRuntime:
     @callback
     def _capture_data(self, data: bytes) -> None:
         self.capture.feed(data)
-        self.temperature_test.capture.feed(data)
 
     @callback
     def listen(self, listener: Callable[[], None]) -> Callable[[], None]:
@@ -150,7 +142,6 @@ class ProxonRuntime:
             "reconnects": self.reconnects,
             "statistics": counters,
             "fresh_keys": sorted(key for key in self.values if self.get(key)),
-            # Bytes offered to StreamWriter, not a bus/controller acknowledgement.
-            "application_bytes_sent": self.temperature_test.bytes_offered,
-            "target_temperature_test": self.temperature_test.diagnostics(),
+            # Retain the diagnostic field; the receiver has no send path.
+            "application_bytes_sent": 0,
         }

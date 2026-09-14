@@ -11,7 +11,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: standardmäßig passiv; experimentelle Schreibaktion nur mit separater Freigabe."
+          "profile": "LT-ZIM V1.6: rein lesende Integration; keine Steuerbefehle."
         }
       },
       "reconfigure": {
@@ -24,7 +24,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: standardmäßig passiv; experimentelle Schreibaktion nur mit separater Freigabe."
+          "profile": "LT-ZIM V1.6: rein lesende Integration; keine Steuerbefehle."
         }
       }
     },
@@ -212,37 +212,6 @@
       },
       "bypass_status": {
         "name": "Bypass-Schaltzustand"
-      }
-    }
-  },
-  "services": {
-    "prepare_target_temperature_test": {
-      "name": "Solltemperatur-Test vorbereiten (experimentell)",
-      "description": "Zeichnet 120 Sekunden auf, sendet nichts. Nur Komfort, Änderung um ±0,5 °C. Antwortdaten mit Freigabecode anfordern. Nach 10 bis unter 60 Sekunden separat senden. Anleitung beachten.",
-      "fields": {
-        "config_entry_id": {
-          "name": "PROXON-Integration"
-        },
-        "expected_temperature": {
-          "name": "Aktuelle Solltemperatur am BDE",
-          "description": "Vor Ort am BDE ablesen und bestätigen."
-        },
-        "delta": {
-          "name": "Temperaturänderung",
-          "description": "Nur −0,5 oder +0,5 °C."
-        }
-      }
-    },
-    "send_target_temperature_test": {
-      "name": "Solltemperatur-Test einmal senden (experimentell)",
-      "description": "Sendet genau einmal über die bestehende Verbindung. BDE beobachten. Keine Wiederholung oder automatische Rückstellung; Übernahme und BDE-Synchronisation sind unbestätigt. Ein Versuch je Laden der Integration.",
-      "fields": {
-        "config_entry_id": {
-          "name": "PROXON-Integration"
-        },
-        "confirmation_token": {
-          "name": "Freigabecode aus der Vorbereitung"
-        }
       }
     }
   }
