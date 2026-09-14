@@ -13,9 +13,31 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
 from .const import DOMAIN
-from .hesp.decoder import MODES, RAW_POINTS
+from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
 
 DESCRIPTIONS = (
+    *(
+        SensorEntityDescription(
+            key=key,
+            translation_key=key,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=1,
+        )
+        for key in TEMPERATURE_KEYS
+    ),
+    *(
+        SensorEntityDescription(
+            key=key,
+            translation_key=key,
+            native_unit_of_measurement="rpm",
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            icon="mdi:fan",
+        )
+        for key in ("fan_supply_rpm", "fan_extract_rpm")
+    ),
     SensorEntityDescription(
         key="device_clock",
         translation_key="device_clock",

@@ -7,11 +7,11 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.3.1 development preview
+## Status: 0.4.0 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
-Development tests use Home Assistant 2026.9.2 / Python 3.14. It is not a
-production release and has not been installed on the user's live HA instance.
+Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
+development preview validated against recordings from the supported installation.
 
 Supported profile: the observed LT-ZIM V1.6 / PTC 4× V1.2 installation, with
 four BDE values plus controller telemetry received from its HESP bus:
@@ -33,14 +33,29 @@ The HA-independent protocol modules currently ship inside the component's
 `hesp` directory. Extraction into a separately versioned library is planned;
 no unpublished external package is required to install this preview.
 
-## Controller telemetry (0.3.1)
+## Controller telemetry
 
-Filter remaining time uses days (reference mapping, local display check pending).
+Filter remaining time uses days and has been compared with the BDE display.
 Eight operating-hour counters were matched exactly against the installation's
 BDE: fan levels 1–4, heat pump heating/cooling, controller and preheating.
 They now use hours and descriptive names, retaining their existing unique IDs.
 No long-term statistics class is assigned until reset behavior is understood.
 Previously disabled entries remain disabled on upgrade; user settings are preserved.
+
+Version 0.4.0 adds two actual fan speeds (supply/extract, rpm) and ten
+controller temperatures (T1, T3–T8, T10, T12, T13, °C) as enabled sensors on
+the same device. Temperatures display one decimal place; fan speeds display
+whole rpm while retaining the received precision. Both use measurement
+statistics. The BDE room-temperature sensor stays separate from these channels.
+
+The 0x03B7 block is decoded only for the verified positive deci-degree encoding
+(0–150 °C). Negative encodings and sensor-error codes are not yet documented;
+high raw values are rejected rather than interpreted as signed temperatures.
+Valid sibling channels continue updating; rejected channels expire after the
+normal 30-second freshness interval. Fan readings must be finite and within
+0–10000 rpm. These are sanity limits, not manufacturer operating limits.
+The unused eleventh temperature slot, target fan speeds and switching states
+are not published as new sensors.
 
 DP 0x032E remains a neutral diagnostic counter without a unit: its previously
 assumed meaning as seconds since startup is not established on this installation.
@@ -57,7 +72,7 @@ See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.3.1 is a receive-only development preview.
+Version 0.4.0 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
@@ -107,10 +122,12 @@ Different aliases for the same host cannot currently be identified as duplicates
 
 - Only catalogued panel SET and controller response shapes are extracted. Other frames are
   skipped; this is not yet a general HESP frame parser.
-- Values are published only when their short-frame checksum is covered by the
-  reference model and matches, and type/range validation succeeds.
-- Unsupported checksum bits, other nodes and corrupted candidates produce no
-  value. The reference model is incomplete; it is not a general CRC algorithm.
+- Values are published only when the reconstructed byte-recurrence checksum
+  matches and type/range validation succeeds. The algorithm was checked against
+  11,599 recorded candidates, including long responses; see
+  [derivation and validation](docs/CHECKSUM_ALGORITHM.md).
+- Unsupported frame shapes, other nodes and corrupted candidates produce no
+  value. A valid checksum alone does not establish a data point's meaning.
 - Cached values become unavailable after 30 seconds without a valid update;
   disconnects invalidate all values immediately. Stale values are not restored
   as current measurements after restart.

@@ -145,6 +145,42 @@
       },
       "device_clock": {
         "name": "Device clock (experimental)"
+      },
+      "temperature_supply": {
+        "name": "Supply air temperature (T1)"
+      },
+      "temperature_extract": {
+        "name": "Extract air temperature (T7)"
+      },
+      "temperature_exhaust": {
+        "name": "Exhaust air temperature (T4)"
+      },
+      "temperature_fresh": {
+        "name": "Fresh air temperature (T3)"
+      },
+      "temperature_before_evaporator": {
+        "name": "Temperature before evaporator (T5)"
+      },
+      "temperature_evaporator": {
+        "name": "Evaporator temperature (T6)"
+      },
+      "temperature_after_preheater": {
+        "name": "Temperature after preheater (T8)"
+      },
+      "temperature_before_condenser": {
+        "name": "Temperature before condenser (T12)"
+      },
+      "temperature_condenser": {
+        "name": "Condenser temperature (T10)"
+      },
+      "temperature_compressor": {
+        "name": "Compressor temperature (T13)"
+      },
+      "fan_supply_rpm": {
+        "name": "Supply fan speed"
+      },
+      "fan_extract_rpm": {
+        "name": "Extract fan speed"
       }
     },
     "button": {

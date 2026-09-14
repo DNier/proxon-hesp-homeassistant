@@ -1,0 +1,344 @@
+[
+  {
+    "capture_index": 1,
+    "frames": 2145,
+    "unique_frames": 147,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 209
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 1044
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 663
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 22
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 23
+      }
+    ]
+  },
+  {
+    "capture_index": 2,
+    "frames": 547,
+    "unique_frames": 107,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 54
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 10
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 267
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 172
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 12
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 6
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 10
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 6
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 5
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 5
+      }
+    ]
+  },
+  {
+    "capture_index": 3,
+    "frames": 2300,
+    "unique_frames": 146,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 224
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 48
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 1125
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 708
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 49
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 25
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 48
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 25
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 24
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 24
+      }
+    ]
+  },
+  {
+    "capture_index": 4,
+    "frames": 2300,
+    "unique_frames": 145,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 225
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 48
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 1122
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 710
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 50
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 24
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 48
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 25
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 24
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 24
+      }
+    ]
+  },
+  {
+    "capture_index": 5,
+    "frames": 2173,
+    "unique_frames": 141,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 207
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 1063
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 670
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 48
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 24
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 23
+      }
+    ]
+  },
+  {
+    "capture_index": 6,
+    "frames": 2134,
+    "unique_frames": 147,
+    "by_payload_size": [
+      {
+        "bytes": 0,
+        "status": "match",
+        "count": 206
+      },
+      {
+        "bytes": 1,
+        "status": "match",
+        "count": 45
+      },
+      {
+        "bytes": 2,
+        "status": "match",
+        "count": 1045
+      },
+      {
+        "bytes": 4,
+        "status": "match",
+        "count": 656
+      },
+      {
+        "bytes": 8,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 12,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 16,
+        "status": "match",
+        "count": 46
+      },
+      {
+        "bytes": 22,
+        "status": "match",
+        "count": 23
+      },
+      {
+        "bytes": 40,
+        "status": "match",
+        "count": 22
+      },
+      {
+        "bytes": 112,
+        "status": "match",
+        "count": 22
+      }
+    ]
+  }
+]

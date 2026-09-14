@@ -12,9 +12,7 @@ from custom_components.proxon_hesp.hesp.decoder import Decoder
 def test_documented_checksum_vector():
     assert checksum(bytes.fromhex("10800060010000040100")) == 0xE149
     assert checksum(bytes(7)) is None
-    assert checksum(bytes(13)) is None
-    # Bit position 44 is explicitly unknown, not a zero contribution.
-    assert checksum(bytes.fromhex("00000000100000000000")) is None
+    assert checksum(bytes(121)) is None
 
 
 def test_recorded_values(frames):

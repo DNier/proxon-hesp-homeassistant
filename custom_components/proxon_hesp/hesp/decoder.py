@@ -32,7 +32,22 @@ RAW_POINTS = {
     1309: 4,
 }
 
+TEMPERATURE_KEYS = (
+    "temperature_supply",
+    "temperature_extract",
+    "temperature_exhaust",
+    "temperature_fresh",
+    "temperature_before_evaporator",
+    "temperature_evaporator",
+    "temperature_after_preheater",
+    "temperature_before_condenser",
+    "temperature_condenser",
+    "temperature_compressor",
+)
+
 RESPONSE_POINTS = {
+    0x00C9: ("fan_speeds", 8),
+    0x03B7: ("temperatures", 22),
     **{dp: (f"raw_{dp:04x}", size) for dp, size in RAW_POINTS.items()},
     0x00ED: ("filter_days", 4),
     0x032E: ("uptime", 4),
@@ -69,7 +84,7 @@ class Statistics:
 
 
 class Decoder:
-    """Accept arbitrary TCP boundaries; retain at most one short candidate."""
+    """Accept arbitrary TCP boundaries; retain at most one supported candidate."""
 
     def __init__(self) -> None:
         self.buffer = bytearray()
@@ -104,13 +119,9 @@ class Decoder:
             elif calculated != int.from_bytes(frame[-2:], "little"):
                 self.stats.checksum_rejected += 1
             else:
-                value = self._value(key, frame[8:-2])
-                if value is not None:
-                    readings.append(Reading(key, value))
-                    if key == "raw_0330":
-                        clock = decode_clock(frame[8:-2])
-                        if clock is not None:
-                            readings.append(Reading("device_clock", clock))
+                decoded = self._readings(key, frame[8:-2])
+                if decoded:
+                    readings.extend(decoded)
                     self.stats.accepted += 1
                 else:
                     self.stats.value_rejected += 1
@@ -119,6 +130,41 @@ class Decoder:
             # Rescan after a corrupt candidate; never trust its frame boundary.
             del self.buffer[0]
             self.stats.discarded_bytes += 1
+        return readings
+
+    @classmethod
+    def _readings(cls, key: str, payload: bytes) -> list[Reading]:
+        if key == "fan_speeds":
+            if len(payload) != 8:
+                return []
+            values = struct.unpack("<2f", payload)
+            return [
+                Reading(k, v)
+                for k, v in zip(
+                    ("fan_supply_rpm", "fan_extract_rpm"), values, strict=True
+                )
+                if math.isfinite(v) and 0 <= v <= 10000
+            ]
+        if key == "temperatures":
+            if len(payload) != 22:
+                return []
+            # Positive deci-degree encoding is verified against the BDE.
+            # Negative encodings and error sentinels are not established yet.
+            # Do not reinterpret high unsigned values as plausible negatives.
+            values = struct.unpack("<11H", payload)[:10]
+            return [
+                Reading(k, v / 10)
+                for k, v in zip(TEMPERATURE_KEYS, values, strict=True)
+                if v <= 1500
+            ]
+        value = cls._value(key, payload)
+        if value is None:
+            return []
+        readings = [Reading(key, value)]
+        if key == "raw_0330":
+            clock = decode_clock(payload)
+            if clock is not None:
+                readings.append(Reading("device_clock", clock))
         return readings
 
     @staticmethod

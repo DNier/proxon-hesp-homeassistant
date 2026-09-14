@@ -1,7 +1,8 @@
 # Attribution
 
-The limited checksum contribution table in
-`custom_components/proxon_hesp/hesp/checksum.py` and the protocol/data-point
+The checksum byte transform in
+`custom_components/proxon_hesp/hesp/checksum.py`, the reference contributions in
+`tools/derive_checksum.py`, and the protocol/data-point
 interpretation are adapted from Markus Mauch's PROXON HESP documentation:
 
 - https://github.com/markusmauch/proxon-hesp
@@ -11,10 +12,12 @@ interpretation are adapted from Markus Mauch's PROXON HESP documentation:
 Source material: © 2026 Markus Mauch, CC BY 4.0:
 https://creativecommons.org/licenses/by/4.0/
 
-Changes: table converted to Python, restricted receive-only stream extraction
-and validation for four observed panel SET data points. This implementation is
+Changes: a fixed invertible byte transform and initial state were reconstructed
+from the published bit contributions and example query; independent recorded
+frames validate short and long messages. See docs/CHECKSUM_ALGORITHM.md.
+Stream extraction remains restricted and receive-only. This implementation is
 independent and is not endorsed by Markus Mauch or the equipment manufacturer.
-Unknown checksum contributions remain unknown; no general encoder is provided.
+No active bus sender or general frame encoder is provided.
 
 Original project code is licensed under the MIT License; see LICENSE.
 The adapted source material identified above remains subject to CC BY 4.0.

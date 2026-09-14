@@ -145,6 +145,42 @@
       },
       "device_clock": {
         "name": "Geräteuhrzeit (experimentell)"
+      },
+      "temperature_supply": {
+        "name": "Zulufttemperatur (T1)"
+      },
+      "temperature_extract": {
+        "name": "Ablufttemperatur (T7)"
+      },
+      "temperature_exhaust": {
+        "name": "Fortlufttemperatur (T4)"
+      },
+      "temperature_fresh": {
+        "name": "Frischlufttemperatur (T3)"
+      },
+      "temperature_before_evaporator": {
+        "name": "Temperatur vor Verdampfer (T5)"
+      },
+      "temperature_evaporator": {
+        "name": "Verdampfertemperatur (T6)"
+      },
+      "temperature_after_preheater": {
+        "name": "Temperatur nach Vorwärme (T8)"
+      },
+      "temperature_before_condenser": {
+        "name": "Temperatur vor Kondensator (T12)"
+      },
+      "temperature_condenser": {
+        "name": "Kondensatortemperatur (T10)"
+      },
+      "temperature_compressor": {
+        "name": "Kompressortemperatur (T13)"
+      },
+      "fan_supply_rpm": {
+        "name": "Drehzahl Zuluft"
+      },
+      "fan_extract_rpm": {
+        "name": "Drehzahl Abluft"
       }
     },
     "button": {

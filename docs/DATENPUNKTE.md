@@ -73,3 +73,20 @@ aktiviert; bestehende Deaktivierungen bleiben erhalten.
 war laut Nutzer am selben Tag ausgeschaltet. Daher ab 0.2.1 neutraler Zähler
 ohne Einheit und ohne Geräte-/Statistikklasse; Bedeutung bleibt offen.
 Die 18 Hex-Sensoren bleiben ungeklärt und standardmäßig deaktiviert.
+
+## Erweiterung 0.4.0 (14.09.2026)
+
+Die historische Prüfsummenbegrenzung oben ist aufgehoben: siehe
+[Herleitung und Validierung](CHECKSUM_ALGORITHM.md).
+0x00C9 liefert nun Ist-Drehzahlen für Zuluft/Abluft als zwei float32 LE.
+0x03B7 liefert zehn benannte Temperaturen aus elf uint16-LE-Slots, Faktor 0,1:
+T1, T7, T4, T3, T5, T6, T8, T12, T10, T13; Slot 11 bleibt unbenutzt.
+Die Zuordnung wurde anhand mehrerer BDE-Aufnahmen geprüft. Temperaturkanäle
+mit Rohwerten über 1500 werden einzeln verworfen: negative Kodierung und
+Fehlersentinels sind noch nicht belegt. Gültige Nachbarkanäle bleiben nutzbar.
+
+Zwölf neue, standardmäßig aktivierte Sensoren, Einheiten °C/rpm und
+Statistikklasse measurement. Gerätezuteilung und bestehende IDs bleiben erhalten.
+00D7, Bypass, Fehler-/Schaltzustände, Zeitprogramm und Metadaten bleiben außerhalb
+dieser Erweiterung; eine passende Prüfsumme allein belegt ihre Bedeutung nicht.
+Filterrestlaufzeit wurde inzwischen auch lokal am BDE abgeglichen.
