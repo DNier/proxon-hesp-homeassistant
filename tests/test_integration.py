@@ -71,11 +71,16 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 48
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 51
         new_ids = []
         from custom_components.proxon_hesp.hesp.decoder import TEMPERATURE_KEYS
 
-        for key in (*TEMPERATURE_KEYS, "fan_supply_rpm", "fan_extract_rpm"):
+        for key in (
+            *TEMPERATURE_KEYS,
+            "fan_supply_rpm",
+            "fan_extract_rpm",
+            "compressor_rpm",
+        ):
             entity_id = registry.async_get_entity_id(
                 "sensor", DOMAIN, f"stable-unit_{key}"
             )
@@ -115,7 +120,7 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert "private.test" not in str(diagnostic)
         assert "stable-unit" not in str(diagnostic)
         assert diagnostic["application_bytes_sent"] == 0
-        assert diagnostic["statistics"]["accepted"] == 34
+        assert diagnostic["statistics"]["accepted"] == 35
         reader.feed_eof()
         await hass.async_block_till_done()
         assert hass.states.get(mode_id).state == "unavailable"

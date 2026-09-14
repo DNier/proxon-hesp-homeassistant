@@ -34,11 +34,12 @@ beschriebenen Zustand, nicht für ausgelesene Buskennungen.
 | Hauptplatine | Hermes electronic, **LT-ZIM V1.6**, Aufdruck 01.2014 | F; Platinenaufdruck ist kein belegtes Baujahr der Gesamtanlage |
 | Zusatzplatine | **PTC-Modul 4× V1.2** | F |
 | Zentrales Bediengerät | **BDE Comfort**, Anzeige **V03.6.07A0** | F; diese Versionsanzeige dem BDE zuordnen, nicht automatisch jedem Busknoten |
+| BDE-Solltemperaturbereich | **18–30 °C** laut Betreiber am 14.09.2026 | Bedienbeobachtung; 18, 26 und 30 °C im Bus bestätigt. Nicht als universelle Grenze aller Varianten behandeln |
 | Kühlung | Am **03.09.2026 nachgerüstet und konfiguriert**, Funktionsprüfung laut Servicebericht i.O. | S, durch W bestätigt; kein Nachweis für eigene HA-Steuerbefehle |
 | Material der Kühlnachrüstung | Spule für 4-Wegeventil, Artikel **P0015/91**, ein Stück | S |
 | Raumthermostate | Laut Wartungsbericht nicht mehr die Originalgeräte; beim Termin nicht geprüft | W; Hersteller, Typ und Einbindung der Ersatzgeräte nicht dokumentiert |
 | Trinkwassergerät | T300 vorhanden; genaue Variante widersprüchlich angegeben | W: **T 300 1,5**; S: **T 300 2.x** |
-| Software T300 | Update auf **V3.8** beim Wartungstermin dokumentiert | W; nicht die Firmware der HESP-Hauptplatine oder des BDE |
+| Software T300 | Update auf **V3.8** beim Wartungstermin dokumentiert; Display zeigt **0038** | W und Foto IMG_1646; Anzeige passt zur Berichtsangabe, nicht zur Firmware der HESP-Hauptplatine oder des BDE gehörig |
 | HA-Anbindung | Passiver Empfang über Waveshare RS485/TCP-Gateway | M; bestehende BDE-/PTC-Kommunikation bleibt bestehen |
 
 ### Noch offene Identifikationsfragen
@@ -51,6 +52,33 @@ sind, geht aus den Berichten nicht hervor. Deshalb lautet die Arbeitsbezeichnung
 oder eine Herstellerbestätigung könnte die Abweichungen auflösen. Die
 Seriennummernfelder im Servicebericht sind leer; eine Seriennummer wird nicht
 angenommen oder aus Platinenaufklebern abgeleitet.
+
+### Ergänzende T300-Fotos vom Betreiber, 14.09.2026
+
+**Priorität:** T300-Anbindung auf Wunsch des Betreibers vorerst zurückgestellt.
+Die folgenden Angaben dienen als spätere Referenz; Hauptarbeit bleibt die
+HESP-Integration des Lüftungs-/Heizgeräts. Quellen: IMG_1645 bis IMG_1651;
+Originalfotos bleiben außerhalb des Repositorys.
+
+| Foto | Direkt ablesbare Anzeige / Beobachtung |
+|---|---|
+| IMG_1645 | Hauptanzeige 46 °C, Geräteuhr 11:53; daraus allein keine Unterscheidung von Ist- und Sollwert ableiten |
+| IMG_1646 | Systeminfo: S2 Komp. 027474; S3 Extra 000000; S4 E-Heiz 000082; S5 Vent. 027470; S6 Abtau 000238; Software 0038 |
+| IMG_1647 | Systeminfo: „Wärme“ 194 kWh; „E.Arb.“ 48 kWh |
+| IMG_1648 | Temperaturanzeige: T5 V.Verda 21,4; T6 Verdamp 19,7; T20 Untbeh 44,7; T21 Mitbeh 46,9; T13 Komp. 97,7; T11 Sauggas 25,3 |
+| IMG_1649–IMG_1651 | Platinen- und Anschlussansichten; unter anderem Aufdrucke X13, X16 und X17 sichtbar |
+
+Die S2–S6-Werte werden ohne zusätzliche Einheiten dokumentiert, da diese auf
+dem Foto fehlen. Für die beiden Energieanzeigen sind Mess-/Berechnungsverfahren,
+Bezugszeitraum und Rücksetzverhalten unbekannt; daraus wird kein COP oder
+Jahresverbrauch abgeleitet. Eine Übertragung dieser Anzeigen über den vorhandenen
+HESP-Anschluss wurde nicht nachgewiesen.
+
+Die Fotos enthalten kein eindeutig lesbares Typenschild bzw. keine eindeutige
+Platinenrevision und lösen die Variantenabweichung in den Berichten noch nicht
+auf. Der Aufdruck X17 allein bestätigt weder die elektrische Pinbelegung noch
+die Übertragbarkeit einer Anschlussanleitung aus einem anderen T300-Projekt.
+Modbus-Adresse, Parität und Schreibfreigabe sind auf diesen Menüfotos nicht sichtbar.
 
 ## Was diese Ausstattung für die Integration bedeutet
 

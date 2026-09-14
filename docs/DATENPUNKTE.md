@@ -2,7 +2,7 @@
 
 Geltungsbereich: [lokale Referenzanlage und Hardware-/Ausstattungsvarianten](ANLAGENPROFIL.md).
 Die folgenden Abschnitte halten die Entwicklung ab Version 0.2.0 fest;
-der neueste Abdeckungsstand steht im Abschnitt zu 0.4.0.
+der aktuelle Abdeckungsstand steht am Ende im Abschnitt zu 0.5.0.
 
 Grundlage: Markus Mauchs Datenpunktreferenz (abgerufen am 13.09.2026) und
 vorhandener 30-Sekunden-Mitschnitt der LT-ZIM-V1.6/PTC-4×-V1.2-Anlage.
@@ -94,3 +94,37 @@ Statistikklasse measurement. Gerätezuteilung und bestehende IDs bleiben erhalte
 00D7, Bypass, Fehler-/Schaltzustände, Zeitprogramm und Metadaten bleiben außerhalb
 dieser Erweiterung; eine passende Prüfsumme allein belegt ihre Bedeutung nicht.
 Filterrestlaufzeit wurde inzwischen auch lokal am BDE abgeglichen.
+
+## Erweiterung 0.5.0 (14.09.2026)
+
+| Datenpunkt | Neue Entität | Beleg und Grenze |
+|---|---|---|
+| Controller `0x051C`, Float32 LE, 4 Bytes | Kompressordrehzahl, rpm, measurement | BDE-Abgleich im Heiz-/Kühlbetrieb und bei Stillstand; der bisherige Hex-Sensor bleibt mit gleicher ID erhalten |
+| Controller `0x0160`, 1 Byte | Bypass-Schaltzustand, binary_sensor | `00` = Aus, `01` = Ein, weitere Codes ungültig; gemeldeter Schaltzustand, keine mechanische Positionsrückmeldung |
+| Panel `0x01F8`, 4 Bytes, Maske `0x40` | Intensivlüftung aktiv, binary_sensor | Zwei Aktivierungsversuche und Gegenprobe mit manueller Luftstufe 4; übrige Bits bleiben unabhängig |
+
+Alle drei werden am vorhandenen Gerät standardmäßig aktiviert, mit deutschen
+und englischen Namen. Die zwei Binärsensoren bekommen keine Geräteklasse, die
+eine gemessene Position oder andere unbelegte Semantik behauptet.
+
+Kompressordrehzahlen müssen endlich und zwischen 0 und 10000 rpm liegen;
+die Grenzen sind eine Empfangs-Plausibilitätsprüfung, keine Herstellergrenzen.
+Die Rohdiagnose bleibt auch bei numerisch ungültigen Werten erhalten. Ungültige
+Werte erneuern nicht die Frische der zugehörigen semantischen Entität. Nach
+30 Sekunden ohne gültiges Update bzw. bei Verbindungsabbruch wird sie unavailable.
+Gültige 0 rpm und Aus werden dagegen angezeigt.
+
+Der Solltemperatur-Empfang akzeptiert jetzt die beobachteten 30 °C. Die bisherige
+untere Empfangsgrenze 15 °C bleibt für Varianten erhalten; daraus folgt kein
+schreibbarer Bereich. Lokal ist am BDE 18–30 °C beobachtet.
+
+Prüfung am 14.09.2026: **111 Tests bestanden**, Ruff-Lint/Formatprüfung und
+`git diff --check` erfolgreich. Alle 16 nummerierten Diagnoseexporte liefern
+bei Offline-Wiedergabe mit Chunkgrößen 1, 37, 127 und gesamter Bytestrom jeweils
+identische Ergebnisse, ohne abgewiesene Prüfsummen. Quellen und BDE-Abgleiche:
+[Heizen/Kühlen](KUEHLUNG_BEOBACHTUNGEN.md) und
+[Intensivlüftung](INTENSIVLUEFTUNG_BEOBACHTUNGEN.md).
+
+Version, Lockdatei und Release Notes gehören zum Release 0.5.0.
+Der abschließende BDE-Abgleich erfolgt nach HACS-Installation und HA-Neustart.
+Keine aktiven Abfragen oder Schreibbefehle wurden ergänzt.

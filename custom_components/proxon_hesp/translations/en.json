@@ -181,6 +181,9 @@
       },
       "fan_extract_rpm": {
         "name": "Extract fan speed"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
       }
     },
     "button": {
@@ -192,6 +195,14 @@
       },
       "capture_clear": {
         "name": "Clear capture"
+      }
+    },
+    "binary_sensor": {
+      "intensive_ventilation": {
+        "name": "Intensive ventilation active"
+      },
+      "bypass_status": {
+        "name": "Bypass switching state"
       }
     }
   }

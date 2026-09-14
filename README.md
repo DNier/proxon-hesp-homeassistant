@@ -7,7 +7,7 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.4.0 development preview
+## Status: 0.5.0 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
@@ -62,25 +62,54 @@ high raw values are rejected rather than interpreted as signed temperatures.
 Valid sibling channels continue updating; rejected channels expire after the
 normal 30-second freshness interval. Fan readings must be finite and within
 0–10000 rpm. These are sanity limits, not manufacturer operating limits.
-The unused eleventh temperature slot, target fan speeds and switching states
-are not published as new sensors.
+The unused eleventh temperature slot and target fan speeds are not published
+as new sensors. See the status additions below.
 
 DP 0x032E remains a neutral diagnostic counter without a unit: its previously
 assumed meaning as seconds since startup is not established on this installation.
 Its internal key stays `uptime` solely to preserve entity identity.
 
-18 unknown short response payloads remain disabled-by-default hexadecimal
-diagnostic sensors. Do not use them as measurements or automation inputs.
+18 short response payloads remain disabled-by-default hexadecimal diagnostic
+sensors. Most meanings remain unknown; 0x051C now also has a numeric sensor.
+Do not use the raw payloads as measurements or automation inputs.
 Enable individual entries only for a targeted comparison with normal BDE changes;
 record before/after, time and the corresponding display. A zero payload does not
 prove that a component is off or that no fault exists. No arbitrary bus writes.
 
 See [data-point coverage](docs/DATENPUNKTE.md) for evidence and remaining gaps.
 
+### New in 0.5.0: three additional read-only entities
+
+Version 0.5.0 adds an enabled, read-only **Intensive ventilation active**
+binary sensor. It reads bit 6 (`0x40`) of the BDE's 32-bit little-endian flags
+at DP `0x01F8`. Local recordings distinguish timed intensive ventilation in
+Comfort from manual fan level 4 in Eco Summer. Other flag bits are ignored.
+The sensor becomes unavailable without fresh data after 30 seconds or on
+disconnect. Duration, remaining time and the automatic fan-selection mode are
+not inferred. See the [local validation record](docs/INTENSIVLUEFTUNG_BEOBACHTUNGEN.md).
+
+**Compressor speed** reads Float32 LE from controller DP `0x051C` in rpm,
+with measurement statistics and whole-rpm display precision. Full received
+precision is retained. The existing raw `0x051C` entity keeps its identity and
+enabled/disabled setting. Non-finite, negative and above-10000 rpm readings
+do not update the numeric sensor; 0 rpm is a valid stopped reading. The range
+is a receive sanity guard, not a manufacturer operating limit.
+
+**Bypass switching state** reads exactly `0` (off) or `1` (on) from controller
+DP `0x0160`. It reports the state displayed by the BDE, not measured flap
+position, and is not an open/closed cover or control. Other values are rejected.
+The source mappings are recorded in the [heating/cooling observations](docs/KUEHLUNG_BEOBACHTUNGEN.md).
+
+All three entities are enabled by default on the existing device. Missing or
+invalid updates do not become zero/off: each last valid value expires after
+30 seconds without a valid update, and disconnect makes it unavailable.
+The temperature setpoint receive guard now accepts the observed 30 °C setting;
+the local BDE supports 18–30 °C. All these changes remain passive.
+
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.4.0 is a receive-only development preview.
+Version 0.5.0 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.

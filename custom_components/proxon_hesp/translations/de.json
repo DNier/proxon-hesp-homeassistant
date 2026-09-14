@@ -181,6 +181,9 @@
       },
       "fan_extract_rpm": {
         "name": "Drehzahl Abluft"
+      },
+      "compressor_rpm": {
+        "name": "Kompressordrehzahl"
       }
     },
     "button": {
@@ -192,6 +195,14 @@
       },
       "capture_clear": {
         "name": "Mitschnitt löschen"
+      }
+    },
+    "binary_sensor": {
+      "intensive_ventilation": {
+        "name": "Intensivlüftung aktiv"
+      },
+      "bypass_status": {
+        "name": "Bypass-Schaltzustand"
       }
     }
   }

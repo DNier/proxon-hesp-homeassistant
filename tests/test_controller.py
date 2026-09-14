@@ -18,6 +18,8 @@ FRAMES = {
 def test_recorded_controller_values_and_every_split():
     stream = b"".join(FRAMES.values())
     expected = {
+        "bypass_status": True,
+        "compressor_rpm": 0.0,
         "fan_supply_rpm": pytest.approx(1788.05444),
         "fan_extract_rpm": pytest.approx(1754.57190),
         "temperature_supply": 22.8,
@@ -67,8 +69,8 @@ def test_corrupt_response_is_rejected_and_recovers():
     assert decoder.stats.checksum_rejected == 1
 
 
-@pytest.mark.parametrize("dp", ["0x00d7", "0x0160", "0x02df", "0x02d6"])
-def test_unverified_arrays_and_bypass_do_not_publish(dp):
+@pytest.mark.parametrize("dp", ["0x00d7", "0x02df", "0x02d6"])
+def test_unverified_arrays_do_not_publish(dp):
     assert Decoder().feed(FRAMES[dp]) == []
 
 

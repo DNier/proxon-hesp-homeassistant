@@ -1,26 +1,27 @@
-## Twelve new read-only sensors
+## 0.5.0 — Compressor speed and reported ventilation states
 
-- Actual supply and extract fan speeds in rpm.
-- Ten temperatures: supply T1, fresh air T3, exhaust T4, before evaporator T5,
-  evaporator T6, extract air T7, after preheater T8, condenser T10,
-  before condenser T12 and compressor T13.
-- All twelve are enabled by default on the existing device, with German/English
-  names, appropriate units, display precision and measurement statistics.
-  Existing entity identities and enabled/disabled settings are preserved.
+Three new read-only entities are enabled by default on the existing PROXON device:
 
-The reconstructed checksum algorithm matches all 11,599 scanned candidates
-from six recordings, including long fan and temperature responses. Its derivation
-uses the public reference table and one public example, not fitted private payloads.
+- **Compressor speed** in rpm, with measurement statistics and whole-rpm display
+  precision. Validated against BDE readings in heating, cooling and stopped states.
+- **Bypass switching state**, matching the BDE's on/off indication. This is a
+  reported switching state, not mechanical position feedback or a control.
+- **Intensive ventilation active**, distinguishing timed intensive ventilation
+  from manual fan level 4. Duration and automatic fan-selection mode remain unknown.
 
-Scope: observed LT-ZIM V1.6 installation. Positive temperature encoding is
-validated; negative encodings and error codes remain unverified. Such channels
-expire rather than displaying guessed negative values; valid siblings continue.
-Unknown temperature slot 11, target fan speeds and switching states remain
-unpublished. No controls, active polling or additional bus connections are added.
+The target-temperature sensor now accepts the observed 30 °C setpoint.
+The reference BDE's user setting range is 18–30 °C; this release adds no controls.
 
-Validation includes fixed recorded checksums, every single-bit corruption of
-recorded examples, split TCP frames, channel mappings, invalid values, actual
-Home Assistant entity registration, units, statistics and disconnect handling.
+Existing entity IDs and user enable/disable choices are preserved, including
+DP 0x051C's raw diagnostic entity. Invalid compressor values and unknown bypass
+codes do not update the corresponding typed entity. Last valid values expire
+independently after 30 seconds; disconnect makes entities unavailable. A real
+zero rpm or off value remains valid.
 
-Install this update through HACS, then restart Home Assistant to load the new
-Python code. The twelve new sensor entities are created automatically.
+Validation covers fixed recorded frames, every stream split, single-bit frame
+corruption, wrong source/length, invalid numeric/status values, HA registration,
+existing raw-entity identity, availability, recovery and unload. The existing
+passive transport is unchanged; no polling or bus commands are introduced.
+
+Install this version through HACS and restart Home Assistant. The three new entities will be created automatically. Compare them
+with the BDE after installation.

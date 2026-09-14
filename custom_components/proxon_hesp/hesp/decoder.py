@@ -46,6 +46,7 @@ TEMPERATURE_KEYS = (
 )
 
 RESPONSE_POINTS = {
+    0x0160: ("bypass_status", 1),
     0x00C9: ("fan_speeds", 8),
     0x03B7: ("temperatures", 22),
     **{dp: (f"raw_{dp:04x}", size) for dp, size in RAW_POINTS.items()},
@@ -58,6 +59,7 @@ RESPONSE_POINTS = {
 }
 
 POINTS = {
+    0x01F8: ("intensive_ventilation", 4),
     0x00E1: ("fan_level", 2),
     0x020A: ("operating_mode", 2),
     0x0226: ("room_temperature", 4),
@@ -70,7 +72,7 @@ class Reading:
     """A verified, typed value from a validated supported frame, not an actuator ACK."""
 
     key: str
-    value: float | int | str
+    value: float | int | str | bool
 
 
 @dataclass
@@ -161,6 +163,12 @@ class Decoder:
         if value is None:
             return []
         readings = [Reading(key, value)]
+        if key == "raw_051c":
+            # Preserve the existing raw entity, even for invalid numeric data.
+            rpm = struct.unpack("<f", payload)[0]
+            # Receive sanity bound, not a manufacturer operating limit.
+            if math.isfinite(rpm) and 0 <= rpm <= 10000:
+                readings.append(Reading("compressor_rpm", rpm))
         if key == "raw_0330":
             clock = decode_clock(payload)
             if clock is not None:
@@ -168,7 +176,14 @@ class Decoder:
         return readings
 
     @staticmethod
-    def _value(key: str, payload: bytes) -> float | int | str | None:
+    def _value(key: str, payload: bytes) -> float | int | str | bool | None:
+        if key == "bypass_status":
+            # Reported BDE switching state; not a measured flap position.
+            return bool(payload[0]) if payload[0] in (0, 1) else None
+        if key == "intensive_ventilation":
+            # BDE request bit: verified at 30/120 min and against manual level 4.
+            # Other bits (including observed 0x0800) are independent.
+            return bool(int.from_bytes(payload, "little") & 0x40)
         if key.startswith("raw_"):
             return payload.hex()
         if key in ("filter_days", "uptime") or key.startswith("counter_"):
@@ -180,7 +195,10 @@ class Decoder:
             level = int.from_bytes(payload, "little")
             return level if 0 <= level <= 4 else None
         value = struct.unpack("<f", payload)[0]
-        low, high = (15, 25) if key == "target_temperature" else (-20, 60)
+        # The reference BDE supports 18–30 °C; captured 30 °C on 2026-09-14.
+        # Retain the existing lower receive bound for other device variants.
+        # This plausibility guard is not a writable control's setting range.
+        low, high = (15, 30) if key == "target_temperature" else (-20, 60)
         return value if math.isfinite(value) and low <= value <= high else None
 
 

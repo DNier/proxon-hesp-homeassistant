@@ -1,0 +1,268 @@
+[
+  {
+    "dp": "0x0105",
+    "request_argument": 1,
+    "frame": "10800005010000040100a218",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0206",
+    "request_argument": 1,
+    "frame": "108000060200000401006203",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0208",
+    "request_argument": 1,
+    "frame": "10800008020000040100ff56",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x020F",
+    "request_argument": 1,
+    "frame": "1080000f02000004010079fc",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x0110",
+    "request_argument": 1,
+    "frame": "10800010010000040100834c",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0115",
+    "request_argument": 1,
+    "frame": "108000150100000401005afa",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0116",
+    "request_argument": 2,
+    "frame": "10800016010000040200f7e9",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0519",
+    "request_argument": 1,
+    "frame": "10800019050000040100a951",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x011C",
+    "request_argument": 1,
+    "frame": "1080001c0100000401004105",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x051C",
+    "request_argument": 1,
+    "frame": "1080001c05000004010070e7",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x051D",
+    "request_argument": 2,
+    "frame": "1080001d05000004020082e8",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x051E",
+    "request_argument": 2,
+    "frame": "1080001e050000040200ba7a",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x0120",
+    "request_argument": 1,
+    "frame": "108000200100000401001a6b",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0123",
+    "request_argument": 1,
+    "frame": "1080002301000004010022f9",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x032E",
+    "request_argument": 2,
+    "frame": "1080002e030000040200424e",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x0330",
+    "request_argument": 0,
+    "frame": "108000300300000400004ef8",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0160",
+    "request_argument": 1,
+    "frame": "1080006001000004010049e1",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x0168",
+    "request_argument": 1,
+    "frame": "108000680100000401003590",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x006C",
+    "request_argument": 1,
+    "frame": "1080006c00000004010023d0",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x0178",
+    "request_argument": 6,
+    "frame": "108000780100000406008af1",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x03B7",
+    "request_argument": 11,
+    "frame": "108000b7030000040b00cec2",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x00C9",
+    "request_argument": 2,
+    "frame": "108000c90000000402003936",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x02D0",
+    "request_argument": 1,
+    "frame": "108000d00200000401001f5b",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x02D1",
+    "request_argument": 1,
+    "frame": "108000d102000004010078d5",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x00D2",
+    "request_argument": 4,
+    "frame": "108000d20000000404003e34",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D2",
+    "request_argument": 1,
+    "frame": "108000d20200000401004047",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x00D3",
+    "request_argument": 4,
+    "frame": "108000d300000004040059ba",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D3",
+    "request_argument": 1,
+    "frame": "108000d302000004010027c9",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D4",
+    "request_argument": 1,
+    "frame": "108000d4020000040100a163",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D5",
+    "request_argument": 1,
+    "frame": "108000d5020000040100c6ed",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D6",
+    "request_argument": 20,
+    "frame": "108000d602000004140098f6",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x00D7",
+    "request_argument": 2,
+    "frame": "108000d70000000402005c81",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x02D7",
+    "request_argument": 1,
+    "frame": "108000d702000004010099f1",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02D9",
+    "request_argument": 1,
+    "frame": "108000d902000004010004a4",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x02DF",
+    "request_argument": 28,
+    "frame": "108000df020000041c00270c",
+    "checksum": "match",
+    "occurrences": 24
+  },
+  {
+    "dp": "0x00ED",
+    "request_argument": 1,
+    "frame": "108000ed000000040100734a",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x00EE",
+    "request_argument": 1,
+    "frame": "108000ee0000000401004bd8",
+    "checksum": "match",
+    "occurrences": 25
+  },
+  {
+    "dp": "0x01F5",
+    "request_argument": 1,
+    "frame": "108000f50100000401005fa1",
+    "checksum": "match",
+    "occurrences": 24
+  }
+]

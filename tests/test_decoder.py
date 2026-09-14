@@ -74,3 +74,26 @@ def test_temperature_rejects_nonphysical_values(value):
 def test_unknown_enum_and_level_do_not_become_zero():
     assert Decoder._value("operating_mode", b"\xff\xff") is None
     assert Decoder._value("fan_level", b"\x05\x00") is None
+
+
+@pytest.mark.parametrize(
+    ("frame_hex", "expected"),
+    [
+        ("11800027020000080000d0410ee5", 26.0),
+        ("11800027020000080000f0419ef3", 30.0),
+    ],
+)
+def test_recorded_high_setpoint_replaces_previous_value(frames, frame_hex, expected):
+    decoder = Decoder()
+    decoder.feed(b"".join(frames.values()))
+    # Actual panel telegrams from the 26/30 °C experiments, 2026-09-14.
+    readings = decoder.feed(bytes.fromhex(frame_hex))
+    assert [(reading.key, reading.value) for reading in readings] == [
+        ("target_temperature", expected)
+    ]
+    assert decoder.stats.value_rejected == 0
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), 14.0, 31.0])
+def test_setpoint_keeps_conservative_receive_guard(value):
+    assert Decoder._value("target_temperature", struct.pack("<f", value)) is None

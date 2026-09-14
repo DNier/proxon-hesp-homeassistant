@@ -177,6 +177,12 @@ aktuelle Busdaten vorliegen. Normale Änderungen nicht als Logspam ausgeben.
 
 ## 7. Steuerung: größtes offenes Arbeitspaket
 
+Die [Offline-Auswertung der BDE-Schreibtelegramme](SCHREIBBEFEHLE_BEOBACHTUNGEN.md)
+belegt inzwischen 1.300 SETs mit zeitlich passenden ACKs für vier ausgewählte
+Datenpunkte in den Exporten (1)–(16). Das Werkzeug trennt Wiederholungen,
+Wertänderungen und mehrdeutige Zuordnungen; eigener Buszugriff und dauerhafte
+Übernahme eines externen Sollwerts sind damit noch nicht nachgewiesen.
+
 Die Referenz berichtet, dass das BDE bzw. PTC seine Einstellungen etwa alle fünf
 Sekunden wiederholt. Schnelleres Dauerschreiben ist keine freigabefähige Lösung.
 Eine parallele RS485-Verbindung über TCP garantiert außerdem keine Kollisionsfreiheit:

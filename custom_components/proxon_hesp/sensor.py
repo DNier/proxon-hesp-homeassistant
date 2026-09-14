@@ -34,9 +34,9 @@ DESCRIPTIONS = (
             native_unit_of_measurement="rpm",
             state_class=SensorStateClass.MEASUREMENT,
             suggested_display_precision=0,
-            icon="mdi:fan",
+            icon="mdi:engine" if key == "compressor_rpm" else "mdi:fan",
         )
-        for key in ("fan_supply_rpm", "fan_extract_rpm")
+        for key in ("fan_supply_rpm", "fan_extract_rpm", "compressor_rpm")
     ),
     SensorEntityDescription(
         key="device_clock",
