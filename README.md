@@ -14,7 +14,15 @@ Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
 development preview validated against recordings from the supported installation.
 
 Supported profile: the observed LT-ZIM V1.6 / PTC 4× V1.2 installation, with
-four BDE values plus controller telemetry received from its HESP bus:
+four BDE values plus controller telemetry received from its HESP bus.
+The maintenance report identifies the local central unit as **P 2 H-L**;
+a separate service form says **P 1.0 (Hermes)**. Cooling was retrofitted on
+3 September 2026. Hardware, firmware, report discrepancies and the comparison
+with Markus Mauch's P 2H-L are recorded in the
+[reference installation profile](docs/ANLAGENPROFIL.md). These are local evidence,
+not automatically detected attributes or a compatibility promise for all P units.
+
+Panel entities:
 
 | Entity | Meaning |
 |---|---|

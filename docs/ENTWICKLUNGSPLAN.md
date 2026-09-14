@@ -1,7 +1,9 @@
 # Entwicklungsplan: PROXON HESP für Home Assistant
 
 Stand: 13. September 2026. Zielplan; die erste lesende Entwicklungsfassung ist implementiert.
-Aktueller Prüfstand: siehe VALIDIERUNG.md.
+Historischer Ausgangsstand; das am 14.09.2026 anhand der Serviceberichte ergänzte
+[Anlagenprofil](ANLAGENPROFIL.md) beschreibt Hardware, Firmware und Variantenabgrenzung.
+Aktuelle Datenpunktabdeckung: siehe DATENPUNKTE.md.
 
 ## 1. Ziel und Umfang
 
@@ -45,7 +47,9 @@ HESP-Bibliothek → HA-Gerät und Entitäten. Ein Verbindungsinhaber pro Anlage.
 
 Ein HA-Gerät „PROXON“ repräsentiert die zentrale Lüftungsheizung. Hersteller,
 exakter Gerätetyp, Hardware- und Firmwareversion werden nur übernommen, wenn
-gelesen oder vom Nutzer bestätigt. „P 2H-L“ nicht aus der Referenz hineinraten.
+gelesen oder belegt. Der lokale Wartungsbericht nennt inzwischen P 2 H-L;
+die abweichende Bezeichnung im Servicebericht bleibt im Anlagenprofil dokumentiert.
+Diese lokale Angabe nicht als automatisch erkanntes Modell anderer Anlagen ausgeben.
 HA hat keinen generischen Gerätetyp-Schalter „Wärmepumpe“: Gerätedaten beschreiben
 die Hardware; die Domains climate, fan und sensor bestimmen die Funktionen.
 

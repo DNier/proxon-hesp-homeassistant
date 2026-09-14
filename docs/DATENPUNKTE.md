@@ -1,4 +1,8 @@
-# Datenpunktabdeckung 0.2.0
+# Datenpunktabdeckung
+
+Geltungsbereich: [lokale Referenzanlage und Hardware-/Ausstattungsvarianten](ANLAGENPROFIL.md).
+Die folgenden Abschnitte halten die Entwicklung ab Version 0.2.0 fest;
+der neueste Abdeckungsstand steht im Abschnitt zu 0.4.0.
 
 Grundlage: Markus Mauchs Datenpunktreferenz (abgerufen am 13.09.2026) und
 vorhandener 30-Sekunden-Mitschnitt der LT-ZIM-V1.6/PTC-4×-V1.2-Anlage.
