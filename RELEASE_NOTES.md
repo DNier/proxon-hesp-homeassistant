@@ -1,27 +1,38 @@
-## 0.5.0 — Compressor speed and reported ventilation states
+## 0.6.0 — Separate requested and controller fan levels
 
-Three new read-only entities are enabled by default on the existing PROXON device:
+The BDE can request level 3 while its display and controller remain at level 4
+for cooling after timed intensive ventilation ends. This release makes those
+states distinguishable without adding bus commands.
 
-- **Compressor speed** in rpm, with measurement statistics and whole-rpm display
-  precision. Validated against BDE readings in heating, cooling and stopped states.
-- **Bypass switching state**, matching the BDE's on/off indication. This is a
-  reported switching state, not mechanical position feedback or a control.
-- **Intensive ventilation active**, distinguishing timed intensive ventilation
-  from manual fan level 4. Duration and automatic fan-selection mode remain unknown.
+Three new sensors are disabled by default under the existing device's diagnostics:
 
-The target-temperature sensor now accepts the observed 30 °C setpoint.
-The reference BDE's user setting range is 18–30 °C; this release adds no controls.
+- **Controller fan level** / **Luftstufe laut Steuerung** reads controller DP
+  0x0208, limited to eight recorded status words covering levels 1–4.
+- **Supply fan control (raw)** / **Zuluft-Stellwert (roh)** and
+  **Extract fan control (raw)** / **Abluft-Stellwert (roh)** expose the two values
+  at 0x00D7. These have no unit or statistics class. Historical SD metadata
+  suggests millivolts, but they are not verified voltage measurements or rpm.
 
-Existing entity IDs and user enable/disable choices are preserved, including
-DP 0x051C's raw diagnostic entity. Invalid compressor values and unknown bypass
-codes do not update the corresponding typed entity. Last valid values expire
-independently after 30 seconds; disconnect makes entities unavailable. A real
-zero rpm or off value remains valid.
+The existing panel sensor is now named **Requested fan level** /
+**Angeforderte Luftstufe**. Existing entity IDs, custom names and enabled/disabled
+choices are preserved. The intensive-ventilation binary sensor remains separate.
 
-Validation covers fixed recorded frames, every stream split, single-bit frame
-corruption, wrong source/length, invalid numeric/status values, HA registration,
-existing raw-entity identity, availability, recovery and unload. The existing
-passive transport is unchanged; no polling or bus commands are introduced.
+Unknown controller status words and invalid control values do not refresh the
+corresponding sensor. Each last valid value expires after 30 seconds without a
+valid update; disconnect makes it unavailable. Control channels are validated
+independently as finite values within 0–10000. Other status bits and special
+operating states are not inferred. All reception remains passive.
 
-Install this version through HACS and restart Home Assistant. The three new entities will be created automatically. Compare them
-with the BDE after installation.
+An offline capture-inventory tool and expanded evidence documentation are included.
+Private SD files, videos and complete diagnostic captures are not part of the release.
+
+Validation: 148 tests, lint and formatting checks; replay of all 18 recorded
+captures using original chunks and multiple stream boundaries produced identical
+results with no rejected checksums. The new diagnostic displays still need a
+live comparison after installation.
+
+### Update
+
+Update to 0.6.0 through HACS and restart Home Assistant. Open the PROXON device
+and enable the three new diagnostic sensors individually if you want to compare
+them with the BDE. No wiring change or USB cable is required.

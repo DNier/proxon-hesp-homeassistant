@@ -20,6 +20,20 @@ DESCRIPTIONS = (
         SensorEntityDescription(
             key=key,
             translation_key=key,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            icon="mdi:fan",
+        )
+        for key in (
+            "controller_fan_level",
+            "fan_supply_control",
+            "fan_extract_control",
+        )
+    ),
+    *(
+        SensorEntityDescription(
+            key=key,
+            translation_key=key,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,

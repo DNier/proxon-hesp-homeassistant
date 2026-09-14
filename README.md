@@ -7,7 +7,7 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.5.0 development preview
+## Status: 0.6.0 development preview
 
 An installable **receive-only** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
@@ -28,7 +28,7 @@ Panel entities:
 |---|---|
 | Room temperature | Unrounded temperature transmitted by the BDE |
 | Target temperature | BDE temperature setpoint; read-only |
-| Fan level | BDE requested level, not measured fan speed |
+| Requested fan level | BDE requested level; may differ from the BDE display during cooling; not measured fan speed |
 | Operating mode | BDE program; Eco Summer locally compared with the display |
 
 These values represent the **panel's transmitted state**, not a new command's
@@ -62,8 +62,8 @@ high raw values are rejected rather than interpreted as signed temperatures.
 Valid sibling channels continue updating; rejected channels expire after the
 normal 30-second freshness interval. Fan readings must be finite and within
 0–10000 rpm. These are sanity limits, not manufacturer operating limits.
-The unused eleventh temperature slot and target fan speeds are not published
-as new sensors. See the status additions below.
+The unused eleventh temperature slot is not published. DP 0x00D7 is treated
+separately as raw fan control values, not target rpm (see 0.6.0 additions).
 
 DP 0x032E remains a neutral diagnostic counter without a unit: its previously
 assumed meaning as seconds since startup is not established on this installation.
@@ -106,10 +106,30 @@ invalid updates do not become zero/off: each last valid value expires after
 The temperature setpoint receive guard now accepts the observed 30 °C setting;
 the local BDE supports 18–30 °C. All these changes remain passive.
 
+### New in 0.6.0: optional fan diagnostics
+
+Three additional sensors are disabled by default and categorized as diagnostics:
+
+- **Controller fan level**: controller DP `0x0208`, restricted to eight recorded
+  status words covering levels 1–4. It can remain at 4 during cooling after
+  intensive ventilation ends while **Requested fan level** returns to 3.
+  It is a reported controller stage, not a measured airflow or speed.
+- **Supply fan control (raw)** and **Extract fan control (raw)**: the two
+  Float32 LE values at `0x00D7`. They are unitless and have no statistics class.
+  Historical SD metadata suggests millivolts, but a simultaneous mapping and
+  electrical measurement are missing; these are not measured voltages or rpm.
+
+Unknown status words and non-finite/out-of-range controls (outside 0–10000)
+do not refresh their values. The last valid value expires after 30 seconds;
+disconnect makes it unavailable. Each control channel is validated independently.
+Other status bits, faults, defrost and off states are not inferred.
+Existing entity IDs and user settings remain unchanged. No bus writes are added.
+See [SD and capture evidence](docs/SD_KARTEN_ABGLEICH.md).
+
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.5.0 is a receive-only development preview.
+Version 0.6.0 is a receive-only development preview.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.

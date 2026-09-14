@@ -28,7 +28,7 @@ HEADERS = {
     )
 }
 POINTS = {
-    0x00E1: ("effective_fan_level", 2),
+    0x00E1: ("panel_requested_fan_level", 2),
     0x01F8: ("panel_flags", 4),
     0x020A: ("operating_mode", 2),
     0x0227: ("target_temperature", 4),

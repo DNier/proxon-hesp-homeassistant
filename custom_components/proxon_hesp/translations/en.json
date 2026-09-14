@@ -47,7 +47,7 @@
         "name": "Target temperature"
       },
       "fan_level": {
-        "name": "Fan level"
+        "name": "Requested fan level"
       },
       "operating_mode": {
         "name": "Operating mode",
@@ -184,6 +184,15 @@
       },
       "compressor_rpm": {
         "name": "Compressor speed"
+      },
+      "controller_fan_level": {
+        "name": "Controller fan level"
+      },
+      "fan_supply_control": {
+        "name": "Supply fan control (raw)"
+      },
+      "fan_extract_control": {
+        "name": "Extract fan control (raw)"
       }
     },
     "button": {

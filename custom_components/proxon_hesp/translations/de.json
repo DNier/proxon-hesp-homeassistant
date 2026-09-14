@@ -47,7 +47,7 @@
         "name": "Solltemperatur"
       },
       "fan_level": {
-        "name": "Luftstufe"
+        "name": "Angeforderte Luftstufe"
       },
       "operating_mode": {
         "name": "Betriebsart",
@@ -184,6 +184,15 @@
       },
       "compressor_rpm": {
         "name": "Kompressordrehzahl"
+      },
+      "controller_fan_level": {
+        "name": "Luftstufe laut Steuerung"
+      },
+      "fan_supply_control": {
+        "name": "Zuluft-Stellwert (roh)"
+      },
+      "fan_extract_control": {
+        "name": "Abluft-Stellwert (roh)"
       }
     },
     "button": {

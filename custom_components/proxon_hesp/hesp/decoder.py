@@ -11,6 +11,18 @@ from dataclasses import dataclass
 from .checksum import checksum
 
 MODES = {0: "off", 1: "eco_summer", 2: "eco_winter", 3: "comfort", 4: "stove"}
+# Captures 1–18, 2026-09-14. Other status bits and special modes are unknown.
+# Do not extract a plausible level from an unverified status word.
+CONTROLLER_FAN_LEVELS = {
+    0x8000100A: 1,
+    0x80001012: 2,
+    0x8000101A: 3,
+    0x80001022: 4,
+    0x80001122: 4,
+    0x8000131A: 3,
+    0x80001422: 4,
+    0x80001522: 4,
+}
 RAW_POINTS = {
     1310: 4,
     108: 4,
@@ -46,6 +58,8 @@ TEMPERATURE_KEYS = (
 )
 
 RESPONSE_POINTS = {
+    0x0208: ("controller_fan_level", 4),
+    0x00D7: ("fan_controls", 8),
     0x0160: ("bypass_status", 1),
     0x00C9: ("fan_speeds", 8),
     0x03B7: ("temperatures", 22),
@@ -136,6 +150,20 @@ class Decoder:
 
     @classmethod
     def _readings(cls, key: str, payload: bytes) -> list[Reading]:
+        if key == "fan_controls":
+            if len(payload) != 8:
+                return []
+            # Raw control values, not rpm or measured voltage. Historical SD
+            # metadata suggests mV, but no simultaneous mapping is verified.
+            return [
+                Reading(k, v)
+                for k, v in zip(
+                    ("fan_supply_control", "fan_extract_control"),
+                    struct.unpack("<2f", payload),
+                    strict=True,
+                )
+                if math.isfinite(v) and 0 <= v <= 10000
+            ]
         if key == "fan_speeds":
             if len(payload) != 8:
                 return []
@@ -177,6 +205,8 @@ class Decoder:
 
     @staticmethod
     def _value(key: str, payload: bytes) -> float | int | str | bool | None:
+        if key == "controller_fan_level":
+            return CONTROLLER_FAN_LEVELS.get(int.from_bytes(payload, "little"))
         if key == "bypass_status":
             # Reported BDE switching state; not a measured flap position.
             return bool(payload[0]) if payload[0] in (0, 1) else None

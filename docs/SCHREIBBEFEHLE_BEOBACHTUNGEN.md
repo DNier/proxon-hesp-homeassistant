@@ -15,7 +15,7 @@ kein offenes SET am Mitschnittende in dieser Stichprobe.
 
 | Datenpunkt | Beobachteter Inhalt | SETs / zugeordnete ACKs | Unveränderte Wiederholungen | Größte Zeitdifferenz im Capture |
 |---|---|---:|---:|---:|
-| `0x00E1` | effektive Luftstufe | 331 / 331 | 304 | 80 ms |
+| `0x00E1` | angeforderte Panel-Luftstufe | 331 / 331 | 304 | 80 ms |
 | `0x01F8` | BDE-Bitfeld, darin Intensivlüftung `0x40` | 322 / 322 | 301 | 116 ms |
 | `0x020A` | Betriebsart | 322 / 322 | 304 | 132 ms |
 | `0x0227` | Solltemperatur, Float32 Little Endian | 325 / 325 | 307 | 142 ms |
@@ -44,6 +44,10 @@ Erfassung aller vorherigen oder späteren Vorgänge auf dem physischen Bus.
 
 Die Auswahl der Intensivdauer führte weiterhin zu keinem identifizierten
 Minuten-Schreibwert; siehe [Intensivlüftungsversuche](INTENSIVLUEFTUNG_BEOBACHTUNGEN.md).
+Eine erneute Prüfung der Exporte (13)–(16) ohne Header- oder Datenpunkt-Auswahlliste
+bestätigt diesen Stand: sämtliche 130.482 Bytes wurden strukturell erfasst,
+aber keine zusätzliche Dauerübertragung zugeordnet. Der nächste gezielte
+Versuch erfasst das automatische Ende statt eines weiteren manuellen Ein/Aus.
 
 ## Bedeutung und Grenzen eines ACKs
 
@@ -94,3 +98,19 @@ löst diese Fragen nicht. Siehe [Entwicklungsplan](ENTWICKLUNGSPLAN.md) und
 
 Das Audit besitzt keinen Netzwerkzugriff und keinen Sender. Die Integration
 bleibt passiv; es wurden keine Schreibtelegramme an die Anlage gesendet.
+
+## Präzisierung durch das automatische Ende in Export (18)
+
+Bei weiterhin angezeigtem Kühlbetrieb und BDE-Luftstufe 4 schreibt die Panel-Seite
+nach Ablauf der Intensivlüftung 0x01F8 = 0 und anschließend 0x00E1 = 3.
+Controllerstatus und hohe Ist-Drehzahlen bleiben davon unabhängig.
+Die ursprüngliche Bezeichnung „effektive Luftstufe“ war deshalb zu weitgehend:
+0x00E1 bildet die **angeforderte Panel-Luftstufe** ab. Im Offline-Audit lautet
+der Berichtsname jetzt `panel_requested_fan_level`; der HA-Schlüssel `fan_level`
+und seine Werte werden dadurch nicht verändert. Die Tabelle oben behält ihren
+historischen Stichprobenumfang (1)–(16).
+
+In Export (18) sind alle 22 Luftstufen-SETs und 21 Bitfeld-SETs mit zeitlich
+zugeordneten ACKs erfasst, einschließlich der Änderungen beim automatischen Ende.
+Details und Zeitvergleich mit Export (17):
+[automatisches Ende unter Kühlung](INTENSIVLUEFTUNG_BEOBACHTUNGEN.md#automatisches-ende-bei-weiterlaufender-kühlung-export-18).

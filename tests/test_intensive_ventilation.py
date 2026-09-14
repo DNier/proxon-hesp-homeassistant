@@ -41,6 +41,30 @@ def test_other_bits_do_not_hide_intensive_ventilation():
     assert Decoder().feed(combined)[0].value is True
 
 
+def test_recorded_automatic_end_during_cooling_keeps_request_and_rpm_separate():
+    # Capture (18): BDE display stays at 4, but its HESP request returns to 3.
+    # Actual fan speeds stay high; neither is a substitute for the intensive bit.
+    fan_request = bytes.fromhex("118000e1000000040300dba6")
+    actual_rpm = bytes.fromhex("224000c9000000101c92174535771e452f1f")
+    controller_flags = bytes.fromhex("2240000802000008221500806ff9")
+    data = ON + OFF + fan_request + actual_rpm + controller_flags
+    for chunk_size in (1, 7, len(data)):
+        decoder = Decoder()
+        received = []
+        for offset in range(0, len(data), chunk_size):
+            received.extend(decoder.feed(data[offset : offset + chunk_size]))
+        assert [r.value for r in received if r.key == "intensive_ventilation"] == [
+            True,
+            False,
+        ]
+        values = {r.key: r.value for r in received}
+        assert values["fan_level"] == 3
+        assert values["controller_fan_level"] == 4
+        assert values["fan_supply_rpm"] == pytest.approx(2425.1318359375)
+        assert values["fan_extract_rpm"] == pytest.approx(2535.450439453125)
+        assert decoder.stats.checksum_rejected == 0
+
+
 def test_wrong_source_length_and_checksum_cannot_update_status():
     wrong_frames = [
         checked_frame(bytes.fromhex("224000") + ON[3:-2]),

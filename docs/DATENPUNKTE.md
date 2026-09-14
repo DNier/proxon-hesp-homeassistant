@@ -2,7 +2,15 @@
 
 Geltungsbereich: [lokale Referenzanlage und Hardware-/Ausstattungsvarianten](ANLAGENPROFIL.md).
 Die folgenden Abschnitte halten die Entwicklung ab Version 0.2.0 fest;
-der aktuelle Abdeckungsstand steht am Ende im Abschnitt zu 0.5.0.
+der aktuelle Abdeckungsstand steht am Ende im Abschnitt zu 0.6.0.
+Nach Veröffentlichung von 0.5.0 bestätigte der Betreiber die Übereinstimmung
+der drei neuen Werte mit dem BDE. Die separate Intensivlüftungsdauer bleibt
+auch nach erneuter vollständiger Auswertung der Exporte (13)–(16) ungeklärt;
+siehe [Dauerprüfung und nächster Versuch](INTENSIVLUEFTUNG_BEOBACHTUNGEN.md#erneute-vollständige-dauerprüfung-nach-050).
+Der anschließende Versuch (17)/(18) bestätigt das automatische Ende nach etwa
+30 Minuten bei weiterlaufender Kühlung. Er präzisiert 0x00E1 als angeforderte
+Panel-Luftstufe: nach Ablauf Wert 3, während die BDE-Hauptanzeige 4 anzeigt.
+Details: [automatisches Ende](INTENSIVLUEFTUNG_BEOBACHTUNGEN.md#automatisches-ende-bei-weiterlaufender-kühlung-export-18).
 
 Grundlage: Markus Mauchs Datenpunktreferenz (abgerufen am 13.09.2026) und
 vorhandener 30-Sekunden-Mitschnitt der LT-ZIM-V1.6/PTC-4×-V1.2-Anlage.
@@ -29,7 +37,7 @@ Längen akzeptiert. Panel-SETs behalten Header 11 80 00. Insbesondere wird eine
 Antwort von Node 0x41 auf DP 0194 nicht als Zulufttemperatur interpretiert.
 Es erfolgen weder Abfragen noch andere Schreibzugriffe.
 
-## Noch nicht als Sensor ausgegeben
+## Noch nicht als Sensor ausgegeben (historischer Stand 0.2.0)
 
 | Gruppe | Grund / nächster Nachweis |
 |---|---|
@@ -128,3 +136,19 @@ identische Ergebnisse, ohne abgewiesene Prüfsummen. Quellen und BDE-Abgleiche:
 Version, Lockdatei und Release Notes gehören zum Release 0.5.0.
 Der abschließende BDE-Abgleich erfolgt nach HACS-Installation und HA-Neustart.
 Keine aktiven Abfragen oder Schreibbefehle wurden ergänzt.
+
+## Erweiterung 0.6.0: Lüfterdiagnosen
+
+| Datenpunkt | Entität | Begrenzung |
+| --- | --- | --- |
+| Controller 0x0208, 4 Bytes uint32 LE | Luftstufe laut Steuerung | Nur acht vollständig beobachtete Statuswörter; übrige Wörter werden nicht als Stufe interpretiert |
+| Controller 0x00D7, 8 Bytes, zwei float32 LE | Zuluft-/Abluft-Stellwert (roh) | Je Kanal endlich, 0–10000; keine Einheit, keine Zieldrehzahl oder gemessene Spannung |
+
+Alle drei sind standardmäßig deaktivierte Diagnose-Sensoren ohne Statistikklasse.
+IDs bestehender Sensoren bleiben erhalten. Der Panel-Wert heißt jetzt
+„Angeforderte Luftstufe“, die zusätzliche Controller-Stufe ist davon unabhängig.
+Nach Intensivende bei Kühlung ist die Kombination Anforderung 3 / Steuerung 4
+belegt. Ungültige Werte erneuern die Frische nicht; 30 Sekunden ohne gültiges
+Update oder Verbindungsabbruch führen zu unavailable, nicht 0/Aus.
+Belegumfang, genaue Statuswörter und Grenzen:
+[SD-Karten-Abgleich](SD_KARTEN_ABGLEICH.md).
