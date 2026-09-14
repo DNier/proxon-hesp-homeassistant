@@ -7,7 +7,7 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.7.0 development preview
+## Status: 0.7.1 development preview
 
 An installable **passive-by-default** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
@@ -135,7 +135,7 @@ See [SD and capture evidence](docs/SD_KARTEN_ABGLEICH.md).
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.7.0 is passive by default and includes separately confirmed experimental
+Version 0.7.1 is passive by default and includes separately confirmed experimental
 test actions. Installing or restarting does not initiate a write.
 
 [![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)

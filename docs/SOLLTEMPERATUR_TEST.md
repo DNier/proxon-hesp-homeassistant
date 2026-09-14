@@ -41,7 +41,7 @@ das BDE durch häufigeres Senden zu überstimmen.
 
 ## Installation und Durchführung
 
-Zuerst in HACS **PROXON HESP → Aktualisieren / Erneut herunterladen → 0.7.0**
+Zuerst in HACS **PROXON HESP → Aktualisieren / Erneut herunterladen → 0.7.1**
 auswählen und Home Assistant neu starten. Die bestehenden Entitäten bleiben
 erhalten. Die zwei Testaktionen erscheinen unter Entwicklerwerkzeuge → Aktionen.
 
