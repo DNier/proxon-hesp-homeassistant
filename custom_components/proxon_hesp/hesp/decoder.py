@@ -107,6 +107,10 @@ class Decoder:
                 value = self._value(key, frame[8:-2])
                 if value is not None:
                     readings.append(Reading(key, value))
+                    if key == "raw_0330":
+                        clock = decode_clock(frame[8:-2])
+                        if clock is not None:
+                            readings.append(Reading("device_clock", clock))
                     self.stats.accepted += 1
                 else:
                     self.stats.value_rejected += 1
@@ -132,3 +136,14 @@ class Decoder:
         value = struct.unpack("<f", payload)[0]
         low, high = (15, 25) if key == "target_temperature" else (-20, 60)
         return value if math.isfinite(value) and low <= value <= high else None
+
+
+def decode_clock(payload: bytes) -> str | None:
+    """Observed packed local clock; no date or timezone is inferred."""
+    if len(payload) != 4:
+        return None
+    value = int.from_bytes(payload, "little")
+    hour, minute, second = value & 31, (value >> 5) & 63, (value >> 11) & 63
+    if value >> 17 or hour > 23 or minute > 59 or second > 59:
+        return None
+    return f"{hour:02}:{minute:02}:{second:02}"

@@ -142,6 +142,9 @@
       },
       "raw_051d": {
         "name": "DP 0x051D (Hex)"
+      },
+      "device_clock": {
+        "name": "Device clock (experimental)"
       }
     },
     "button": {

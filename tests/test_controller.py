@@ -19,6 +19,7 @@ def test_recorded_controller_values_and_every_split():
     stream = b"".join(FRAMES.values())
     expected = {
         "filter_days": 114,
+        "device_clock": "00:02:16",
         "uptime": 35831810,
         "counter_02d0": 42236,
         "counter_02d1": 9607,
@@ -62,3 +63,20 @@ def test_unverified_arrays_and_bypass_do_not_publish(dp):
 def test_unavailable_unsigned_sentinel():
     assert Decoder._value("filter_days", b"\xff" * 4) is None
     assert Decoder._value("uptime", bytes(4)) == 0
+
+
+def test_recorded_clock_and_corruption():
+    frame = bytes.fromhex("2240003003000008d6fc0000d2f8")
+    for split in range(len(frame) + 1):
+        decoder = Decoder()
+        values = decoder.feed(frame[:split]) + decoder.feed(frame[split:])
+        assert {r.key: r.value for r in values}["device_clock"] == "22:38:31"
+    damaged = frame[:-1] + bytes([frame[-1] ^ 1])
+    assert Decoder().feed(damaged) == []
+
+
+@pytest.mark.parametrize("value", [24, 60 << 5, 60 << 11, 1 << 17])
+def test_invalid_clock_fields(value):
+    from custom_components.proxon_hesp.hesp.decoder import decode_clock
+
+    assert decode_clock(value.to_bytes(4, "little")) is None

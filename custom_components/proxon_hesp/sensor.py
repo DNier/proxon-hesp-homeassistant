@@ -16,6 +16,13 @@ from .const import DOMAIN
 from .hesp.decoder import MODES, RAW_POINTS
 
 DESCRIPTIONS = (
+    SensorEntityDescription(
+        key="device_clock",
+        translation_key="device_clock",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:clock-outline",
+    ),
     *(
         SensorEntityDescription(
             key=f"raw_{dp:04x}",

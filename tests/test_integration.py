@@ -56,6 +56,11 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         raw_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_raw_0116")
         assert registry.async_get(raw_id).disabled_by is not None
         assert hass.states.get(raw_id) is None
+        clock_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, "stable-unit_device_clock"
+        )
+        assert registry.async_get(clock_id).disabled_by is not None
+        assert hass.states.get(clock_id) is None
         hours_id = registry.async_get_entity_id(
             "sensor", DOMAIN, "stable-unit_counter_02d4"
         )
@@ -66,7 +71,7 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 35
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 36
         runtime = entry.runtime_data
         start_id = registry.async_get_entity_id(
             "button", DOMAIN, "stable-unit_capture_start"
