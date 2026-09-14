@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="custom_components/proxon_hesp/brand/logo.png" alt="PROXON HESP" width="160" height="160">
+  <img src="https://raw.githubusercontent.com/DNier/proxon-hesp-homeassistant/main/custom_components/proxon_hesp/brand/logo.png" alt="PROXON HESP" width="160" height="160">
 </p>
 
 # PROXON HESP for Home Assistant
@@ -137,6 +137,10 @@ See [SD and capture evidence](docs/SD_KARTEN_ABGLEICH.md).
 This public repository can be added to HACS as a custom integration repository.
 Version 0.7.0 is passive by default and includes separately confirmed experimental
 test actions. Installing or restarting does not initiate a write.
+
+[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
+
+Use the button above to open or add this repository in HACS, or follow these steps:
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
