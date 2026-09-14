@@ -11,6 +11,7 @@ import struct
 from bisect import bisect_left
 from collections import Counter
 from pathlib import Path
+from statistics import median
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
 
@@ -68,6 +69,7 @@ def audit(chunks: list[dict], ack_window_ms: int = 1000) -> dict:
     last_time = {}
     delays = {}
     intervals = {}
+    repeat_intervals = {}
     frame_counts = Counter()
     pos = parsed = 0
     malformed_selected = 0
@@ -127,6 +129,10 @@ def audit(chunks: list[dict], ack_window_ms: int = 1000) -> dict:
             item["sets"] += 1
             if dp in last_time:
                 intervals.setdefault(dp, []).append(timestamp - last_time[dp])
+                if item["changes"][-1]["payload_hex"] == raw:
+                    repeat_intervals.setdefault(dp, []).append(
+                        timestamp - last_time[dp]
+                    )
             last_time[dp] = timestamp
             if not item["changes"] or item["changes"][-1]["payload_hex"] != raw:
                 if item["changes"]:
@@ -168,6 +174,18 @@ def audit(chunks: list[dict], ack_window_ms: int = 1000) -> dict:
             ("set_interval_ms", intervals.get(dp, [])),
         ):
             item[key] = {"min": min(values), "max": max(values)} if values else None
+        # Exclude changes; never bridge separate captures or a changed value.
+        repeats = repeat_intervals.get(dp, [])
+        item["unchanged_set_interval_ms"] = (
+            {
+                "count": len(repeats),
+                "min": min(repeats),
+                "median": median(repeats),
+                "max": max(repeats),
+            }
+            if repeats
+            else None
+        )
     return {
         "bytes": len(data),
         "parsed_bytes": parsed,

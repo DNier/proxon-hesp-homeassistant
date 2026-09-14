@@ -1,5 +1,9 @@
 # Beobachtete BDE-Schreibtelegramme und ACKs
 
+Aktuelle Ergänzung nach 0.6.0: [BDE-Parallelbetrieb](BDE_PARALLELBETRIEB.md)
+mit allen 18 Aufzeichnungen, gemessenen Wiederholungsintervallen und
+Quellenvergleich. Die folgenden Abschnitte bewahren ihren historischen Umfang.
+
 Stand: 14.09.2026. Geltungsbereich: [lokale Referenzanlage](ANLAGENPROFIL.md).
 Offline ausgewertet wurden die privaten, nummerierten Diagnoseexporte (1)–(16).
 Die zusätzlich anders benannte Datei `2.json` gehört nicht zu dieser Stichprobe.

@@ -47,6 +47,41 @@ def test_recorded_sequence_and_repeat_vs_change():
     assert [c["value"] for c in p["changes"]] == [0, 64, 0]
     assert p["ack_capture_delta_ms"] == {"min": 18, "max": 18}
     assert p["set_interval_ms"] == {"min": 5000, "max": 5000}
+    assert p["unchanged_set_interval_ms"] == {
+        "count": 1,
+        "min": 5000,
+        "median": 5000,
+        "max": 5000,
+    }
+
+
+def test_repeat_timing_excludes_changes_and_other_data_points():
+    result = audit(
+        chunks(
+            (0, OFF),
+            (10, ACK),
+            (5000, OFF),
+            (5010, ACK),
+            (5200, ON),
+            (5210, ACK),
+            (8000, TARGET),
+            (8010, TARGET_ACK),
+            (10400, ON),
+            (10410, ACK),
+            (11000, OFF),
+            (11010, ACK),
+        )
+    )
+    assert point(result)["unchanged_set_interval_ms"] == {
+        "count": 2,
+        "min": 5000,
+        "median": 5100,
+        "max": 5200,
+    }
+    assert result["points"]["0x0227"]["unchanged_set_interval_ms"] is None
+    assert (
+        point(audit(chunks((0, OFF), (10, ACK))))["unchanged_set_interval_ms"] is None
+    )
 
 
 def test_each_chunk_split_preserves_frames():

@@ -1,4 +1,4 @@
-"""Receive-only TCP session. No writes, polling requests or gateway changes."""
+"""TCP receiver; optional writer access for the explicitly armed experiment."""
 
 import asyncio
 from collections.abc import AsyncIterator, Callable
@@ -12,13 +12,21 @@ class NoSupportedData(Exception):
 
 
 @asynccontextmanager
-async def open_receiver(host: str, port: int):
+async def open_receiver(
+    host: str,
+    port: int,
+    on_writer: Callable[[asyncio.StreamWriter | None], None] | None = None,
+):
     """Close the stream on cancellation, setup failure, EOF and normal exit."""
     async with asyncio.timeout(5):
         reader, writer = await asyncio.open_connection(host, port)
     try:
+        if on_writer is not None:
+            on_writer(writer)
         yield reader
     finally:
+        if on_writer is not None:
+            on_writer(None)
         writer.close()
         with suppress(OSError, TimeoutError):
             async with asyncio.timeout(2):

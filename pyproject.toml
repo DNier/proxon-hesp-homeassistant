@@ -1,7 +1,7 @@
 [project]
 name = "proxon-hesp-homeassistant"
-version = "0.6.0"
-description = "Read-only PROXON HESP custom integration for Home Assistant"
+version = "0.7.0"
+description = "PROXON HESP telemetry and supervised test actions for Home Assistant"
 requires-python = ">=3.14.2"
 
 [dependency-groups]

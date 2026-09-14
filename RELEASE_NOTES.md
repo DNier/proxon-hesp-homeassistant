@@ -1,38 +1,48 @@
-## 0.6.0 — Separate requested and controller fan levels
+## 0.7.0 — Supervised, one-shot temperature experiment
 
-The BDE can request level 3 while its display and controller remain at level 4
-for cooling after timed intensive ventilation ends. This release makes those
-states distinguishable without adding bus commands.
+This development preview adds two admin-only actions for a supervised test:
 
-Three new sensors are disabled by default under the existing device's diagnostics:
+- `proxon_hesp.prepare_target_temperature_test` confirms the current BDE setpoint,
+  starts a separate 120-second recording and returns a short-lived confirmation token.
+  Preparation sends nothing.
+- `proxon_hesp.send_target_temperature_test` uses that token to attempt exactly
+  one temperature SET on the existing gateway connection, without retries.
 
-- **Controller fan level** / **Luftstufe laut Steuerung** reads controller DP
-  0x0208, limited to eight recorded status words covering levels 1–4.
-- **Supply fan control (raw)** / **Zuluft-Stellwert (roh)** and
-  **Extract fan control (raw)** / **Abluft-Stellwert (roh)** expose the two values
-  at 0x00D7. These have no unit or statistics class. Historical SD metadata
-  suggests millivolts, but they are not verified voltage measurements or rpm.
+The experiment is restricted to Comfort mode, fresh received state, a change of
+**−0.5 or +0.5 °C**, and the locally observed **18–30 °C** range. Wait at least
+10 seconds after preparation and send before 60 seconds have elapsed.
+State or connection changes invalidate the preparation. A failed, interrupted
+or timed-out send still consumes the single attempt until integration reload.
 
-The existing panel sensor is now named **Requested fan level** /
-**Angeforderte Luftstufe**. Existing entity IDs, custom names and enabled/disabled
-choices are preserved. The intensive-ventilation binary sensor remains separate.
+**Installation, restart, reconnect and normal sensor operation remain passive.**
+No climate entity, arbitrary bus writes, periodic override or automatic restoration
+is introduced. Restore the original setpoint at the BDE if needed.
 
-Unknown controller status words and invalid control values do not refresh the
-corresponding sensor. Each last valid value expires after 30 seconds without a
-valid update; disconnect makes it unavailable. Control channels are validated
-independently as finite values within 0–10000. Other status bits and special
-operating states are not inferred. All reception remains passive.
+### What remains unverified
 
-An offline capture-inventory tool and expanded evidence documentation are included.
-Private SD files, videos and complete diagnostic captures are not part of the release.
+No live write test has been performed with this function. TCP flush success
+does not establish controller acceptance or BDE synchronization. Parallel RS485
+transmission can collide with existing traffic, and the BDE/PTC can reassert its
+previous value. Observe the physical BDE during the experiment. This is not a
+production temperature-control feature.
 
-Validation: 148 tests, lint and formatting checks; replay of all 18 recorded
-captures using original chunks and multiple stream boundaries produced identical
-results with no rejected checksums. The new diagnostic displays still need a
-live comparison after installation.
+Diagnostics include the transmitted-frame attempt and separate received traffic;
+the confirmation token is omitted from integration diagnostics. Existing capture
+Stop/Clear buttons also stop/erase the test recording and disarm a pending test.
+Clearing does not grant another write attempt. Entity IDs and user settings remain.
 
-### Update
+Offline SET/ACK analysis now reports intervals between unchanged repeated commands.
+The evidence and test procedure are included; private captures and SD files are not.
 
-Update to 0.6.0 through HACS and restart Home Assistant. Open the PROXON device
-and enable the three new diagnostic sensors individually if you want to compare
-them with the BDE. No wiring change or USB cable is required.
+### Installation and test
+
+1. In HACS, update or redownload **PROXON HESP 0.7.0** and restart Home Assistant.
+2. Open **Developer tools → Actions** as an administrator.
+3. Follow the [German step-by-step test guide](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.7.0/docs/SOLLTEMPERATUR_TEST.md),
+   starting with preparation and its response data. Do not create an automation.
+4. Observe the BDE, then download diagnostics after the recording finishes.
+
+Validation: **180 tests passed**, including real Home Assistant service setup,
+permissions, one-attempt concurrency, stale state, disconnects and ambiguous send
+failures using fake streams only. Ruff lint/format and service selectors/translations
+were checked. These software checks do not verify behavior on the physical bus.

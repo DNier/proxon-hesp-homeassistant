@@ -4,6 +4,10 @@ Stand: 13. September 2026. Zielplan; die erste lesende Entwicklungsfassung ist i
 Historischer Ausgangsstand; das am 14.09.2026 anhand der Serviceberichte ergänzte
 [Anlagenprofil](ANLAGENPROFIL.md) beschreibt Hardware, Firmware und Variantenabgrenzung.
 Aktuelle Datenpunktabdeckung: siehe DATENPUNKTE.md.
+Version 0.7.0 ergänzt den ausdrücklich angeforderten
+[einmaligen Solltemperatur-Test](SOLLTEMPERATUR_TEST.md).
+Eine Live-Schreibprobe steht weiterhin aus. Dies ersetzt
+nicht die unten beschriebenen Voraussetzungen für eine dauerhafte Steuerung.
 
 ## 1. Ziel und Umfang
 
@@ -176,6 +180,12 @@ unknown/unavailable und nicht 0. Wiederhergestellte Werte bleiben veraltet, bis
 aktuelle Busdaten vorliegen. Normale Änderungen nicht als Logspam ausgeben.
 
 ## 7. Steuerung: größtes offenes Arbeitspaket
+
+Aktualisierung nach 0.6.0: [Vorprüfung BDE-Parallelbetrieb](BDE_PARALLELBETRIEB.md).
+Alle 18 Mitschnitte bestätigen 1.478 zeitlich zugeordnete SET-/ACK-Paare und
+typische Wiederholungen um fünf Sekunden. Ein kooperativer Schreibweg mit
+BDE-Synchronisierung ist weiterhin offen; die bestehenden Upstream-Nachfragen
+sind beim Abruf am 14.09.2026 noch unbeantwortet.
 
 Die [Offline-Auswertung der BDE-Schreibtelegramme](SCHREIBBEFEHLE_BEOBACHTUNGEN.md)
 belegt inzwischen 1.300 SETs mit zeitlich passenden ACKs für vier ausgewählte

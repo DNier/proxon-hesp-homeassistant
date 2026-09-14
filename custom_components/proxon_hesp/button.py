@@ -38,3 +38,5 @@ class CaptureButton(ButtonEntity):
     async def async_press(self):
         action = self.entity_description.key.removeprefix("capture_")
         getattr(self.runtime.capture, action)()
+        if action in ("stop", "clear"):
+            self.runtime.temperature_test.stop_capture(clear=action == "clear")

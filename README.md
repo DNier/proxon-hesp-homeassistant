@@ -7,11 +7,17 @@
 Project foundation for a Home Assistant custom integration for the PROXON
 P-series HESP bus via a transparent RS485-to-TCP gateway.
 
-## Status: 0.6.0 development preview
+## Status: 0.7.0 development preview
 
-An installable **receive-only** custom integration for Home Assistant 2026.9+.
+An installable **passive-by-default** custom integration for Home Assistant 2026.9+.
 Development tests use Home Assistant 2026.9.2 / Python 3.14. This is a
 development preview validated against recordings from the supported installation.
+
+**New in 0.7.0:** an explicitly armed, admin-only, one-shot temperature
+experiment for a supervised test. Normal setup,
+reconnect and sensor operation still send nothing. This is not a production control
+or verified BDE synchronization. See the [test procedure](docs/SOLLTEMPERATUR_TEST.md).
+Version 0.7.0 contains these actions; their effect on real hardware remains untested.
 
 Supported profile: the observed LT-ZIM V1.6 / PTC 4× V1.2 installation, with
 four BDE values plus controller telemetry received from its HESP bus.
@@ -129,7 +135,8 @@ See [SD and capture evidence](docs/SD_KARTEN_ABGLEICH.md).
 ## HACS installation
 
 This public repository can be added to HACS as a custom integration repository.
-Version 0.6.0 is a receive-only development preview.
+Version 0.7.0 is passive by default and includes separately confirmed experimental
+test actions. Installing or restarting does not initiate a write.
 
 1. Open **HACS → ⋮ → Custom repositories**.
 2. Add `https://github.com/DNier/proxon-hesp-homeassistant`, category **Integration**.
