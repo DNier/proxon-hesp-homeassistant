@@ -12,13 +12,25 @@ from pathlib import Path
 from custom_components.proxon_hesp.hesp.checksum import checksum
 
 
-def inventory(chunks: list[dict]) -> dict:
+def load_capture(path: Path) -> dict:
+    """Read HA diagnostics, a capture wrapper or a bare capture."""
+    data = json.loads(path.read_text())
+    return data.get("data", data).get("capture", data)
+
+
+def inventory(
+    chunks: list[dict], *, start_ms: int = 0, end_ms: int | None = None
+) -> dict:
     """Group by complete three-byte identity, DP and payload size.
 
     Uses the observed even nibble-length encoding, reserved zero bytes and
     checksum; no assumptions about unknown header identities or payload types.
     Times refer to the chunk completing a frame, not its wire transmission.
     """
+    if type(start_ms) is not int or start_ms < 0:
+        raise ValueError("start_ms must be a nonnegative integer")
+    if end_ms is not None and (type(end_ms) is not int or end_ms <= start_ms):
+        raise ValueError("end_ms must be an integer greater than start_ms")
     data = bytearray()
     ends, times = [], []
     for chunk in chunks:
@@ -49,8 +61,10 @@ def inventory(chunks: list[dict]) -> dict:
             continue
         pos += length
         parsed += length
-        frames += 1
         timestamp = times[bisect_left(ends, pos)]
+        if timestamp < start_ms or (end_ms is not None and timestamp >= end_ms):
+            continue
+        frames += 1
         identity = header[:3].hex()
         dp = int.from_bytes(header[3:5], "little")
         key = f"{identity}/0x{dp:04X}/{size}"
@@ -61,19 +75,27 @@ def inventory(chunks: list[dict]) -> dict:
                 "dp": f"0x{dp:04X}",
                 "payload_bytes": size,
                 "count": 0,
+                "first_seen_ms": timestamp,
                 "last_seen_ms": timestamp,
+                "payload_counts": {},
                 "values": [],
                 "changes": [],
             },
         )
         raw = frame[8:-2].hex()
         item["count"] += 1
+        item["payload_counts"][raw] = item["payload_counts"].get(raw, 0) + 1
         item["last_seen_ms"] = timestamp
         if raw not in item["values"]:
             item["values"].append(raw)
         if not item["changes"] or item["changes"][-1]["payload_hex"] != raw:
             item["changes"].append({"elapsed_ms": timestamp, "payload_hex": raw})
     return {
+        "window": {"start_ms": start_ms, "end_ms": end_ms},
+        "byte_coverage_scope": "whole_capture",
+        "max_chunk_gap_ms": max(
+            (b - a for a, b in zip(times, times[1:], strict=False)), default=0
+        ),
         "bytes": len(data),
         "parsed_bytes": parsed,
         "unparsed_bytes": len(data) - parsed,
@@ -90,7 +112,7 @@ def main():
     args = parser.parse_args()
     results = []
     for index, path in enumerate(args.captures, 1):
-        capture = json.loads(path.read_text())["data"]["capture"]
+        capture = load_capture(path)
         results.append({"capture_index": index, **inventory(capture["chunks"])})
     args.output.write_text(json.dumps(results, indent=2) + "\n")
 

@@ -1,6 +1,6 @@
 # HESP checksum: reconstructed byte recurrence
 
-Status: implemented and tested locally, 14 September 2026. No device writes.
+Implemented checksum derivation for the supported HESP message shapes.
 
 ## Algorithm
 
@@ -62,7 +62,8 @@ clock/date raw values, fan responses and temperature blocks. Expected checksums
 are copied from the wire. Every individual bit of each example, including the
 checksum bytes, is flipped and must fail verification. Existing decoder tests
 continue to cover stream splitting, corruption recovery, value bounds and nodes.
-The entire local test suite passes: 67 tests.
+The test suite includes these checks; see [contributing](../CONTRIBUTING.md)
+for the current verification commands.
 
 ## Production boundary
 
