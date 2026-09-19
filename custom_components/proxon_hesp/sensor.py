@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
+from .capture import STATUSES
 from .const import DOMAIN
 from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
 
@@ -129,7 +130,32 @@ async def async_setup_entry(
     entry: ProxonConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    async_add_entities(ProxonSensor(entry, description) for description in DESCRIPTIONS)
+    async_add_entities(
+        [
+            *(ProxonSensor(entry, description) for description in DESCRIPTIONS),
+            ProxonDiagnosticSensor(
+                entry,
+                SensorEntityDescription(
+                    key="capture_status",
+                    translation_key="capture_status",
+                    device_class=SensorDeviceClass.ENUM,
+                    options=list(STATUSES),
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    icon="mdi:record-rec",
+                ),
+            ),
+            ProxonDiagnosticSensor(
+                entry,
+                SensorEntityDescription(
+                    key="last_valid_received",
+                    translation_key="last_valid_received",
+                    device_class=SensorDeviceClass.TIMESTAMP,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
+                ),
+            ),
+        ]
+    )
 
 
 class ProxonSensor(SensorEntity):
@@ -158,3 +184,26 @@ class ProxonSensor(SensorEntity):
     def native_value(self):
         reading = self.runtime.get(self.entity_description.key)
         return reading.value if reading else None
+
+
+class ProxonDiagnosticSensor(ProxonSensor):
+    """Local diagnostics remain readable without fresh telemetry."""
+
+    async def async_added_to_hass(self) -> None:
+        self.async_on_remove(self.runtime.listen_diagnostics(self.async_write_ha_state))
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self):
+        if self.entity_description.key == "capture_status":
+            return self.runtime.capture.reason
+        return self.runtime.last_valid_received
+
+    @property
+    def extra_state_attributes(self):
+        if self.entity_description.key == "capture_status":
+            return self.runtime.capture.summary()
+        return None

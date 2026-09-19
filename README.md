@@ -12,9 +12,16 @@ The integration receives existing bus traffic. It does not send HESP requests,
 change settings or control the equipment. The existing controller continues to
 operate the system.
 
+## New in 0.9.0
+
+Capture status now shows recording progress and the stopping reason. Recording
+duration is configurable from 30 to 600 seconds (default 120), with unchanged
+memory limits. Optional diagnostics report TCP connectivity and the last valid
+supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
+
 ## Compatibility
 
-Version **0.8.0** requires **Home Assistant 2026.9 or later**. Development tests
+Version **0.9.0** requires **Home Assistant 2026.9 or later**. Development tests
 use Home Assistant 2026.9.2 and Python 3.14.
 
 The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
@@ -77,6 +84,13 @@ change the host, port or name while preserving entity identity and history.
 Deleting and recreating the entry creates a new identity. Different host aliases
 for the same gateway cannot currently be detected as duplicates.
 
+### Upgrading from 0.8.0
+
+Download any recording you need, update to 0.9.0 through HACS and restart Home
+Assistant. Keep the existing integration entry: all 54 previous entity identities
+and user settings remain. Three diagnostics are added, giving 57 entities in total.
+The recording limit stays at 120 seconds until changed in the integration options.
+
 ### Upgrading from 0.7.x
 
 Download recordings you need before restarting; they exist only in memory.
@@ -96,7 +110,8 @@ If individual values become unavailable, the stream may lack supported valid
 updates for those data points. TCP connectivity alone does not prove fresh data.
 
 Download diagnostics from the integration to inspect counters and freshness.
-For a targeted investigation, use the device's **Start capture (2 minutes)** button,
+For a targeted investigation, use the device's **Start capture** button
+(**Start capture (2 minutes)** in 0.8.0),
 then **Stop capture** and download diagnostics. Recordings contain raw measurements
 and potentially device information; review them before sharing.
 

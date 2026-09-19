@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
@@ -73,3 +73,24 @@ async def test_reconfigure_preserves_identity_and_skips_same_endpoint_probe(hass
     assert entry.unique_id == "stable"
     assert entry.title == "New"
     probe.assert_not_called()
+
+
+async def test_capture_options_default_bounds_and_no_probe(hass):
+    entry = MockConfigEntry(domain=DOMAIN, data=INPUT, unique_id="options-unit")
+    entry.add_to_hass(hass)
+    with patch("custom_components.proxon_hesp.config_flow.probe") as probe:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["data_schema"]({}) == {"capture_duration": 120}
+        for invalid in (29, 601, 30.5):
+            with pytest.raises(InvalidData):
+                await hass.config_entries.options.async_configure(
+                    result["flow_id"], {"capture_duration": invalid}
+                )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"capture_duration": 600}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert entry.options["capture_duration"] == 600
+        assert entry.unique_id == "options-unit"
+        probe.assert_not_called()

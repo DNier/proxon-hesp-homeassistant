@@ -193,11 +193,58 @@
       },
       "fan_extract_control": {
         "name": "Abluft-Stellwert (roh)"
+      },
+      "capture_status": {
+        "name": "Aufnahmestatus",
+        "state": {
+          "idle": "Bereit",
+          "recording": "Aufnahme läuft",
+          "manual": "Manuell beendet",
+          "duration_limit": "Zeitlimit erreicht",
+          "byte_limit": "Bytelimit erreicht",
+          "chunk_limit": "Chunklimit erreicht",
+          "disconnected": "Verbindung unterbrochen"
+        },
+        "state_attributes": {
+          "started_utc": {
+            "name": "Startzeit"
+          },
+          "stopped_utc": {
+            "name": "Endzeit"
+          },
+          "status": {
+            "name": "Status"
+          },
+          "actual_duration_seconds": {
+            "name": "Tatsächliche Dauer (Sekunden)"
+          },
+          "bytes": {
+            "name": "Datenmenge (Bytes)"
+          },
+          "chunk_count": {
+            "name": "Empfangene Chunks"
+          },
+          "max_bytes": {
+            "name": "Maximale Bytes"
+          },
+          "max_chunks": {
+            "name": "Maximale Chunks"
+          },
+          "duration_seconds": {
+            "name": "Zeitlimit dieser Aufnahme (Sekunden)"
+          },
+          "configured_duration_seconds": {
+            "name": "Zeitlimit nächster Aufnahme (Sekunden)"
+          }
+        }
+      },
+      "last_valid_received": {
+        "name": "Letzter gültiger Datenempfang"
       }
     },
     "button": {
       "capture_start": {
-        "name": "Mitschnitt starten (2 Minuten)"
+        "name": "Aufnahme starten"
       },
       "capture_stop": {
         "name": "Mitschnitt stoppen"
@@ -212,7 +259,27 @@
       },
       "bypass_status": {
         "name": "Bypass-Schaltzustand"
+      },
+      "connection": {
+        "name": "Gateway-Verbindung"
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Aufnahmeoptionen",
+        "description": "Die Dauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
+        "data": {
+          "capture_duration": "Aufnahmedauer (Sekunden)"
+        },
+        "data_description": {
+          "capture_duration": "30–600 Sekunden; Standard: 120."
+        }
+      }
+    },
+    "error": {
+      "invalid_duration": "Eine ganze Zahl zwischen 30 und 600 eingeben."
     }
   }
 }

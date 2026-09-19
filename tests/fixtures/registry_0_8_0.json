@@ -1,0 +1,383 @@
+{
+  "source_commit": "5136418e5e67f4c3339bb9354a22c7bc807fe870",
+  "entries": [
+    {
+      "domain": "sensor",
+      "key": "controller_fan_level",
+      "entity_id": "sensor.existing_controller_fan_level",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "fan_supply_control",
+      "entity_id": "sensor.existing_fan_supply_control",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "fan_extract_control",
+      "entity_id": "sensor.existing_fan_extract_control",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_supply",
+      "entity_id": "sensor.existing_temperature_supply",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_extract",
+      "entity_id": "sensor.existing_temperature_extract",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_exhaust",
+      "entity_id": "sensor.existing_temperature_exhaust",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_fresh",
+      "entity_id": "sensor.existing_temperature_fresh",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_before_evaporator",
+      "entity_id": "sensor.existing_temperature_before_evaporator",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_evaporator",
+      "entity_id": "sensor.existing_temperature_evaporator",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_after_preheater",
+      "entity_id": "sensor.existing_temperature_after_preheater",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_before_condenser",
+      "entity_id": "sensor.existing_temperature_before_condenser",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_condenser",
+      "entity_id": "sensor.existing_temperature_condenser",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "temperature_compressor",
+      "entity_id": "sensor.existing_temperature_compressor",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "fan_supply_rpm",
+      "entity_id": "sensor.existing_fan_supply_rpm",
+      "enabled_default": true,
+      "unit": "rpm"
+    },
+    {
+      "domain": "sensor",
+      "key": "fan_extract_rpm",
+      "entity_id": "sensor.existing_fan_extract_rpm",
+      "enabled_default": true,
+      "unit": "rpm"
+    },
+    {
+      "domain": "sensor",
+      "key": "compressor_rpm",
+      "entity_id": "sensor.existing_compressor_rpm",
+      "enabled_default": true,
+      "unit": "rpm"
+    },
+    {
+      "domain": "sensor",
+      "key": "device_clock",
+      "entity_id": "sensor.existing_device_clock",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_051e",
+      "entity_id": "sensor.existing_raw_051e",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_006c",
+      "entity_id": "sensor.existing_raw_006c",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_00ee",
+      "entity_id": "sensor.existing_raw_00ee",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0168",
+      "entity_id": "sensor.existing_raw_0168",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0120",
+      "entity_id": "sensor.existing_raw_0120",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_01f5",
+      "entity_id": "sensor.existing_raw_01f5",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0110",
+      "entity_id": "sensor.existing_raw_0110",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0105",
+      "entity_id": "sensor.existing_raw_0105",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0115",
+      "entity_id": "sensor.existing_raw_0115",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_011c",
+      "entity_id": "sensor.existing_raw_011c",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0116",
+      "entity_id": "sensor.existing_raw_0116",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0206",
+      "entity_id": "sensor.existing_raw_0206",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0519",
+      "entity_id": "sensor.existing_raw_0519",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_051c",
+      "entity_id": "sensor.existing_raw_051c",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0330",
+      "entity_id": "sensor.existing_raw_0330",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_0123",
+      "entity_id": "sensor.existing_raw_0123",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_020f",
+      "entity_id": "sensor.existing_raw_020f",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "raw_051d",
+      "entity_id": "sensor.existing_raw_051d",
+      "enabled_default": false,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "room_temperature",
+      "entity_id": "sensor.existing_room_temperature",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "target_temperature",
+      "entity_id": "sensor.existing_target_temperature",
+      "enabled_default": true,
+      "unit": "\u00b0C"
+    },
+    {
+      "domain": "sensor",
+      "key": "fan_level",
+      "entity_id": "sensor.existing_fan_level",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "operating_mode",
+      "entity_id": "sensor.existing_operating_mode",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "filter_days",
+      "entity_id": "sensor.existing_filter_days",
+      "enabled_default": true,
+      "unit": "d"
+    },
+    {
+      "domain": "sensor",
+      "key": "uptime",
+      "entity_id": "sensor.existing_uptime",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d0",
+      "entity_id": "sensor.existing_counter_02d0",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d1",
+      "entity_id": "sensor.existing_counter_02d1",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d2",
+      "entity_id": "sensor.existing_counter_02d2",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d3",
+      "entity_id": "sensor.existing_counter_02d3",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d4",
+      "entity_id": "sensor.existing_counter_02d4",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d5",
+      "entity_id": "sensor.existing_counter_02d5",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d7",
+      "entity_id": "sensor.existing_counter_02d7",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "sensor",
+      "key": "counter_02d9",
+      "entity_id": "sensor.existing_counter_02d9",
+      "enabled_default": true,
+      "unit": "h"
+    },
+    {
+      "domain": "binary_sensor",
+      "key": "intensive_ventilation",
+      "entity_id": "binary_sensor.existing_intensive_ventilation",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "binary_sensor",
+      "key": "bypass_status",
+      "entity_id": "binary_sensor.existing_bypass_status",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "button",
+      "key": "capture_start",
+      "entity_id": "button.existing_capture_start",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "button",
+      "key": "capture_stop",
+      "entity_id": "button.existing_capture_stop",
+      "enabled_default": true,
+      "unit": null
+    },
+    {
+      "domain": "button",
+      "key": "capture_clear",
+      "entity_id": "button.existing_capture_clear",
+      "enabled_default": true,
+      "unit": null
+    }
+  ]
+}

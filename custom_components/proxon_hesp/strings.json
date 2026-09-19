@@ -193,11 +193,58 @@
       },
       "fan_extract_control": {
         "name": "Extract fan control (raw)"
+      },
+      "capture_status": {
+        "name": "Capture status",
+        "state": {
+          "idle": "Idle",
+          "recording": "Recording",
+          "manual": "Stopped manually",
+          "duration_limit": "Duration limit reached",
+          "byte_limit": "Byte limit reached",
+          "chunk_limit": "Chunk limit reached",
+          "disconnected": "Disconnected"
+        },
+        "state_attributes": {
+          "started_utc": {
+            "name": "Started at"
+          },
+          "stopped_utc": {
+            "name": "Stopped at"
+          },
+          "status": {
+            "name": "Status"
+          },
+          "actual_duration_seconds": {
+            "name": "Actual duration (seconds)"
+          },
+          "bytes": {
+            "name": "Data size (bytes)"
+          },
+          "chunk_count": {
+            "name": "Received chunks"
+          },
+          "max_bytes": {
+            "name": "Maximum bytes"
+          },
+          "max_chunks": {
+            "name": "Maximum chunks"
+          },
+          "duration_seconds": {
+            "name": "This recording limit (seconds)"
+          },
+          "configured_duration_seconds": {
+            "name": "Next recording limit (seconds)"
+          }
+        }
+      },
+      "last_valid_received": {
+        "name": "Last valid data received"
       }
     },
     "button": {
       "capture_start": {
-        "name": "Start capture (2 minutes)"
+        "name": "Start capture"
       },
       "capture_stop": {
         "name": "Stop capture"
@@ -212,7 +259,27 @@
       },
       "bypass_status": {
         "name": "Bypass switching state"
+      },
+      "connection": {
+        "name": "Gateway connection"
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Capture options",
+        "description": "Applies to the next recording. Running and saved recordings are preserved. Memory limits may end a recording earlier.",
+        "data": {
+          "capture_duration": "Capture duration (seconds)"
+        },
+        "data_description": {
+          "capture_duration": "30–600 seconds; default: 120."
+        }
+      }
+    },
+    "error": {
+      "invalid_duration": "Enter a whole number between 30 and 600."
     }
   }
 }

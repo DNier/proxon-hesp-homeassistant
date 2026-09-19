@@ -17,3 +17,8 @@ For the panel vectors, expected observations are fan level 3, Eco Summer (1),
 target 21 °C and room temperature approximately 22.62 °C. Display evidence and
 variant limitations are summarized in [data-point coverage](../../docs/DATA_POINTS.md).
 Tests do not transmit these frames to equipment.
+
+`registry_0_8_0.json` is a synthetic upgrade fixture, not a recording. Entity keys,
+default activation and units were extracted from the 0.8.0 release commit noted
+in the file. The `existing_*` entity IDs simulate previously registered IDs;
+no real Home Assistant registry or private identifiers are included.

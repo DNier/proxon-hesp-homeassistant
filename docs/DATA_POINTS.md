@@ -1,7 +1,10 @@
 # Data points and validation boundaries
 
-This table describes version 0.8.0. There are 49 sensors, two binary sensors and
-three passive-capture buttons. Hardware scope is documented in
+This table describes the data-point mappings retained from version 0.8.0.
+Version 0.9.0 adds capture status plus optional last-valid-data and connection
+diagnostics: 51 sensors, three binary sensors and three capture buttons,
+for 57 entities in total. Existing data-point mappings remain unchanged.
+See [capture diagnostics](DIAGNOSTICS.md). Hardware scope is documented in
 [compatibility](COMPATIBILITY.md).
 
 `P` means the three-byte identity `11 80 00`; `C` means `22 40 00`.

@@ -3,16 +3,30 @@
 import uuid
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_PROFILE, DEFAULT_PORT, DOMAIN, PROBE_TIMEOUT, PROFILE
+from .capture import DURATION, MAX_DURATION, MIN_DURATION, validate_duration
+from .const import (
+    CONF_CAPTURE_DURATION,
+    CONF_PROFILE,
+    DEFAULT_PORT,
+    DOMAIN,
+    PROBE_TIMEOUT,
+    PROFILE,
+)
 from .hesp.transport import NoSupportedData, probe
 
 
 class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry) -> ProxonOptionsFlow:
+        return ProxonOptionsFlow()
 
     def _schema(self, defaults: dict) -> vol.Schema:
         return vol.Schema(
@@ -73,3 +87,36 @@ class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reconfigure(self, user_input=None) -> ConfigFlowResult:
         return await self._step("reconfigure", user_input)
+
+
+class ProxonOptionsFlow(OptionsFlow):
+    """Configure recording limits without touching the gateway connection."""
+
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+        errors = {}
+        if user_input is not None:
+            try:
+                duration = validate_duration(user_input[CONF_CAPTURE_DURATION])
+            except ValueError, KeyError:
+                errors[CONF_CAPTURE_DURATION] = "invalid_duration"
+            else:
+                return self.async_create_entry(
+                    data={
+                        **self.config_entry.options,
+                        CONF_CAPTURE_DURATION: duration,
+                    }
+                )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CAPTURE_DURATION,
+                        default=self.config_entry.options.get(
+                            CONF_CAPTURE_DURATION, DURATION
+                        ),
+                    ): vol.All(int, vol.Range(min=MIN_DURATION, max=MAX_DURATION))
+                }
+            ),
+            errors=errors,
+        )

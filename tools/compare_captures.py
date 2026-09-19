@@ -19,6 +19,7 @@ METADATA = (
     "max_chunks",
     "integration_version",
     "profile",
+    "configured_duration_seconds",
 )
 
 

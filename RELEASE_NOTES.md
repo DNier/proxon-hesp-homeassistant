@@ -1,3 +1,27 @@
+## 0.9.0 — Capture and connection diagnostics
+
+- Add an enabled capture-status sensor with actual duration, start/stop times,
+  size and separate reasons for duration, byte and chunk limits or disconnect.
+- Add recording options from 30 to 600 seconds (default 120). Changes apply to
+  the next recording without reload, connection changes or loss of captured data.
+- Add optional TCP connection and last supported valid-data timestamp diagnostics.
+- Export format version 2 includes measured duration, stop time, integration
+  version and profile. The receive-chunk format is unchanged; offline analysis
+  continues to support older exports.
+- Preserve the original 54 entity identities and settings; add three diagnostics.
+  Recording remains passive and bounded to 1 MiB / 4096 chunks.
+
+### Upgrade and validation
+
+Download recordings you need before updating; they exist only in memory. Install
+0.9.0 through HACS, restart Home Assistant and keep the existing integration entry.
+The recording limit defaults to 120 seconds for existing entries.
+
+170 automated tests passed, including upgrade from the 0.8.0 entity contract,
+timer completion without traffic, options persistence and resource cleanup.
+Ruff lint and formatting checks passed. These are simulated checks, not a claim
+of compatibility with every hardware configuration.
+
 ## 0.8.0 — Read-only telemetry and passive diagnostics
 
 This release removes the experimental temperature-write actions. The integration

@@ -40,7 +40,7 @@ async def test_receive_capture_reconnect_reload_remain_read_only(hass, frames):
             entity.unique_id: entity.entity_id
             for entity in er.async_entries_for_config_entry(registry, entry.entry_id)
         }
-        assert len(ids) == 54
+        assert len(ids) == 57
         fan_id = ids["passive-unit_fan_level"]
         registry.async_update_entity(fan_id, name="My ventilation level")
 
