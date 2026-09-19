@@ -13,7 +13,7 @@ from custom_components.proxon_hesp.const import DOMAIN, PROFILE
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from custom_components.proxon_hesp.hesp.decoder import Decoder
 
-# Fixed recorded frames/checksums from captures 1, 5, 7, 9, 10, 14, 16, 18.
+# Fixed recorded frames/checksums with display-validated controller levels.
 LEVELS = [
     ("22400008020000081a100080b2dc", 3),
     ("22400008020000080a100080f28f", 1),
@@ -23,6 +23,8 @@ LEVELS = [
     ("22400008020000081a130080d98b", 3),
     ("224000080200000822100080d200", 4),
     ("22400008020000081210008012f5", 2),
+    ("22400008020000081a92008089d8", 3),
+    ("22400008020000081a930080df15", 3),
 ]
 CONTROLS = [
     ("224000d7000000100080a2450080a245a292", (5200.0, 5200.0)),
@@ -76,7 +78,9 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x8000102A,
         0x80001032,
         0x8000103A,
-        0x8000931A,
+        0x8000111A,
+        0x80009212,
+        0x80009322,
         0x8080121A,
         0x8000135A,
     ],
@@ -138,6 +142,10 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
         reader.feed_data(valid)
         await hass.async_block_till_done()
         assert [float(hass.states.get(ids[k]).state) for k in KEYS] == [4, 10000, 7000]
+        for raw, expected in LEVELS[-2:]:
+            reader.feed_data(bytes.fromhex(raw))
+            await hass.async_block_till_done()
+            assert hass.states.get(ids["controller_fan_level"]).state == str(expected)
         runtime = entry.runtime_data
         invalid = checked(valid[:8] + b"\xff" * 4)
         invalid += checked(bytes.fromhex(CONTROLS[0][0])[:8] + b"\xff" * 8)

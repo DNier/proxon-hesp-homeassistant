@@ -15,7 +15,7 @@ little-endian order unless stated otherwise.
 | Feature | DP / identity / payload bytes | Type and unit | Evidence and limitation |
 |---|---|---|---|
 | Requested fan level | 00E1 / P / 2 | Integer 0–4 | Display comparisons; request may differ from the displayed controller level during cooling |
-| Operating mode | 020A / P / 2 | Enum | Eco Summer compared with display; other labels follow the protocol reference and need variant-specific validation |
+| Operating mode | 020A / P / 2 | Enum | Eco Summer and Stove compared with display; other labels follow the protocol reference and need variant-specific validation |
 | Room temperature | 0226 / P / 4 | float32 / °C | Compatible with rounded BDE display; not a precision calibration |
 | Target temperature | 0227 / P / 4 | float32 / °C | Display comparisons; receive guard 15–30 °C is not a writable range |
 | Ten temperatures | 03B7 / C / 22 | uint16 × 0.1 / °C | Positive encoding and channel mapping compared with display; negative encoding and fault sentinels unresolved |
@@ -23,7 +23,7 @@ little-endian order unless stated otherwise.
 | Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw entity retained |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Eight observed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Ten observed words; other bits and words are not interpreted; disabled by default |
 | Raw fan control values | 00D7 / C / 8 | Two float32 / no unit | No validated voltage or target-rpm interpretation; disabled by default |
 | Filter remaining time | 00ED / C / 4 | uint32 / days | Display comparison and decrement observed; reset behaviour unresolved |
 | Operating-hour counters | 02D0–02D5, 02D7, 02D9 / C / 4 | uint32 / h | Display mappings confirmed; reset behaviour unresolved, no statistics class |
@@ -47,8 +47,13 @@ Controller fan level accepts only these complete status words:
 |---|---|
 | 1 | `8000100A` |
 | 2 | `80001012` |
-| 3 | `8000101A`, `8000131A` |
+| 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
+
+The two additional words `8000921A` and `8000931A` were compared with displayed
+level 3 in Stove mode. Their other bits do not establish PTC, valve or heating
+states. These additions extend the version 0.9.0 allowlist without changing
+entity identities or enabled/disabled settings.
 
 This allowlist does not establish a general status-bit mapping. The two fan
 control values must each be finite and between 0 and 10000. They have no unit
@@ -82,8 +87,16 @@ unique IDs and user-selected enabled/disabled settings are preserved on upgrade.
 - **Fault text 0130:** not observed in the reviewed passive recording corpus.
   Encoding, response shape and display correspondence remain unverified.
   Missing text must not be presented as a fault-free state.
-- **PTC and valve states:** 006C/0208 remain candidates; simultaneous bit changes
-  do not provide unique assignments.
+- **PTC state:** reviewed display comparisons show different PTC states with
+  identical 006C and 0208 payloads. The 0168 value `02` also occurs with both
+  displayed states. These values do not establish a direct PTC-state mapping.
+- **Valve states:** candidate bits in 006C/0208 correlate with defrost and
+  heating/cooling display states in a small sample, but compressor, bypass and
+  operating conditions also change. Preheating has no positive display example
+  in that sample. No valve mapping is validated. Further evidence needs
+  timestamped display observations during a captured transition that separates
+  the candidate state from those other changes; matching bits alone are
+  insufficient.
 - **Intensive duration or remaining time:** no validated data point. The
   integration does not substitute an estimated countdown.
 - **Negative temperatures and error sentinels:** require independent evidence

@@ -1,3 +1,22 @@
+## 0.9.1 — Controller fan level in Stove mode
+
+- Recognize the observed status words `8000921A` and `8000931A` as controller
+  fan level 3. The optional diagnostic previously rejected these words and
+  became unavailable after its freshness timeout.
+- Keep validation limited to complete, display-confirmed words. No PTC,
+  valve or heating-state interpretation is added.
+- Preserve all 57 entity identities, user settings and passive operation.
+
+### Upgrade and validation
+
+Install 0.9.1 through HACS and restart Home Assistant. Keep the existing
+integration entry. Export any recording you need before restarting.
+
+174 automated tests passed, including recorded frames at every stream split,
+unknown-word rejection, HA entity updates and existing upgrade/lifecycle checks.
+Ruff lint and formatting checks passed. Offline replay of the supporting
+recordings recognizes both new words; unrelated unknown words remain rejected.
+
 ## 0.9.0 — Capture and connection diagnostics
 
 - Add an enabled capture-status sensor with actual duration, start/stop times,

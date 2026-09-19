@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from .checksum import checksum
 
 MODES = {0: "off", 1: "eco_summer", 2: "eco_winter", 3: "comfort", 4: "stove"}
-# Captures 1–18, 2026-09-14. Other status bits and special modes are unknown.
+# Complete status words compared with the display, including Stove mode.
 # Do not extract a plausible level from an unverified status word.
 CONTROLLER_FAN_LEVELS = {
     0x8000100A: 1,
@@ -22,6 +22,8 @@ CONTROLLER_FAN_LEVELS = {
     0x8000131A: 3,
     0x80001422: 4,
     0x80001522: 4,
+    0x8000921A: 3,
+    0x8000931A: 3,
 }
 RAW_POINTS = {
     1310: 4,
