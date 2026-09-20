@@ -83,7 +83,9 @@ Before a functional release:
 3. Update the manifest version, project version, lockfile and release notes.
 4. Review the public diff for private data and unresolved claims.
 5. Publish the reviewed changes, then run **Publish release** on `main` to create
-   the matching tag and GitHub release. Do not overwrite an existing release.
+   the matching tag and GitHub release. The workflow extracts only the matching
+   version section from `RELEASE_NOTES.md`; missing, empty or duplicate sections
+   fail publication. Do not overwrite an existing release.
 
 A development push does not publish a release or update a user's installation.
 HACS updates still require user installation and a Home Assistant restart.
