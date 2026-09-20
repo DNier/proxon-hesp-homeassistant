@@ -3,7 +3,10 @@
 This table describes the data-point mappings retained from version 0.8.0.
 Version 0.9.0 adds capture status plus optional last-valid-data and connection
 diagnostics: 51 sensors, three binary sensors and three capture buttons,
-for 57 entities in total. Existing data-point mappings remain unchanged.
+for 57 entities in total. Version 0.10.0's compressor-running binary sensor adds
+one entity, derived from the existing speed reading. Automatic event recording
+adds a diagnostic status and a clear/rearm button (60 entities total). Existing
+data-point mappings remain unchanged.
 See [capture diagnostics](DIAGNOSTICS.md). Hardware scope is documented in
 [compatibility](COMPATIBILITY.md).
 
@@ -21,6 +24,7 @@ little-endian order unless stated otherwise.
 | Ten temperatures | 03B7 / C / 22 | uint16 × 0.1 / °C | Positive encoding and channel mapping compared with display; negative encoding and fault sentinels unresolved |
 | Supply/extract fan speeds | 00C9 / C / 8 | Two float32 / rpm | Display comparisons; finite values from 0 to 10000 |
 | Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw entity retained |
+| Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
 | Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Ten observed words; other bits and words are not interpreted; disabled by default |
@@ -87,6 +91,14 @@ unique IDs and user-selected enabled/disabled settings are preserved on upgrade.
 - **Fault text 0130:** not observed in the reviewed passive recording corpus.
   Encoding, response shape and display correspondence remain unverified.
   Missing text must not be presented as a fault-free state.
+- **Current heating/cooling activity:** requested operating mode is insufficient.
+  Reviewed recordings contain both hot and cold supply air in Comfort mode,
+  and hot supply air with a running compressor after selecting Eco Summer.
+  Cold supply air can persist after the compressor stops. Temperature
+  differences and candidate valve bits do not yet distinguish all transitions
+  and defrost operation. Operating-hour counters did not change within the
+  short recordings; they do not provide instantaneous activity. No inferred
+  heating/cooling state is published.
 - **PTC state:** reviewed display comparisons show different PTC states with
   identical 006C and 0208 payloads. The 0168 value `02` also occurs with both
   displayed states. These values do not establish a direct PTC-state mapping.

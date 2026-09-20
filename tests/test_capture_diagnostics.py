@@ -61,6 +61,8 @@ async def diagnostic_setup(hass, frames):
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert runtime.timer is None and runtime.task is None
         assert runtime.capture.timer is None
+        assert runtime.event_capture.capture.timer is None
+        assert not runtime.event_capture.ring
         assert not runtime.listeners and not runtime.diagnostic_listeners
         for _, writer in streams:
             writer.write.assert_not_called()
@@ -208,3 +210,77 @@ def test_translations_cover_all_capture_states_and_diagnostics():
         assert data["entity"]["sensor"]["last_valid_received"]["name"]
         assert data["entity"]["binary_sensor"]["connection"]["name"]
         assert data["options"]["step"]["init"]["data"]["capture_duration"]
+
+
+async def test_automatic_capture_uses_validated_stream_and_preserves_manual(
+    hass, diagnostic_setup, frames, tmp_path
+):
+    from tests.test_operating_telemetry import HEATING, STOPPED
+    from tools.inventory_capture import load_capture
+
+    entry, streams, ids = diagnostic_setup
+    runtime = entry.runtime_data
+    reader = streams[0][0]
+    assert hass.states.get(ids["event_capture_status"]).state == "disabled"
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {"capture_duration": 120, "event_capture_enabled": True}
+    )
+    await hass.async_block_till_done()
+    assert entry.runtime_data is runtime and len(streams) == 1
+    assert hass.states.get(ids["event_capture_status"]).state == "waiting"
+    await press(hass, ids, "start")
+    reader.feed_data(STOPPED)
+    await hass.async_block_till_done()
+    damaged = bytearray(HEATING)
+    damaged[-1] ^= 1
+    reader.feed_data(damaged)
+    await hass.async_block_till_done()
+    assert runtime.event_capture.status == "waiting"
+    reader.feed_data(HEATING[:9])
+    await hass.async_block_till_done()
+    assert runtime.event_capture.status == "waiting"
+    reader.feed_data(HEATING[9:])
+    await hass.async_block_till_done()
+    assert hass.states.get(ids["event_capture_status"]).state == "recording"
+    assert runtime.capture.reason == "recording"
+    await press(hass, ids, "stop")
+    manual = runtime.capture.export()
+    reader.feed_data(STOPPED)
+    await hass.async_block_till_done()
+    runtime.event_capture.capture.stop("duration_limit")
+    await hass.async_block_till_done()
+    assert hass.states.get(ids["event_capture_status"]).state == "ready"
+    assert "chunks" not in hass.states.get(ids["event_capture_status"]).attributes
+    assert "events" not in hass.states.get(ids["event_capture_status"]).attributes
+    export = await async_get_config_entry_diagnostics(hass, entry)
+    assert export["event_capture"]["events"][0]["type"] == "compressor_started"
+    assert export["event_capture"]["events"][1]["type"] == "compressor_stopped"
+    chunks = export["event_capture"]["chunks"]
+    raw = b"".join(bytes.fromhex(c["hex"]) for c in chunks)
+    assert raw == STOPPED + damaged + HEATING + STOPPED
+    assert replay(raw)["readings"]["compressor_rpm"]["count"] == 3
+    path = tmp_path / "diagnostic.json"
+    path.write_text(json.dumps({"data": export}))
+    assert load_capture(path, event=True)["chunks"] == chunks
+    assert load_capture(path)["chunks"] == manual["chunks"]
+    # Retained first event cannot be overwritten by subsequent transitions.
+    reader.feed_data(HEATING + STOPPED)
+    await hass.async_block_till_done()
+    assert runtime.event_capture.export()["chunks"] == chunks
+    assert runtime.capture.export() == manual
+    await hass.services.async_call(
+        "button", "press", {"entity_id": ids["event_capture_clear"]}, blocking=True
+    )
+    assert runtime.event_capture.status == "waiting"
+    assert runtime.capture.export() == manual
+    reader.feed_data(HEATING)  # New baseline, not a false start.
+    await hass.async_block_till_done()
+    assert not runtime.event_capture.events
+    reader.feed_data(STOPPED)
+    await hass.async_block_till_done()
+    reader.feed_eof()
+    await hass.async_block_till_done()
+    assert runtime.event_capture.capture.reason == "disconnected"
+    assert runtime.event_capture.capture.timer is None
+    assert runtime.diagnostics()["application_bytes_sent"] == 0

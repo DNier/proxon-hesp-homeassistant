@@ -76,13 +76,21 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 57
+        assert len(all_entities) == 60
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
             if e.unique_id not in baseline
         }
-        assert set(new) == {"capture_status", "last_valid_received", "connection"}
+        assert set(new) == {
+            "capture_status",
+            "last_valid_received",
+            "connection",
+            "compressor_running",
+            "event_capture_status",
+            "event_capture_clear",
+        }
+        assert new["compressor_running"].disabled_by is None
         assert new["capture_status"].disabled_by is None
         for key in ("last_valid_received", "connection"):
             assert new[key].disabled_by == er.RegistryEntryDisabler.INTEGRATION

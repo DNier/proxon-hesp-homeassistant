@@ -8,3 +8,5 @@ PROBE_TIMEOUT = 20.0
 STALE_SECONDS = 30.0
 
 CONF_CAPTURE_DURATION = "capture_duration"
+
+CONF_EVENT_CAPTURE = "event_capture_enabled"

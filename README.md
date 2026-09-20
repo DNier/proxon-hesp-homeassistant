@@ -12,6 +12,21 @@ The integration receives existing bus traffic. It does not send HESP requests,
 change settings or control the equipment. The existing controller continues to
 operate the system.
 
+## New in 0.10.0
+
+Optional **Automatic event capture** saves up to 60 seconds before and 180
+seconds after a compressor start or stop. Enable it under **Settings → Devices
+& services → PROXON HESP → Configure**. An **Event capture** status shows when
+one recording is ready to download through device diagnostics. It is retained
+until **Clear event capture and rearm**; restart discards it. Manual captures
+remain independent. See [recording instructions](docs/DIAGNOSTICS.md).
+
+
+A new **Compressor running** binary sensor derives on/off from fresh, validated
+compressor speed. It becomes unavailable with the speed reading. This indicates
+rotation only; current heating, cooling, defrost and PTC activity remain
+unclassified. Existing entities and settings are preserved.
+
 ## New in 0.9.1
 
 The optional controller fan-level diagnostic now recognizes two additional
@@ -27,7 +42,7 @@ supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
 
 ## Compatibility
 
-Version **0.9.1** requires **Home Assistant 2026.9 or later**. Development tests
+Version **0.10.0** requires **Home Assistant 2026.9 or later**. Development tests
 use Home Assistant 2026.9.2 and Python 3.14.
 
 The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
@@ -92,9 +107,10 @@ for the same gateway cannot currently be detected as duplicates.
 
 ### Upgrading from 0.8.0
 
-Download any recording you need, update to 0.9.1 through HACS and restart Home
+Download any recording you need, update to 0.10.0 through HACS and restart Home
 Assistant. Keep the existing integration entry: all 54 previous entity identities
-and user settings remain. Three diagnostics are added, giving 57 entities in total.
+and user settings remain. Six entities are added, giving 60 entities in total. Automatic event recording
+is disabled by default; enable it through Configure when needed.
 The recording limit stays at 120 seconds until changed in the integration options.
 
 ### Upgrading from 0.7.x

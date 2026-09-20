@@ -7,7 +7,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_integration
 
 from .capture import DURATION, validate_duration
-from .const import CONF_CAPTURE_DURATION, CONF_PROFILE, DOMAIN, PROFILE
+from .const import (
+    CONF_CAPTURE_DURATION,
+    CONF_EVENT_CAPTURE,
+    CONF_PROFILE,
+    DOMAIN,
+    PROFILE,
+)
 from .coordinator import ProxonRuntime
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
@@ -23,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         capture_duration=entry.options.get(CONF_CAPTURE_DURATION, DURATION),
+        event_capture_enabled=entry.options.get(CONF_EVENT_CAPTURE, False),
         integration_version=str(integration.version),
         profile=entry.data[CONF_PROFILE],
     )
@@ -44,6 +51,9 @@ async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) ->
     """Apply to the next recording without reloading or losing the current one."""
     entry.runtime_data.capture.duration = validate_duration(
         entry.options.get(CONF_CAPTURE_DURATION, DURATION)
+    )
+    entry.runtime_data.event_capture.configure(
+        entry.options.get(CONF_EVENT_CAPTURE, False)
     )
     entry.runtime_data._notify_diagnostics()
 

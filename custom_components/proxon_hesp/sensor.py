@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ProxonConfigEntry
 from .capture import STATUSES
 from .const import DOMAIN
+from .event_capture import EVENT_STATUSES
 from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
 
 DESCRIPTIONS = (
@@ -136,6 +137,17 @@ async def async_setup_entry(
             ProxonDiagnosticSensor(
                 entry,
                 SensorEntityDescription(
+                    key="event_capture_status",
+                    translation_key="event_capture_status",
+                    device_class=SensorDeviceClass.ENUM,
+                    options=list(EVENT_STATUSES),
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    icon="mdi:record-rec",
+                ),
+            ),
+            ProxonDiagnosticSensor(
+                entry,
+                SensorEntityDescription(
                     key="capture_status",
                     translation_key="capture_status",
                     device_class=SensorDeviceClass.ENUM,
@@ -198,12 +210,16 @@ class ProxonDiagnosticSensor(ProxonSensor):
 
     @property
     def native_value(self):
+        if self.entity_description.key == "event_capture_status":
+            return self.runtime.event_capture.status
         if self.entity_description.key == "capture_status":
             return self.runtime.capture.reason
         return self.runtime.last_valid_received
 
     @property
     def extra_state_attributes(self):
+        if self.entity_description.key == "event_capture_status":
+            return self.runtime.event_capture.summary()
         if self.entity_description.key == "capture_status":
             return self.runtime.capture.summary()
         return None

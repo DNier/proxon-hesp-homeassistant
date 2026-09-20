@@ -34,6 +34,14 @@ async def async_setup_entry(
     async_add_entities(
         [
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),
+            ProxonCompressorSensor(
+                entry,
+                BinarySensorEntityDescription(
+                    key="compressor_running",
+                    translation_key="compressor_running",
+                    icon="mdi:engine",
+                ),
+            ),
             ProxonConnectionSensor(
                 entry,
                 BinarySensorEntityDescription(
@@ -78,6 +86,19 @@ class ProxonBinarySensor(BinarySensorEntity):
     def is_on(self) -> bool | None:
         reading = self.runtime.get(self.entity_description.key)
         return reading.value if reading is not None else None
+
+
+class ProxonCompressorSensor(ProxonBinarySensor):
+    """Derive rotation from fresh validated RPM, not thermal operating mode."""
+
+    @property
+    def available(self) -> bool:
+        return self.runtime.get("compressor_rpm") is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        reading = self.runtime.get("compressor_rpm")
+        return reading.value > 0 if reading is not None else None
 
 
 class ProxonConnectionSensor(ProxonBinarySensor):

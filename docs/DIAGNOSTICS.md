@@ -24,10 +24,52 @@ specific reading, note the corresponding BDE display and the time. Select
 **Stop capture**, then download diagnostics. The capture uses the existing
 receiver; it does not open another connection or send requests.
 
-Under the integration's **Options**, choose a duration from **30 to 600 seconds**
-(default **120**). Changes apply to the next recording without reconnecting or
-clearing a running/saved recording. The current recording retains its original
-limit. The start button keeps its unique ID; existing custom names are preserved.
+Open **Settings → Devices & services → PROXON HESP**, then **Configure**
+next to the entry (not **System options**). Choose a manual recording duration
+from **30 to 600 seconds** (default **120**). Changes apply to the next manual
+recording without reconnecting or clearing a running/saved recording. The current
+recording retains its original limit. Existing button identities are preserved.
+
+### Automatic event recording (since 0.10.0)
+
+In the same **Configure** dialog, enable **Automatic event capture**. No camera
+or manual start at the moment of a transition is needed. This is disabled by
+default and remains completely passive, using the existing receiver.
+
+- While waiting, a rolling memory buffer retains up to 60 seconds of traffic,
+  bounded to 256 KiB of raw bytes and 1024 receive chunks.
+- A fresh, validated compressor speed transition from zero to positive or back
+  triggers a capture with that prehistory and 180 seconds of subsequent traffic.
+  Initial readings, stale gaps of 30 seconds or more, and reconnects establish
+  a baseline rather than manufacturing a transition. Invalid frames cannot trigger.
+- The **Event capture** diagnostic shows Disabled, Waiting, Recording or Ready.
+  Download ordinary device diagnostics when Ready; the separate `event_capture`
+  object contains the capture and relative `compressor_started`/`compressor_stopped`
+  event timestamps. A snapshot during Recording is incomplete.
+- One event capture is retained until **Clear event capture and rearm** is pressed.
+  Further transitions during its fixed post-event window are annotated (up to 32;
+  additional events are counted), without extending that window. Later traffic
+  never overwrites the retained capture. Download it before clearing.
+- Manual recording controls operate independently. Changing manual duration does
+  not change the automatic 60/180-second windows. Turning automatic capture off
+  drops the rolling buffer and ends an active event capture with reason `disabled`,
+  retaining the partial result for download. Re-enabling does not replace it.
+- Disconnect ends an active capture with reason `disconnected` and resets the
+  baseline/prebuffer. Reload and restart discard all recordings and timers;
+  the enable option is retained, so buffering resumes after setup.
+
+The event recording itself has the existing 1 MiB / 4096-chunk bounds, including
+prehistory. Byte/chunk limits can shorten either window. Summary attributes expose
+actual prehistory, total elapsed duration, counts and completion reason, never raw
+traffic. Total raw retention is bounded to one manual capture plus one automatic
+capture (up to 2 MiB); the rolling buffer is released when the event begins.
+Python objects and hexadecimal diagnostic exports require additional memory.
+
+The trigger reports compressor rotation only, not heating, cooling, defrost or
+PTC power. Event time is when the complete valid reading was decoded from TCP,
+not a precise electrical switching timestamp. Buffer edges can split telegrams;
+the existing parser resynchronizes. Device display evidence may still be needed
+to establish the meaning of unknown protocol bits.
 
 Recording stops at its selected time limit, 1 MiB, 4096 chunks, a manual stop or
 disconnect. A longer time limit does not guarantee a longer recording: the same
@@ -100,6 +142,20 @@ migration or extra gateway connection is required. Download any recording before
 updating because reload/restart still clears the in-memory buffer.
 
 ## Offline tools
+
+Use `--event` with inventory, replay or comparison to select the automatic
+recording from a full diagnostic export; the default remains the manual capture:
+
+```sh
+uv run python -m tools.inventory_capture diagnostics.json --event --output tmp/event.json
+uv run python -m tools.replay_diagnosis diagnostics.json --event --output tmp/event-replay.json
+uv run python -m tools.compare_captures diagnostics.json --event \
+  --before-end-ms 60000 --after-start-ms 60000 \
+  --output tmp/event-comparison.json --report tmp/event-comparison.md
+```
+
+For comparisons, replace the example 60000 ms with the actual first event's
+`elapsed_ms`; a short prebuffer means the event occurs earlier in the export.
 
 Run from a development checkout after following [setup instructions](../CONTRIBUTING.md).
 These commands do not connect to equipment. Store reports in the ignored `tmp/`

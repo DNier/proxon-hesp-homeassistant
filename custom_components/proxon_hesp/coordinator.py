@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .capture import DURATION, Capture
 from .const import PROFILE, STALE_SECONDS
+from .event_capture import EventCapture
 from .hesp.decoder import Decoder, Reading, Statistics
 from .hesp.transport import NoSupportedData, open_receiver, receive
 
@@ -28,11 +29,15 @@ class ProxonRuntime:
         port: int,
         *,
         capture_duration: int = DURATION,
+        event_capture_enabled: bool = False,
         integration_version: str | None = None,
         profile: str = PROFILE,
     ) -> None:
         self.diagnostic_listeners: set[Callable[[], None]] = set()
         self.capture = Capture(capture_duration, self._notify_diagnostics)
+        self.event_capture = EventCapture(
+            event_capture_enabled, self._notify_diagnostics
+        )
         self.integration_version = integration_version
         self.profile = profile
         self.last_valid_received: datetime | None = None
@@ -63,6 +68,7 @@ class ProxonRuntime:
             raise
 
     async def stop(self) -> None:
+        self.event_capture.clear()
         self.capture.clear()
         if self.timer:
             self.timer.cancel()
@@ -91,6 +97,8 @@ class ProxonRuntime:
                         now = time.monotonic()
                         self.last_valid_received = datetime.now(UTC)
                         for reading in readings:
+                            if reading.key == "compressor_rpm":
+                                self.event_capture.observe_rpm(reading.value)
                             self.values[reading.key] = (reading, now)
                         delay = 1
                         self.last_error = None
@@ -103,6 +111,7 @@ class ProxonRuntime:
             finally:
                 self.connected = False
                 self.values.clear()
+                self.event_capture.disconnect()
                 self.capture.stop("disconnected")
                 self._notify()
                 self._notify_diagnostics()
@@ -120,6 +129,7 @@ class ProxonRuntime:
     @callback
     def _capture_data(self, data: bytes) -> None:
         self.capture.feed(data)
+        self.event_capture.feed(data)
 
     @callback
     def listen(self, listener: Callable[[], None]) -> Callable[[], None]:
@@ -170,6 +180,11 @@ class ProxonRuntime:
             "profile": self.profile,
             "capture": {
                 **self.capture.export(),
+                "integration_version": self.integration_version,
+                "profile": self.profile,
+            },
+            "event_capture": {
+                **self.event_capture.export(),
                 "integration_version": self.integration_version,
                 "profile": self.profile,
             },

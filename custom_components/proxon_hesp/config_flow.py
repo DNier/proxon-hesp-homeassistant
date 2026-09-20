@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from .capture import DURATION, MAX_DURATION, MIN_DURATION, validate_duration
 from .const import (
     CONF_CAPTURE_DURATION,
+    CONF_EVENT_CAPTURE,
     CONF_PROFILE,
     DEFAULT_PORT,
     DOMAIN,
@@ -104,6 +105,10 @@ class ProxonOptionsFlow(OptionsFlow):
                     data={
                         **self.config_entry.options,
                         CONF_CAPTURE_DURATION: duration,
+                        CONF_EVENT_CAPTURE: user_input.get(
+                            CONF_EVENT_CAPTURE,
+                            self.config_entry.options.get(CONF_EVENT_CAPTURE, False),
+                        ),
                     }
                 )
         return self.async_show_form(
@@ -115,7 +120,13 @@ class ProxonOptionsFlow(OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_CAPTURE_DURATION, DURATION
                         ),
-                    ): vol.All(int, vol.Range(min=MIN_DURATION, max=MAX_DURATION))
+                    ): vol.All(int, vol.Range(min=MIN_DURATION, max=MAX_DURATION)),
+                    vol.Required(
+                        CONF_EVENT_CAPTURE,
+                        default=self.config_entry.options.get(
+                            CONF_EVENT_CAPTURE, False
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,

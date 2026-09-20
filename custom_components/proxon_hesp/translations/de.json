@@ -240,6 +240,15 @@
       },
       "last_valid_received": {
         "name": "Letzter gültiger Datenempfang"
+      },
+      "event_capture_status": {
+        "name": "Ereignisaufnahme",
+        "state": {
+          "disabled": "Deaktiviert",
+          "waiting": "Wartet auf Verdichterwechsel",
+          "recording": "Nachlauf wird aufgezeichnet",
+          "ready": "Aufnahme bereit"
+        }
       }
     },
     "button": {
@@ -251,9 +260,15 @@
       },
       "capture_clear": {
         "name": "Mitschnitt löschen"
+      },
+      "event_capture_clear": {
+        "name": "Ereignisaufnahme löschen und neu bereitstellen"
       }
     },
     "binary_sensor": {
+      "compressor_running": {
+        "name": "Verdichter läuft"
+      },
       "intensive_ventilation": {
         "name": "Intensivlüftung aktiv"
       },
@@ -271,10 +286,12 @@
         "title": "Aufnahmeoptionen",
         "description": "Die Dauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
         "data": {
-          "capture_duration": "Aufnahmedauer (Sekunden)"
+          "capture_duration": "Aufnahmedauer (Sekunden)",
+          "event_capture_enabled": "Automatische Ereignisaufnahme"
         },
         "data_description": {
-          "capture_duration": "30–600 Sekunden; Standard: 120."
+          "capture_duration": "30–600 Sekunden; Standard: 120.",
+          "event_capture_enabled": "Puffert bis zu 60 Sekunden vor und 180 Sekunden nach einem Verdichterstart oder -stopp. Eine Aufnahme bleibt bis zum Löschen erhalten. Nur im Arbeitsspeicher; Neustart verwirft sie."
         }
       }
     },

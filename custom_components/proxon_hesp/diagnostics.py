@@ -1,4 +1,4 @@
-"""Diagnostics include raw payloads only after explicit capture activation."""
+"""Diagnostics include raw payloads only after manual or automatic capture opt-in."""
 
 from homeassistant.core import HomeAssistant
 

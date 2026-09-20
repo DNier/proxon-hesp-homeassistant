@@ -16,6 +16,7 @@ DESCRIPTIONS = tuple(
         ("capture_start", "mdi:record-rec"),
         ("capture_stop", "mdi:stop"),
         ("capture_clear", "mdi:delete-outline"),
+        ("event_capture_clear", "mdi:delete-clock-outline"),
     )
 )
 
@@ -36,5 +37,8 @@ class CaptureButton(ButtonEntity):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.unique_id)})
 
     async def async_press(self):
+        if self.entity_description.key == "event_capture_clear":
+            self.runtime.event_capture.clear()
+            return
         action = self.entity_description.key.removeprefix("capture_")
         getattr(self.runtime.capture, action)()

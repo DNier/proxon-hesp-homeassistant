@@ -1,3 +1,32 @@
+## 0.10.0 — Automatic compressor event recording
+
+- Add a default-enabled compressor-running binary sensor derived from validated
+  speed: on above 0 rpm, off at 0 rpm. Missing, expired or disconnected telemetry
+  is unavailable, never assumed off. Invalid frames cannot refresh the state.
+- Add opt-in passive event recording with up to 60 seconds of prehistory and
+  180 seconds after a fresh validated compressor start or stop. Keep the first
+  event capture until explicitly cleared; expose status and a clear/rearm button.
+- Keep manual recording independent and provide a separate diagnostic export;
+  inventory, replay and comparison accept `--event`. Both captures are bounded.
+- Keep all 57 existing entity identities and settings; add three entities (60 total).
+- Do not classify heating, cooling, defrost or PTC activity from rotation,
+  requested mode or temperature differences. Recorded transitions do not yet
+  validate a complete thermal-state classifier.
+
+### Upgrade and validation
+
+Install 0.10.0 through HACS and restart Home Assistant. Keep the existing entry.
+Export saved recordings before restarting; captures are held in memory only.
+Under Settings → Devices & services → PROXON HESP → Configure, enable
+Automatic event capture. Download diagnostics when Event capture shows Ready,
+then use Clear event capture and rearm for the next event.
+
+185 automated tests passed, including upgrade from 0.8.0, bounded pre/post
+recording, invalid/fragmented telegrams, disconnect handling, independent manual
+recording and offline event export selection. Ruff lint and formatting passed.
+Offline replay of 23 existing captures detected the recorded compressor stop.
+Live acceptance of this version on physical hardware is still pending.
+
 ## 0.9.1 — Controller fan level in Stove mode
 
 - Recognize the observed status words `8000921A` and `8000931A` as controller

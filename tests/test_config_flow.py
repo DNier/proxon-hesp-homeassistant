@@ -81,7 +81,10 @@ async def test_capture_options_default_bounds_and_no_probe(hass):
     with patch("custom_components.proxon_hesp.config_flow.probe") as probe:
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
-        assert result["data_schema"]({}) == {"capture_duration": 120}
+        assert result["data_schema"]({}) == {
+            "capture_duration": 120,
+            "event_capture_enabled": False,
+        }
         for invalid in (29, 601, 30.5):
             with pytest.raises(InvalidData):
                 await hass.config_entries.options.async_configure(

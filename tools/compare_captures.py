@@ -158,6 +158,9 @@ def main():
         parser.add_argument(f"--{side}-end-ms", type=int)
         parser.add_argument(f"--{side}-event-ms", type=int)
         parser.add_argument(f"--{side}-event-description", default="Manual event")
+    parser.add_argument(
+        "--event", action="store_true", help="Use automatic event capture"
+    )
     parser.add_argument("--output", type=Path, required=True, help="JSON report")
     parser.add_argument("--report", type=Path, required=True, help="Readable Markdown")
     args = parser.parse_args()
@@ -184,8 +187,8 @@ def main():
         )
     try:
         report = compare(
-            load_capture(args.before),
-            load_capture(args.after or args.before),
+            load_capture(args.before, event=args.event),
+            load_capture(args.after or args.before, event=args.event),
             **options,
         )
     except (ValueError, KeyError, TypeError) as err:

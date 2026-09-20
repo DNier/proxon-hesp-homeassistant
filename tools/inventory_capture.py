@@ -12,9 +12,11 @@ from pathlib import Path
 from custom_components.proxon_hesp.hesp.checksum import checksum
 
 
-def load_capture(path: Path) -> dict:
+def load_capture(path: Path, *, event: bool = False) -> dict:
     """Read HA diagnostics, a capture wrapper or a bare capture."""
     data = json.loads(path.read_text())
+    if event:
+        return data.get("data", data)["event_capture"]
     return data.get("data", data).get("capture", data)
 
 
@@ -108,11 +110,14 @@ def inventory(
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("captures", type=Path, nargs="+")
+    parser.add_argument(
+        "--event", action="store_true", help="Use automatic event capture"
+    )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     results = []
     for index, path in enumerate(args.captures, 1):
-        capture = load_capture(path)
+        capture = load_capture(path, event=args.event)
         results.append({"capture_index": index, **inventory(capture["chunks"])})
     args.output.write_text(json.dumps(results, indent=2) + "\n")
 
