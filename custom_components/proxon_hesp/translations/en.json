@@ -262,7 +262,7 @@
         "name": "Clear capture"
       },
       "event_capture_clear": {
-        "name": "Clear event capture and rearm"
+        "name": "Clear event captures"
       }
     },
     "binary_sensor": {
@@ -291,7 +291,7 @@
         },
         "data_description": {
           "capture_duration": "30–600 seconds; default: 120.",
-          "event_capture_enabled": "Buffers up to 60 seconds before and 180 seconds after a compressor start or stop. Keeps one capture until cleared. Memory only; restart discards it."
+          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start or stop. Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them."
         }
       }
     },

@@ -36,8 +36,8 @@ In the same **Configure** dialog, enable **Automatic event capture**. No camera
 or manual start at the moment of a transition is needed. This is disabled by
 default and remains completely passive, using the existing receiver.
 
-- While waiting, a rolling memory buffer retains up to 60 seconds of traffic,
-  bounded to 256 KiB of raw bytes and 1024 receive chunks.
+- Since 0.11.0, a continuous rolling memory buffer retains up to 180 seconds
+  of traffic, bounded to 512 KiB of raw bytes and 8192 receive chunks.
 - A fresh, validated compressor speed transition from zero to positive or back
   triggers a capture with that prehistory and 180 seconds of subsequent traffic.
   Initial readings, stale gaps of 30 seconds or more, and reconnects establish
@@ -46,24 +46,31 @@ default and remains completely passive, using the existing receiver.
   Download ordinary device diagnostics when Ready; the separate `event_capture`
   object contains the capture and relative `compressor_started`/`compressor_stopped`
   event timestamps. A snapshot during Recording is incomplete.
-- One event capture is retained until **Clear event capture and rearm** is pressed.
-  Further transitions during its fixed post-event window are annotated (up to 32;
-  additional events are counted), without extending that window. Later traffic
-  never overwrites the retained capture. Download it before clearing.
+- Up to four event captures are retained, including an active recording. After
+  completion, capture remains armed: the next transition starts another window.
+  A fifth recording replaces the oldest; `overwritten_captures` counts replacements.
+  Further transitions within an active window are annotated (up to 32; additional
+  events are counted) without extending it. **Clear event captures** clears all.
+  `capture_count` includes the current recording. Ready means data is available,
+  not that automatic recording has stopped. Download before older events roll out.
+- The latest recording remains at `event_capture.chunks` / `events`. Earlier
+  recordings are in `event_capture.previous_captures`, oldest first, with their
+  own timestamps and completion reasons. No raw data appears in entity attributes.
 - Manual recording controls operate independently. Changing manual duration does
-  not change the automatic 60/180-second windows. Turning automatic capture off
+  not change the automatic 180/180-second windows. Turning automatic capture off
   drops the rolling buffer and ends an active event capture with reason `disabled`,
-  retaining the partial result for download. Re-enabling does not replace it.
+  retaining the partial result for download. Re-enabling preserves saved data
+  and starts a fresh transition baseline.
 - Disconnect ends an active capture with reason `disconnected` and resets the
   baseline/prebuffer. Reload and restart discard all recordings and timers;
   the enable option is retained, so buffering resumes after setup.
 
-The event recording itself has the existing 1 MiB / 4096-chunk bounds, including
-prehistory. Byte/chunk limits can shorten either window. Summary attributes expose
-actual prehistory, total elapsed duration, counts and completion reason, never raw
-traffic. Total raw retention is bounded to one manual capture plus one automatic
-capture (up to 2 MiB); the rolling buffer is released when the event begins.
-Python objects and hexadecimal diagnostic exports require additional memory.
+Each recording is bounded to 1 MiB and 16384 receive chunks, including prehistory.
+Byte/chunk limits can shorten either window. Summary attributes expose actual
+prehistory, elapsed duration, counts and completion reason, never raw traffic.
+Total raw retention is bounded to one manual capture, four automatic captures
+and the continuous rolling buffer (up to 5.5 MiB). Python objects and hexadecimal
+diagnostic exports require additional memory.
 
 The trigger reports compressor rotation only, not heating, cooling, defrost or
 PTC power. Event time is when the complete valid reading was decoded from TCP,
@@ -71,7 +78,7 @@ not a precise electrical switching timestamp. Buffer edges can split telegrams;
 the existing parser resynchronizes. Device display evidence may still be needed
 to establish the meaning of unknown protocol bits.
 
-Recording stops at its selected time limit, 1 MiB, 4096 chunks, a manual stop or
+Manual recording stops at its selected time limit, 1 MiB, 16384 chunks, a stop or
 disconnect. A longer time limit does not guarantee a longer recording: the same
 memory and chunk limits still apply.
 Starting again replaces the previous recording. **Clear capture**, reload and
@@ -143,8 +150,10 @@ updating because reload/restart still clears the in-memory buffer.
 
 ## Offline tools
 
-Use `--event` with inventory, replay or comparison to select the automatic
-recording from a full diagnostic export; the default remains the manual capture:
+Use `--event` with inventory, replay or comparison to select the latest
+automatic recording from a full diagnostic export; the default remains the manual
+capture. Add `--event-index 0` for the oldest retained event (`1` for the next,
+and `-1` for the latest). Older single-event exports remain supported:
 
 ```sh
 uv run python -m tools.inventory_capture diagnostics.json --event --output tmp/event.json

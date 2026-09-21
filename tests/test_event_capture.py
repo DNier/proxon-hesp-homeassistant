@@ -94,9 +94,9 @@ async def test_ring_time_byte_chunk_and_event_bounds():
     ):
         clock.return_value = 0
         e.feed(b"old")
-        clock.return_value = 61
+        clock.return_value = 181
         e.feed(b"new")
-        assert list(e.ring) == [(61, b"new")]
+        assert list(e.ring) == [(181, b"new")]
         e.feed(b"x" * 100)
         assert e.ring_size == 10
         e.feed(b"a")
@@ -141,7 +141,8 @@ async def test_post_capture_resource_limit(limit, reason):
 @pytest.mark.parametrize(
     "tool", ["inventory_capture", "replay_diagnosis", "compare_captures"]
 )
-def test_existing_cli_selects_event_export(tool, tmp_path):
+@pytest.mark.parametrize("archived", [False, True])
+def test_existing_cli_selects_event_export(tool, tmp_path, archived):
     import importlib
     import json
 
@@ -161,8 +162,16 @@ def test_existing_cli_selects_event_export(tool, tmp_path):
             }
         )
     )
+    if archived:
+        data = json.loads(source.read_text())
+        current = data["data"]["event_capture"]
+        current["previous_captures"] = [{"chunks": current["chunks"]}]
+        current["chunks"] = []
+        source.write_text(json.dumps(data))
     output = tmp_path / "result.json"
     argv = [tool, str(source), "--event", "--output", str(output)]
+    if archived:
+        argv += ["--event-index", "0"]
     if tool == "compare_captures":
         argv += ["--report", str(tmp_path / "report.md")]
     with patch("sys.argv", argv):
@@ -187,3 +196,73 @@ def test_event_translations():
         )
         assert d["entity"]["button"]["event_capture_clear"]["name"]
         assert d["options"]["step"]["init"]["data"]["event_capture_enabled"]
+
+
+async def test_latest_four_windows_roll_over_and_keep_continuous_prehistory():
+    e = EventCapture(True)
+    with patch("custom_components.proxon_hesp.event_capture.time.monotonic") as clock:
+        clock.return_value = 0
+        e.feed(b"initial")
+        e.observe_rpm(0)
+        for index in range(6):
+            clock.return_value = index * 200
+            e.observe_rpm(0)  # Refresh baseline after a stale interval.
+            e.feed(bytes([index]))
+            e.observe_rpm(100)
+            assert e.status == "recording"
+            assert e.summary()["capture_count"] == min(index + 1, 4)
+            if index:
+                assert e.pre_seconds == 100
+                assert e.capture.chunks[0]["hex"] == b"ongoing".hex()
+            clock.return_value += 100
+            e.feed(b"ongoing")
+            e.capture.stop("duration_limit")
+        result = e.export()
+        assert len(result["previous_captures"]) == 3
+        assert result["overwritten_captures"] == 2
+        assert all("previous_captures" not in c for c in result["previous_captures"])
+        result["previous_captures"][0]["chunks"].clear()
+        assert e.export()["previous_captures"][0]["chunks"]
+        e.configure(False)
+        assert e.summary()["capture_count"] == 4
+        e.clear()
+        assert e.summary()["capture_count"] == 0
+        assert e.overwritten_captures == 0
+
+
+async def test_small_tcp_chunks_preserve_full_three_minute_windows():
+    e = EventCapture(True)
+    with patch("custom_components.proxon_hesp.event_capture.time.monotonic") as clock:
+        for tick in range(7201):
+            clock.return_value = tick / 20
+            e.feed(b"x" * 16)
+            e.observe_rpm(0 if tick < 3600 else 2000)
+        result = e.export()
+        assert result["pre_duration_seconds"] == 180
+        assert result["actual_duration_seconds"] == 360
+        assert result["completion_reason"] == "duration_limit"
+        assert result["chunk_count"] == 7200
+        assert result["events"][0]["elapsed_ms"] == 180000
+    e.clear()
+
+
+def test_load_retained_event_index(tmp_path):
+    import json
+
+    from tools.inventory_capture import load_capture
+
+    path = tmp_path / "capture.json"
+    path.write_text(
+        json.dumps(
+            {
+                "event_capture": {
+                    "chunks": ["latest"],
+                    "previous_captures": [{"chunks": ["oldest"]}],
+                }
+            }
+        )
+    )
+    assert load_capture(path, event=True)["chunks"] == ["latest"]
+    assert load_capture(path, event=True, event_index=0)["chunks"] == ["oldest"]
+    with pytest.raises(ValueError, match="outside retained"):
+        load_capture(path, event=True, event_index=2)

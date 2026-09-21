@@ -264,10 +264,11 @@ async def test_automatic_capture_uses_validated_stream_and_preserves_manual(
     path.write_text(json.dumps({"data": export}))
     assert load_capture(path, event=True)["chunks"] == chunks
     assert load_capture(path)["chunks"] == manual["chunks"]
-    # Retained first event cannot be overwritten by subsequent transitions.
+    # A later transition starts a new window and archives the first event.
     reader.feed_data(HEATING + STOPPED)
     await hass.async_block_till_done()
-    assert runtime.event_capture.export()["chunks"] == chunks
+    assert runtime.event_capture.export()["previous_captures"][0]["chunks"] == chunks
+    assert runtime.event_capture.status == "recording"
     assert runtime.capture.export() == manual
     await hass.services.async_call(
         "button", "press", {"entity_id": ids["event_capture_clear"]}, blocking=True

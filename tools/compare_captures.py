@@ -163,7 +163,15 @@ def main():
     )
     parser.add_argument("--output", type=Path, required=True, help="JSON report")
     parser.add_argument("--report", type=Path, required=True, help="Readable Markdown")
+    parser.add_argument(
+        "--event-index",
+        type=int,
+        default=-1,
+        help="Event index: 0 oldest, -1 latest (default); requires --event",
+    )
     args = parser.parse_args()
+    if args.event_index != -1 and not args.event:
+        parser.error("--event-index requires --event")
     if args.output.resolve() == args.report.resolve() or any(
         out.resolve() == source.resolve()
         for out in (args.output, args.report)
@@ -187,8 +195,12 @@ def main():
         )
     try:
         report = compare(
-            load_capture(args.before, event=args.event),
-            load_capture(args.after or args.before, event=args.event),
+            load_capture(args.before, event=args.event, event_index=args.event_index),
+            load_capture(
+                args.after or args.before,
+                event=args.event,
+                event_index=args.event_index,
+            ),
             **options,
         )
     except (ValueError, KeyError, TypeError) as err:

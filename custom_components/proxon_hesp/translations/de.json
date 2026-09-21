@@ -262,7 +262,7 @@
         "name": "Mitschnitt löschen"
       },
       "event_capture_clear": {
-        "name": "Ereignisaufnahme löschen und neu bereitstellen"
+        "name": "Ereignisaufnahmen löschen"
       }
     },
     "binary_sensor": {
@@ -291,7 +291,7 @@
         },
         "data_description": {
           "capture_duration": "30–600 Sekunden; Standard: 120.",
-          "event_capture_enabled": "Puffert bis zu 60 Sekunden vor und 180 Sekunden nach einem Verdichterstart oder -stopp. Eine Aufnahme bleibt bis zum Löschen erhalten. Nur im Arbeitsspeicher; Neustart verwirft sie."
+          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
         }
       }
     },

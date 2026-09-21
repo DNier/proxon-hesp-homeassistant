@@ -1,3 +1,30 @@
+## 0.11.0 — Continuous event recording
+
+- Extend automatic compressor event prehistory to 180 seconds; retain 180 seconds
+  after the triggering transition. Windows remain subject to memory limits.
+- Automatically retain the four latest event recordings, replacing the oldest
+  when a new window starts. Expose recording and replacement counts. Clear all
+  saved events with the existing clear button; manual recording stays independent.
+- Increase the per-recording receive-block limit to 16384 and the continuous
+  prebuffer to 512 KiB / 8192 chunks, accommodating small TCP receive blocks.
+- Include earlier recordings in diagnostic exports. Offline inventory, replay
+  and comparison support `--event --event-index 0` for the oldest retained window;
+  `--event` alone still selects the latest.
+- Preserve all 60 entity identities and existing settings. Compressor rotation
+  still does not classify heating, cooling, defrost or PTC activity.
+
+### Upgrade and validation
+
+Install 0.11.0 through HACS and restart Home Assistant. Keep the existing entry.
+Download existing recordings before restarting; recordings are held in memory only.
+The automatic recording option is preserved. If not already enabled, enable it
+under Settings → Devices & services → PROXON HESP → Configure. Download diagnostics
+after the relevant transitions; clearing between events is no longer necessary.
+
+197 automated tests passed; Ruff lint and formatting passed. Validation covers upgrade from 0.8.0, automatic rollover, continuous prehistory,
+full windows with small TCP chunks, independent manual recording and offline
+selection. Physical-device acceptance remains pending.
+
 ## 0.10.0 — Automatic compressor event recording
 
 - Add a default-enabled compressor-running binary sensor derived from validated

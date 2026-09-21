@@ -2,21 +2,23 @@
 
 import time
 from collections import deque
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
 from .capture import Capture
 from .const import STALE_SECONDS
 
-PRE_SECONDS = 60
+PRE_SECONDS = 180
 POST_SECONDS = 180
-RING_BYTES = 262_144
-RING_CHUNKS = 1024
+RING_BYTES = 524_288
+RING_CHUNKS = 8192
+MAX_CAPTURES = 4
 MAX_EVENTS = 32
 EVENT_STATUSES = ("disabled", "waiting", "recording", "ready")
 
 
 class EventCapture:
-    """Keep one event until explicitly cleared; never replace manual captures."""
+    """Retain the latest bounded event windows independently of manual captures."""
 
     def __init__(self, enabled=False, on_change=None):
         self.enabled = enabled
@@ -28,6 +30,8 @@ class EventCapture:
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
+        self.previous_captures = []
+        self.overwritten_captures = 0
 
     def _notify(self):
         if self.on_change:
@@ -55,6 +59,8 @@ class EventCapture:
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
+        self.previous_captures = []
+        self.overwritten_captures = 0
         self.capture.clear()
 
     def disconnect(self, reason="disconnected"):
@@ -66,9 +72,7 @@ class EventCapture:
     def feed(self, data):
         if not self.enabled or not data:
             return
-        if self.capture.reason != "idle":
-            self.capture.feed(data)
-            return
+        self.capture.feed(data)
         now = time.monotonic()
         part = bytes(data[-RING_BYTES:])
         self.ring.append((now, part))
@@ -82,7 +86,7 @@ class EventCapture:
 
     def observe_rpm(self, rpm):
         """Called only for checksum-, identity- and range-validated readings."""
-        if not self.enabled or self.status == "ready":
+        if not self.enabled:
             return
         now = time.monotonic()
         running = rpm > 0
@@ -95,7 +99,14 @@ class EventCapture:
             or previous[0] == running
         ):
             return
-        if self.capture.reason == "idle":
+        if self.capture.reason != "recording":
+            if self.capture.reason != "idle":
+                self.previous_captures.append(self._export_current())
+                if len(self.previous_captures) >= MAX_CAPTURES:
+                    self.previous_captures.pop(0)
+                    self.overwritten_captures += 1
+            self.events = []
+            self.omitted_events = 0
             # on_data already buffered the chunk containing this transition.
             before = [(t, p) for t, p in self.ring if now - t <= PRE_SECONDS]
             start = before[0][0] if before else now
@@ -111,8 +122,6 @@ class EventCapture:
                 for t, p in before
             ]
             self.capture.size = sum(len(p) for _, p in before)
-            self.ring.clear()
-            self.ring_size = 0
         if len(self.events) < MAX_EVENTS:
             self.events.append(
                 {
@@ -137,11 +146,21 @@ class EventCapture:
             "requested_post_seconds": POST_SECONDS,
             "event_count": len(self.events),
             "omitted_events": self.omitted_events,
+            "capture_count": len(self.previous_captures)
+            + int(self.capture.reason != "idle"),
+            "max_captures": MAX_CAPTURES,
+            "overwritten_captures": self.overwritten_captures,
         }
 
-    def export(self):
+    def _export_current(self):
         return {
             **self.capture.export(),
             **self.summary(),
             "events": [dict(event) for event in self.events],
+        }
+
+    def export(self):
+        return {
+            **self._export_current(),
+            "previous_captures": deepcopy(self.previous_captures),
         }

@@ -34,13 +34,23 @@ def main():
         "--event", action="store_true", help="Use automatic event capture"
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--event-index",
+        type=int,
+        default=-1,
+        help="Event index: 0 oldest, -1 latest (default); requires --event",
+    )
     args = parser.parse_args()
+    if args.event_index != -1 and not args.event:
+        parser.error("--event-index requires --event")
 
     def source(path):
         if args.event:
             return b"".join(
                 bytes.fromhex(c["hex"])
-                for c in load_capture(path, event=True)["chunks"]
+                for c in load_capture(path, event=True, event_index=args.event_index)[
+                    "chunks"
+                ]
             )
         return read(path)
 

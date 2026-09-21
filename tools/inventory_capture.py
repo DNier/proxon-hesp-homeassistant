@@ -12,11 +12,16 @@ from pathlib import Path
 from custom_components.proxon_hesp.hesp.checksum import checksum
 
 
-def load_capture(path: Path, *, event: bool = False) -> dict:
+def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> dict:
     """Read HA diagnostics, a capture wrapper or a bare capture."""
     data = json.loads(path.read_text())
     if event:
-        return data.get("data", data)["event_capture"]
+        current = data.get("data", data)["event_capture"]
+        captures = [*current.get("previous_captures", []), current]
+        try:
+            return captures[event_index]
+        except IndexError as err:
+            raise ValueError("Event capture index outside retained recordings") from err
     return data.get("data", data).get("capture", data)
 
 
@@ -114,10 +119,18 @@ def main():
         "--event", action="store_true", help="Use automatic event capture"
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--event-index",
+        type=int,
+        default=-1,
+        help="Event index: 0 oldest, -1 latest (default); requires --event",
+    )
     args = parser.parse_args()
+    if args.event_index != -1 and not args.event:
+        parser.error("--event-index requires --event")
     results = []
     for index, path in enumerate(args.captures, 1):
-        capture = load_capture(path, event=args.event)
+        capture = load_capture(path, event=args.event, event_index=args.event_index)
         results.append({"capture_index": index, **inventory(capture["chunks"])})
     args.output.write_text(json.dumps(results, indent=2) + "\n")
 

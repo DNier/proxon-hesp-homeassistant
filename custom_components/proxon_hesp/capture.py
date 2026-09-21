@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 MAX_BYTES = 1_048_576
-MAX_CHUNKS = 4096
+MAX_CHUNKS = 16384
 DURATION = 120
 MIN_DURATION = 30
 MAX_DURATION = 600

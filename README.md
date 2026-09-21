@@ -12,17 +12,18 @@ The integration receives existing bus traffic. It does not send HESP requests,
 change settings or control the equipment. The existing controller continues to
 operate the system.
 
-## New in 0.10.0
+## New in 0.11.0
 
-Optional **Automatic event capture** saves up to 60 seconds before and 180
-seconds after a compressor start or stop. Enable it under **Settings → Devices
-& services → PROXON HESP → Configure**. An **Event capture** status shows when
-one recording is ready to download through device diagnostics. It is retained
-until **Clear event capture and rearm**; restart discards it. Manual captures
-remain independent. See [recording instructions](docs/DIAGNOSTICS.md).
+Optional **Automatic event capture** saves up to 180 seconds before and after
+compressor starts or stops. Enable it under **Settings → Devices & services →
+PROXON HESP → Configure**. The four latest recordings are kept automatically;
+new recordings replace the oldest. Download device diagnostics to retrieve them.
+**Clear event captures** clears all saved events; restart also discards them.
+Manual captures remain independent. The receive-block limit is now 16384 per
+recording to accommodate fragmented TCP traffic. See
+[recording instructions](docs/DIAGNOSTICS.md).
 
-
-A new **Compressor running** binary sensor derives on/off from fresh, validated
+The **Compressor running** binary sensor derives on/off from fresh, validated
 compressor speed. It becomes unavailable with the speed reading. This indicates
 rotation only; current heating, cooling, defrost and PTC activity remain
 unclassified. Existing entities and settings are preserved.
@@ -36,13 +37,13 @@ and settings are preserved. Unknown words remain unavailable.
 ## Capture diagnostics since 0.9.0
 
 Capture status now shows recording progress and the stopping reason. Recording
-duration is configurable from 30 to 600 seconds (default 120), with unchanged
-memory limits. Optional diagnostics report TCP connectivity and the last valid
+duration is configurable from 30 to 600 seconds (default 120), with bounded
+memory use. Optional diagnostics report TCP connectivity and the last valid
 supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
 
 ## Compatibility
 
-Version **0.10.0** requires **Home Assistant 2026.9 or later**. Development tests
+Version **0.11.0** requires **Home Assistant 2026.9 or later**. Development tests
 use Home Assistant 2026.9.2 and Python 3.14.
 
 The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
@@ -107,7 +108,7 @@ for the same gateway cannot currently be detected as duplicates.
 
 ### Upgrading from 0.8.0
 
-Download any recording you need, update to 0.10.0 through HACS and restart Home
+Download any recording you need, update to 0.11.0 through HACS and restart Home
 Assistant. Keep the existing integration entry: all 54 previous entity identities
 and user settings remain. Six entities are added, giving 60 entities in total. Automatic event recording
 is disabled by default; enable it through Configure when needed.
