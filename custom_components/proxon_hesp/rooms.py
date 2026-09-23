@@ -151,9 +151,12 @@ def sync_room_devices(hass, entry, previous=None):
         if area_id and not ar.async_get(hass).async_get_area(area_id):
             area_id = None
         old = previous_by_id.get(room["id"], room)
-        if room_device_id(entry, room) not in existing_ids or old.get(
-            "area"
-        ) != room.get("area"):
+        if (
+            room_device_id(entry, room) not in existing_ids
+            or (previous is not None and room["id"] not in previous_by_id)
+            or old.get("area") != room.get("area")
+            or (device.area_id is None and area_id is not None)
+        ):
             registry.async_update_device(device.id, area_id=area_id)
 
 

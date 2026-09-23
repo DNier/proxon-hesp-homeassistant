@@ -399,3 +399,39 @@ async def test_room_cleanup_preserves_existing_controller_room_temperature(
     assert registry.async_get(entity_id).name == "Custom temperature label"
     await update_rooms(hass, room_entry, [])
     assert registry.async_get(entity_id).id == original.id
+
+
+async def test_new_room_area_applied_when_entities_register_device_first(
+    hass, room_entry
+):
+    """Entity platform registration may create the device before options sync."""
+    from homeassistant.helpers import area_registry as ar
+
+    area = ar.async_get(hass).async_create("New room")
+    new_room = {**ROOM, "id": "new-room", "name": "New room", "area": area.id}
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=room_entry.entry_id,
+        identifiers={(DOMAIN, "unit_room_new-room")},
+        name="New room",
+    )
+    await update_rooms(hass, room_entry, [ROOM, new_room])
+    assert dr.async_get(hass).async_get(device.id).area_id == area.id
+
+
+async def test_existing_unassigned_room_recovers_saved_area(hass, room_entry):
+    from homeassistant.helpers import area_registry as ar
+
+    from custom_components.proxon_hesp.rooms import sync_room_devices
+
+    area = ar.async_get(hass).async_create("Saved room area")
+    room = {**ROOM, "area": area.id}
+    await update_rooms(hass, room_entry, [room])
+    device_id = er.async_get(hass).async_get(state(hass, "heating").entity_id).device_id
+    devices = dr.async_get(hass)
+    devices.async_update_device(device_id, area_id=None)
+    sync_room_devices(hass, room_entry)
+    assert devices.async_get(device_id).area_id == area.id
+    manual = ar.async_get(hass).async_create("Manual assignment")
+    devices.async_update_device(device_id, area_id=manual.id)
+    sync_room_devices(hass, room_entry)
+    assert devices.async_get(device_id).area_id == manual.id

@@ -88,7 +88,9 @@ Entitäts-ID; nach deren Umbenennung ist eine neue Auswahl notwendig.
 Die Bereichsauswahl gilt nur für das virtuelle Raumgerät. Ein nachträglich in HA
 am Gerät geänderter Bereich bleibt bei normalen Optionsänderungen und Neustarts
 erhalten; eine ausdrücklich geänderte Bereichsauswahl im Raumdialog überschreibt
-ihn. Quellgeräte werden nie verschoben. Leere bzw. entfernte optionale Zuordnungen
+ihn. Fehlt dem Raumgerät ein Bereich, wird eine gespeicherte Bereichsauswahl
+beim Laden wieder angewendet. Zum dauerhaften Entfernen die Bereichsauswahl auch
+im Raumdialog löschen. Quellgeräte werden nie verschoben. Leere bzw. entfernte optionale Zuordnungen
 werden beim Speichern gelöscht.
 
 Nach einem HA-Neustart wird aus den verfügbaren Quellentitäten neu ausgewertet.

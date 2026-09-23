@@ -1,3 +1,21 @@
+## 0.12.0b2 — Fix heating room area assignment (beta)
+
+- Apply the selected HA area when adding a room, including when HA registers
+  the virtual device before the options update finishes.
+- Restore a saved room area on load if the virtual device has no area. Existing
+  manual assignments to a different area are preserved. To remove an assignment
+  permanently, also clear the area in the room configuration.
+- Preserve room identities, linked source devices, thermostat control and captures.
+
+### Upgrade
+
+Install **0.12.0b2** through HACS and restart Home Assistant. Export any recordings
+needed before restarting; recordings are held in memory only. Existing rooms do
+not need to be recreated: saved area selections are applied automatically.
+
+This remains a prerelease; **0.11.0 remains the stable version**.
+Two regression tests cover the registration order and recovery of saved areas.
+
 ## 0.12.0b1 — Heating rooms and optional device time alignment (beta)
 
 This is a prerelease for initial installation testing. **0.11.0 remains the stable release.**
