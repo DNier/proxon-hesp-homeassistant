@@ -71,8 +71,9 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 60
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 62
         for key in (
+            "device_datetime",
             "controller_fan_level",
             "fan_supply_control",
             "fan_extract_control",

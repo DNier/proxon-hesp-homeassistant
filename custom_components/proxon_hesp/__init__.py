@@ -15,6 +15,7 @@ from .const import (
     PROFILE,
 )
 from .coordinator import ProxonRuntime
+from .rooms import CONF_ROOMS, sync_room_devices
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
@@ -38,6 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
     except TimeoutError as err:
         raise ConfigEntryNotReady("No supported HESP data received") from err
     entry.runtime_data = runtime
+    sync_room_devices(hass, entry)
+    runtime.room_config = entry.options.get(CONF_ROOMS, [])
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:
@@ -56,6 +59,12 @@ async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) ->
         entry.options.get(CONF_EVENT_CAPTURE, False)
     )
     entry.runtime_data._notify_diagnostics()
+    rooms = entry.options.get(CONF_ROOMS, [])
+    if rooms != entry.runtime_data.room_config:
+        for update in entry.runtime_data.room_updates:
+            await update()
+        sync_room_devices(hass, entry, entry.runtime_data.room_config)
+        entry.runtime_data.room_config = rooms
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bool:

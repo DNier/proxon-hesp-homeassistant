@@ -19,6 +19,7 @@ from .const import (
     PROFILE,
 )
 from .hesp.transport import NoSupportedData, probe
+from .room_flow import RoomOptionsMixin
 
 
 class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,7 +91,7 @@ class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._step("reconfigure", user_input)
 
 
-class ProxonOptionsFlow(OptionsFlow):
+class ProxonOptionsFlow(RoomOptionsMixin, OptionsFlow):
     """Configure recording limits without touching the gateway connection."""
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
@@ -101,6 +102,12 @@ class ProxonOptionsFlow(OptionsFlow):
             except ValueError, KeyError:
                 errors[CONF_CAPTURE_DURATION] = "invalid_duration"
             else:
+                if user_input.get("manage_rooms", False):
+                    self._pending_capture = {
+                        CONF_CAPTURE_DURATION: duration,
+                        CONF_EVENT_CAPTURE: user_input.get(CONF_EVENT_CAPTURE, False),
+                    }
+                    return await self.async_step_rooms()
                 return self.async_create_entry(
                     data={
                         **self.config_entry.options,
@@ -127,6 +134,7 @@ class ProxonOptionsFlow(OptionsFlow):
                             CONF_EVENT_CAPTURE, False
                         ),
                     ): bool,
+                    vol.Optional("manage_rooms"): bool,
                 }
             ),
             errors=errors,

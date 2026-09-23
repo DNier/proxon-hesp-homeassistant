@@ -26,6 +26,14 @@ LEVELS = [
     ("22400008020000081a92008089d8", 3),
     ("22400008020000081a930080df15", 3),
 ]
+# Minimal checksum-verified recorded transition words. Their fan-level meaning
+# has no independent display confirmation; requested level is not a reference.
+TRANSITION_WORDS = [
+    "22400008020000081a1200808f46",
+    "22400008020000081a110080e411",
+    "22400008020000081a130090c492",
+    "22400008020000081a110090f908",
+]
 CONTROLS = [
     ("224000d7000000100080a2450080a245a292", (5200.0, 5200.0)),
     ("224000d70000001000401c4500401c452299", (2500.0, 2500.0)),
@@ -147,6 +155,22 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             await hass.async_block_till_done()
             assert hass.states.get(ids["controller_fan_level"]).state == str(expected)
         runtime = entry.runtime_data
+        # Repeated unsupported transition words must not keep an old level fresh.
+        # Other validated channels continue to update on the same connection.
+        reading, timestamp = runtime.values["controller_fan_level"]
+        runtime.values["controller_fan_level"] = (reading, timestamp - 31)
+        old_level = runtime.values["controller_fan_level"]
+        for raw in TRANSITION_WORDS:
+            reader.feed_data(bytes.fromhex(raw + CONTROLS[0][0]))
+            await hass.async_block_till_done()
+            assert runtime.values["controller_fan_level"] == old_level
+            assert hass.states.get(ids["controller_fan_level"]).state == "unavailable"
+            assert all(
+                float(hass.states.get(ids[key]).state) == 5200 for key in CONTROL_KEYS
+            )
+        reader.feed_data(bytes.fromhex(LEVELS[0][0]))
+        await hass.async_block_till_done()
+        assert hass.states.get(ids["controller_fan_level"]).state == "3"
         invalid = checked(valid[:8] + b"\xff" * 4)
         invalid += checked(bytes.fromhex(CONTROLS[0][0])[:8] + b"\xff" * 8)
         previous = {key: runtime.values[key] for key in KEYS}
@@ -167,3 +191,26 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
         assert all(hass.states.get(i).state == "unavailable" for i in ids.values())
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert not runtime.listeners
+
+
+@pytest.mark.parametrize("raw", TRANSITION_WORDS)
+def test_recorded_transition_preserves_independent_readings_at_every_split(raw):
+    from tests.test_operating_telemetry import HEATING, STOPPED
+
+    # Status and RPM have different transition times. Neither the status nor
+    # valid fan controls may suppress or substitute a fresh RPM observation.
+    stream = bytes.fromhex(LEVELS[0][0] + raw + CONTROLS[0][0]) + HEATING + STOPPED
+    for split in range(len(stream) + 1):
+        decoder = Decoder()
+        readings = decoder.feed(stream[:split]) + decoder.feed(stream[split:])
+        assert [r.value for r in readings if r.key == "controller_fan_level"] == [3]
+        assert [r.value for r in readings if r.key == "compressor_rpm"] == [
+            4847.17626953125,
+            0.0,
+        ]
+        assert {r.key: r.value for r in readings if r.key in CONTROL_KEYS} == {
+            "fan_supply_control": 5200.0,
+            "fan_extract_control": 5200.0,
+        }
+        assert decoder.stats.checksum_rejected == 0
+        assert decoder.stats.value_rejected == 1

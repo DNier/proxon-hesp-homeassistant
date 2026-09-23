@@ -1,5 +1,4 @@
-"""HA-independent, receive-only HESP subset.
+"""HA-independent HESP telemetry and the narrowly scoped calendar encoder.
 
-Bundled for the initial custom integration; no Home Assistant imports.
-There is intentionally no command encoder or send API.
+No general-purpose write API; only an explicit calendar alignment is supported.
 """

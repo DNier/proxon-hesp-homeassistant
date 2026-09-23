@@ -7,6 +7,7 @@ length and checksum-validated subset can produce sensor values.
 import math
 import struct
 from dataclasses import dataclass
+from datetime import datetime
 
 from .checksum import checksum
 
@@ -199,6 +200,10 @@ class Decoder:
             # Receive sanity bound, not a manufacturer operating limit.
             if math.isfinite(rpm) and 0 <= rpm <= 10000:
                 readings.append(Reading("compressor_rpm", rpm))
+        if key == "uptime":
+            calendar = decode_calendar(payload)
+            if calendar is not None:
+                readings.append(Reading("device_datetime", calendar))
         if key == "raw_0330":
             clock = decode_clock(payload)
             if clock is not None:
@@ -243,3 +248,29 @@ def decode_clock(payload: bytes) -> str | None:
     if value >> 17 or hour > 23 or minute > 59 or second > 59:
         return None
     return f"{hour:02}:{minute:02}:{second:02}"
+
+
+def decode_calendar(payload: bytes) -> str | None:
+    """Observed local calendar, minute resolution; never infer a timezone.
+
+    Keep the legacy raw `uptime` reading separate. A plausible date does not
+    establish that the controller clock is synchronized with real time.
+    """
+    if len(payload) != 4:
+        return None
+    value = int.from_bytes(payload, "little")
+    if value >> 30:
+        return None
+    minute = value & 63
+    hour = (value >> 6) & 31
+    weekday = (value >> 11) & 7
+    year = 2000 + ((value >> 14) & 127)
+    month = (value >> 21) & 15
+    day = (value >> 25) & 31
+    try:
+        calendar = datetime(year, month, day, hour, minute)
+    except ValueError:
+        return None
+    if weekday != (calendar.weekday() + 1) % 7:
+        return None
+    return calendar.isoformat(timespec="minutes")

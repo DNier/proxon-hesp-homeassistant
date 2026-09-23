@@ -11,7 +11,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: rein lesende Integration; keine Steuerbefehle."
+          "profile": "LT-ZIM V1.6: passives Auslesen; optionaler manueller Gerätezeitabgleich."
         }
       },
       "reconfigure": {
@@ -24,7 +24,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: rein lesende Integration; keine Steuerbefehle."
+          "profile": "LT-ZIM V1.6: passives Auslesen; optionaler manueller Gerätezeitabgleich."
         }
       }
     },
@@ -63,7 +63,7 @@
         "name": "Filterrestlaufzeit (Referenz)"
       },
       "uptime": {
-        "name": "Zähler 0x032E (Bedeutung ungeklärt)"
+        "name": "Gerätekalender (roh)"
       },
       "counter_02d0": {
         "name": "Betriebsstunden Luftstufe 1"
@@ -249,6 +249,12 @@
           "recording": "Nachlauf wird aufgezeichnet",
           "ready": "Aufnahme bereit"
         }
+      },
+      "device_datetime": {
+        "name": "Gerätedatum und -uhrzeit (lokal)"
+      },
+      "room_power": {
+        "name": "Leistung der Heizelemente"
       }
     },
     "button": {
@@ -263,6 +269,9 @@
       },
       "event_capture_clear": {
         "name": "Ereignisaufnahmen löschen"
+      },
+      "clock_sync": {
+        "name": "Gerätezeit abgleichen"
       }
     },
     "binary_sensor": {
@@ -277,26 +286,87 @@
       },
       "connection": {
         "name": "Gateway-Verbindung"
+      },
+      "room_reachable": {
+        "name": "Alle Heizschalter erreichbar"
+      },
+      "room_actuator_on": {
+        "name": "Mindestens ein Heizschalter eingeschaltet"
+      },
+      "room_heating": {
+        "name": "Elektrischer Heizbetrieb erkannt"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Aufnahmeoptionen",
+        "title": "Aufnahme- und Raumoptionen",
         "description": "Die Dauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
         "data": {
           "capture_duration": "Aufnahmedauer (Sekunden)",
-          "event_capture_enabled": "Automatische Ereignisaufnahme"
+          "event_capture_enabled": "Automatische Ereignisaufnahme",
+          "manage_rooms": "Heizräume verwalten"
         },
         "data_description": {
           "capture_duration": "30–600 Sekunden; Standard: 120.",
-          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
+          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie.",
+          "manage_rooms": "Weiter zum Hinzufügen, Bearbeiten oder Entfernen eines Raums. Aufnahmeoptionen werden beim Abschluss der Raumänderung gespeichert."
+        }
+      },
+      "rooms": {
+        "title": "Heizräume",
+        "menu_options": {
+          "room_add": "Raum hinzufügen",
+          "room_edit": "Raum bearbeiten",
+          "room_remove": "Raum entfernen"
+        }
+      },
+      "room_edit": {
+        "title": "Raum bearbeiten",
+        "data": {
+          "room": "Raum"
+        }
+      },
+      "room_remove": {
+        "title": "Raum entfernen",
+        "data": {
+          "room": "Raum"
+        }
+      },
+      "room_delete": {
+        "title": "Raum entfernen",
+        "description": "{name} und die zugehörigen PROXON-Überwachungsentitäten entfernen? Verknüpfte Thermostate, Schalter, Sensoren und Quellgeräte bleiben erhalten."
+      },
+      "room": {
+        "title": "Heizraum konfigurieren",
+        "description": "Nur lesende Überwachung. Vorhandene Thermostate bleiben für die Regelung zuständig. Nur Leistungsmessungen der Heizelemente auswählen, ohne überlappende Summen. Ohne Leistungssensoren bleibt der Heizbetrieb unbekannt.",
+        "data": {
+          "name": "Name des Raumgeräts",
+          "area": "Home-Assistant-Bereich",
+          "actuators": "Schalter der Heizelemente",
+          "power_sensors": "Leistungssensoren der Heizelemente",
+          "thermostat": "Vorhandenes Thermostat (Verknüpfung)",
+          "temperature": "Temperatursensor (Verknüpfung)",
+          "humidity": "Luftfeuchtigkeitssensor (Verknüpfung)",
+          "threshold": "Schwelle für Heizbetrieb (W)",
+          "max_age": "Maximales Alter der Leistungswerte (Sekunden)"
+        },
+        "data_description": {
+          "threshold": "Heizbetrieb wird erkannt, wenn die Summe gültiger Messungen diese Schwelle überschreitet. Oberhalb des Standby-Verbrauchs einstellen.",
+          "max_age": "30–86400 Sekunden. Bezug ist die letzte Meldung an HA; länger als das Meldeintervall der Quelle wählen.",
+          "actuators": "Eine oder mehrere switch-Entitäten. Diese werden beobachtet, niemals geschaltet."
         }
       }
     },
     "error": {
-      "invalid_duration": "Eine ganze Zahl zwischen 30 und 600 eingeben."
+      "invalid_duration": "Eine ganze Zahl zwischen 30 und 600 eingeben.",
+      "invalid_room": "Namen, mindestens einen externen Schalter und gültige Einstellungen angeben.",
+      "missing_source": "Eine ausgewählte Entität existiert nicht mehr. Eine vorhandene Entität auswählen.",
+      "source_in_use": "Ein Schalter oder Leistungssensor ist bereits einem anderen Raum zugeordnet."
+    },
+    "abort": {
+      "no_rooms": "Kein konfigurierter Raum vorhanden."
     }
   }
 }

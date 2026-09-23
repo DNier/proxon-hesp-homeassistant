@@ -14,7 +14,11 @@ network addresses and identifiers from its diagnostic data. Review the complete
 export before sharing it: Home Assistant metadata and recorded bus bytes can
 still contain information about your installation.
 
-`application_bytes_sent` remains zero in normal operation. A connected TCP socket
+`application_bytes_sent` counts bytes handed to the TCP writer since the
+integration was loaded. It stays zero unless the time-alignment button is
+pressed and a correction is needed; it does not prove physical delivery.
+`clock_sync_status` reports idle, waiting, confirmed, already_current or
+unconfirmed; `clock_sync_target` records the last requested local date/minute. A connected TCP socket
 does not guarantee that supported, fresh telemetry is being received.
 
 ## Recording

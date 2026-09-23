@@ -1,3 +1,48 @@
+## 0.12.0b1 — Heating rooms and optional device time alignment (beta)
+
+This is a prerelease for initial installation testing. **0.11.0 remains the stable release.**
+
+### Heating rooms
+
+- Configure optional rooms through the integration options, with a separate virtual
+  HA device and optional area assignment for each room.
+- Link existing switches, power sensors, thermostats and temperature/humidity
+  sensors from any manufacturer. Multiple heaters per room are supported.
+- Report switch availability, switch state, complete heater power and electrical
+  heating detected above a configurable threshold. Missing, invalid, restored or
+  expired power readings remain unknown; they are never assumed to be 0 W.
+- Keep existing thermostats responsible for control. Room monitoring sends no
+  switching commands. Editing or removing rooms preserves linked source devices
+  and ongoing recordings. Renaming registered sources preserves their links.
+
+### Device time
+
+- Add an optional local-calendar sensor and a disabled-by-default manual time
+  alignment button using Home Assistant's timezone. This button is the only
+  implemented HESP write action; it sends one calendar telegram and waits for
+  controller readback, with no automatic retries or startup synchronization.
+- The command was display-confirmed on one LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort
+  installation. Other revisions and retention after power loss remain unverified.
+  Correcting the calendar can change which existing time-program period is active.
+
+### Compatibility and installation
+
+Requires **Home Assistant 2026.9 or later**. Existing entity identities, settings
+and thermostat control remain in place. New rooms are opt-in.
+
+In HACS, open PROXON HESP and use **Redownload** to select **0.12.0b1**;
+allow beta/prerelease versions if necessary. Export any recordings needed before
+restarting Home Assistant, because recordings are kept in memory only.
+Start with one room via **Configure → Manage heating rooms → Add room**.
+
+Automated validation covers room lifecycle, missing/stale measurements, source
+renames, upgrade from 0.8.0 and bounded calendar writes. Physical acceptance of
+room monitoring is pending. Reachability is not proof of central heating release;
+room electrical consumption does not classify central heating, cooling or defrost.
+
+See [room setup](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/ROOMS.md)
+and [device time alignment](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/CLOCK_SYNC.md).
+
 ## 0.11.0 — Continuous event recording
 
 - Extend automatic compressor event prehistory to 180 seconds; retain 180 seconds

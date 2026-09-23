@@ -16,6 +16,7 @@ from .capture import STATUSES
 from .const import DOMAIN
 from .event_capture import EVENT_STATUSES
 from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
+from .rooms import async_setup_rooms
 
 DESCRIPTIONS = (
     *(
@@ -53,6 +54,13 @@ DESCRIPTIONS = (
             icon="mdi:engine" if key == "compressor_rpm" else "mdi:fan",
         )
         for key in ("fan_supply_rpm", "fan_extract_rpm", "compressor_rpm")
+    ),
+    SensorEntityDescription(
+        key="device_datetime",
+        translation_key="device_datetime",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
         key="device_clock",
@@ -131,6 +139,7 @@ async def async_setup_entry(
     entry: ProxonConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    await async_setup_rooms(hass, entry, async_add_entities, "sensor")
     async_add_entities(
         [
             *(ProxonSensor(entry, description) for description in DESCRIPTIONS),

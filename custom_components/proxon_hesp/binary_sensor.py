@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
 from .const import DOMAIN
+from .rooms import async_setup_rooms
 
 DESCRIPTIONS = (
     BinarySensorEntityDescription(
@@ -31,6 +32,7 @@ async def async_setup_entry(
     entry: ProxonConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    await async_setup_rooms(hass, entry, async_add_entities, "binary_sensor")
     async_add_entities(
         [
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),

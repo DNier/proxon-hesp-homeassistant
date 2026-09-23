@@ -1,4 +1,4 @@
-"""One receive-only connection and per-value freshness per entry."""
+"""One connection, per-value freshness and explicit calendar correction."""
 
 import asyncio
 import logging
@@ -6,13 +6,16 @@ import time
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .capture import DURATION, Capture
 from .const import PROFILE, STALE_SECONDS
 from .event_capture import EventCapture
+from .hesp.calendar import calendar_frame, calendar_payload
 from .hesp.decoder import Decoder, Reading, Statistics
 from .hesp.transport import NoSupportedData, open_receiver, receive
 
@@ -33,6 +36,8 @@ class ProxonRuntime:
         integration_version: str | None = None,
         profile: str = PROFILE,
     ) -> None:
+        self.room_updates = []
+        self.room_config = []
         self.diagnostic_listeners: set[Callable[[], None]] = set()
         self.capture = Capture(capture_duration, self._notify_diagnostics)
         self.event_capture = EventCapture(
@@ -54,6 +59,13 @@ class ProxonRuntime:
         self.previous_stats = Statistics()
         self.task: asyncio.Task | None = None
         self.timer: asyncio.TimerHandle | None = None
+        self.writer: asyncio.StreamWriter | None = None
+        self.application_bytes_sent = 0
+        self.clock_sync_status = "idle"
+        self.clock_sync_target: str | None = None
+        self._clock_pending: asyncio.Future | None = None
+        self._clock_expected: set[int] = set()
+        self._clock_last_attempt: float | None = None
 
     async def start(self, entry) -> None:
         self.task = entry.async_create_background_task(
@@ -87,7 +99,9 @@ class ProxonRuntime:
         delay = 1
         while True:
             try:
-                async with open_receiver(self.host, self.port) as reader:
+                async with open_receiver(
+                    self.host, self.port, self._set_writer
+                ) as reader:
                     self.connected = True
                     self._notify()
                     self._notify_diagnostics()
@@ -100,6 +114,13 @@ class ProxonRuntime:
                             if reading.key == "compressor_rpm":
                                 self.event_capture.observe_rpm(reading.value)
                             self.values[reading.key] = (reading, now)
+                            if (
+                                reading.key == "uptime"
+                                and self._clock_pending is not None
+                                and not self._clock_pending.done()
+                                and reading.value in self._clock_expected
+                            ):
+                                self._clock_pending.set_result(True)
                         delay = 1
                         self.last_error = None
                         self.ready.set()
@@ -109,6 +130,7 @@ class ProxonRuntime:
                 self.last_error = type(err).__name__
                 _LOGGER.debug("Receiver reconnect: %s", self.last_error)
             finally:
+                self._set_writer(None)
                 self.connected = False
                 self.values.clear()
                 self.event_capture.disconnect()
@@ -125,6 +147,74 @@ class ProxonRuntime:
             self.reconnects += 1
             await asyncio.sleep(delay)
             delay = min(delay * 2, 60)
+
+    @callback
+    def _set_writer(self, writer) -> None:
+        self.writer = writer
+        if writer is None and self._clock_pending is not None:
+            if not self._clock_pending.done():
+                self._clock_pending.set_result(False)
+
+    async def sync_clock(self) -> None:
+        """One explicit write on the existing connection, never retry on failure."""
+        if self._clock_pending is not None:
+            raise HomeAssistantError("A device time update is already in progress")
+        writer = self.writer
+        current = self.get("uptime")
+        if writer is None or writer.is_closing() or current is None:
+            raise HomeAssistantError("Fresh device calendar data is required")
+        now = time.monotonic()
+        if self._clock_last_attempt is not None and now - self._clock_last_attempt < 30:
+            raise HomeAssistantError(
+                "Please wait 30 seconds before another time update"
+            )
+        local = datetime.now(ZoneInfo(self.hass.config.time_zone))
+        try:
+            frame = calendar_frame(local)
+        except ValueError as err:
+            raise HomeAssistantError("Home Assistant date cannot be encoded") from err
+        self.clock_sync_target = local.isoformat(timespec="minutes")
+        expected = int.from_bytes(calendar_payload(local), "little")
+        if current.value == expected:
+            self.clock_sync_status = "already_current"
+            self._notify_diagnostics()
+            return
+        self._clock_last_attempt = now
+        self._clock_expected = {expected}
+        following = local + timedelta(minutes=1)
+        if following.year <= 2127:
+            self._clock_expected.add(
+                int.from_bytes(calendar_payload(following), "little")
+            )
+        pending = self._clock_pending = asyncio.get_running_loop().create_future()
+        self.clock_sync_status = "waiting"
+        self._notify_diagnostics()
+        try:
+            # No await between checking the connection and the single write.
+            writer.write(frame)
+            self.application_bytes_sent += len(frame)
+            async with asyncio.timeout(20):
+                await writer.drain()
+                confirmed = await pending
+            if not confirmed:
+                raise HomeAssistantError(
+                    "Connection lost; device time update unconfirmed"
+                )
+            self.clock_sync_status = "confirmed"
+        except asyncio.CancelledError:
+            self.clock_sync_status = "unconfirmed"
+            raise
+        except (OSError, TimeoutError, HomeAssistantError) as err:
+            self.clock_sync_status = "unconfirmed"
+            raise HomeAssistantError(
+                "Device time update unconfirmed; check the BDE before retrying"
+            ) from err
+        finally:
+            if not pending.done():
+                pending.cancel()
+            self._clock_pending = None
+            self._clock_expected.clear()
+            self._notify_diagnostics()
 
     @callback
     def _capture_data(self, data: bytes) -> None:
@@ -198,6 +288,7 @@ class ProxonRuntime:
             "reconnects": self.reconnects,
             "statistics": counters,
             "fresh_keys": sorted(key for key in self.values if self.get(key)),
-            # Retain the diagnostic field; the receiver has no send path.
-            "application_bytes_sent": 0,
+            "application_bytes_sent": self.application_bytes_sent,
+            "clock_sync_status": self.clock_sync_status,
+            "clock_sync_target": self.clock_sync_target,
         }

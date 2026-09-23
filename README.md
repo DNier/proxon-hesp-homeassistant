@@ -4,13 +4,25 @@
 
 # PROXON HESP for Home Assistant
 
-A local, read-only Home Assistant integration for PROXON P-series systems using
+A local Home Assistant integration for PROXON P-series systems using
 a transparent RS485-to-TCP gateway on the HESP bus. No MQTT broker, cloud service
 or separate application is required.
 
-The integration receives existing bus traffic. It does not send HESP requests,
-change settings or control the equipment. The existing controller continues to
-operate the system.
+The integration receives existing bus traffic without polling. The optional
+**Align device time** button is the only write action: it sends one calendar
+update when pressed. Setup, reconnects and recordings never send commands.
+The existing controller continues to operate the system.
+
+## Beta 0.12.0b1
+
+Optional manufacturer-independent heating rooms group existing HA entities into
+virtual room devices and report electrical heating from valid power measurements.
+Existing thermostats remain responsible for switching. The beta also adds an
+optional device calendar sensor and manual time-alignment button.
+
+See [room setup](docs/ROOMS.md), [time alignment](docs/CLOCK_SYNC.md) and the
+[release notes](RELEASE_NOTES.md). Physical acceptance of room monitoring is pending;
+**0.11.0 remains the stable release**.
 
 ## New in 0.11.0
 
@@ -43,7 +55,7 @@ supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
 
 ## Compatibility
 
-Version **0.11.0** requires **Home Assistant 2026.9 or later**. Development tests
+Versions **0.11.0** and **0.12.0b1** require **Home Assistant 2026.9 or later**. Development tests
 use Home Assistant 2026.9.2 and Python 3.14.
 
 The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
@@ -63,11 +75,14 @@ This independent project is not affiliated with the equipment manufacturer.
 | Compressor speed, bypass switching state, intensive ventilation state | Enabled by default |
 | Filter remaining days and eight operating-hour counters | Enabled by default |
 | Controller fan level and two raw fan control values | Optional diagnostics |
-| Experimental device clock and raw response payloads | Optional diagnostics |
+| Local device date/time, experimental device clock and raw response payloads | Optional diagnostics |
 | Start, stop and clear a passive recording | Diagnostic buttons |
+| Align device time with Home Assistant | Optional configuration button |
 
 Values become unavailable after 30 seconds without a valid update, or immediately
 on disconnect. Missing data is not interpreted as zero, off or fault-free.
+The optional local date/time sensor validates calendar fields and weekday but
+does not assume a timezone or synchronize the device clock.
 Requested fan level can differ from the controller's reported level. Switching
 states are not measurements of physical actuator position.
 
@@ -106,6 +121,14 @@ change the host, port or name while preserving entity identity and history.
 Deleting and recreating the entry creates a new identity. Different host aliases
 for the same gateway cannot currently be detected as duplicates.
 
+### Calendar diagnostics (next version)
+
+The next version adds a local date/time sensor and an explicit time-alignment
+button, both disabled by default (62 entities in total). Existing identities, enabled/disabled preferences and numeric raw
+calendar values are preserved. The raw calendar sensor receives a clearer name.
+The time-alignment button is the only new write action; no general control
+service is added. See [time alignment](docs/CLOCK_SYNC.md).
+
 ### Upgrading from 0.8.0
 
 Download any recording you need, update to 0.11.0 through HACS and restart Home
@@ -122,7 +145,7 @@ unique IDs and user preferences are retained.
 
 The experimental `proxon_hesp.prepare_target_temperature_test` and
 `proxon_hesp.send_target_temperature_test` actions have been removed. Remove any
-saved calls to them. There is no replacement write action. The experimental
+saved calls to them. There is no replacement target-temperature action. The experimental
 `target_temperature_test` diagnostic section is also removed; ordinary diagnostics
 and passive capture buttons remain available.
 
@@ -161,3 +184,13 @@ checksum derivation build on [Markus Mauch's HESP documentation](https://markusm
 licensed under CC BY 4.0. Adapted material retains that attribution and license;
 see [NOTICE.md](NOTICE.md). The PROXON logo is excluded from the MIT license and
 remains the property of its rights holders.
+
+## Optionale Heizräume
+
+Vorhandene Heizschalter, Leistungssensoren und Thermostate lassen sich über die
+Integrationsoptionen beliebig vielen Räumen zuordnen. Jeder Raum erhält ein eigenes
+virtuelles Gerät mit lesender Überwachung von Erreichbarkeit, Schaltzustand und
+elektrischem Heizbetrieb. Die bestehende Temperaturregelung bleibt verantwortlich.
+Es sind keine bestimmten Hersteller oder privaten Entitätsnamen vorausgesetzt.
+
+Einrichtung, Messwertgrenzen und Verhalten bei Ausfällen: [Heizräume](docs/ROOMS.md).

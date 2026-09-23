@@ -1,4 +1,4 @@
-"""Device-scoped capture controls; never send anything to the bus."""
+"""Device-scoped capture controls and an explicit calendar correction."""
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -23,7 +23,19 @@ DESCRIPTIONS = tuple(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
-        CaptureButton(entry, description) for description in DESCRIPTIONS
+        [
+            *(CaptureButton(entry, description) for description in DESCRIPTIONS),
+            ClockSyncButton(
+                entry,
+                ButtonEntityDescription(
+                    key="clock_sync",
+                    translation_key="clock_sync",
+                    icon="mdi:clock-check-outline",
+                    entity_category=EntityCategory.CONFIG,
+                    entity_registry_enabled_default=False,
+                ),
+            ),
+        ]
     )
 
 
@@ -42,3 +54,27 @@ class CaptureButton(ButtonEntity):
             return
         action = self.entity_description.key.removeprefix("capture_")
         getattr(self.runtime.capture, action)()
+
+
+class ClockSyncButton(CaptureButton):
+    """Optional manual action; no automatic invocation on setup or reconnect."""
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.runtime.listen(self.async_write_ha_state))
+        self.async_on_remove(self.runtime.listen_diagnostics(self.async_write_ha_state))
+
+    @property
+    def available(self):
+        return (
+            self.runtime.get("uptime") is not None and self.runtime.writer is not None
+        )
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "status": self.runtime.clock_sync_status,
+            "target_local_time": self.runtime.clock_sync_target,
+        }
+
+    async def async_press(self):
+        await self.runtime.sync_clock()

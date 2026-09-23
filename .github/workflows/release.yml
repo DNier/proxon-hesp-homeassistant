@@ -26,4 +26,9 @@ jobs:
         run: |
           VERSION=$(python -c 'import json; print(json.load(open("custom_components/proxon_hesp/manifest.json"))["version"])')
           python -m tools.release_notes --version "$VERSION" --output "$RUNNER_TEMP/release-notes.md"
-          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "PROXON HESP $VERSION" --notes-file "$RUNNER_TEMP/release-notes.md" --latest
+          if [[ "$VERSION" =~ (a|b|rc|dev)[0-9]+ ]]; then
+            RELEASE_FLAGS=(--prerelease --latest=false)
+          else
+            RELEASE_FLAGS=(--latest)
+          fi
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "PROXON HESP $VERSION" --notes-file "$RUNNER_TEMP/release-notes.md" "${RELEASE_FLAGS[@]}"

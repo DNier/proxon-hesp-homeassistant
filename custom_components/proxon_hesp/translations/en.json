@@ -11,7 +11,7 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: read-only integration; no control commands."
+          "profile": "LT-ZIM V1.6: passive telemetry; optional manual device time alignment."
         }
       },
       "reconfigure": {
@@ -24,7 +24,7 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: read-only integration; no control commands."
+          "profile": "LT-ZIM V1.6: passive telemetry; optional manual device time alignment."
         }
       }
     },
@@ -63,7 +63,7 @@
         "name": "Filter remaining time (reference)"
       },
       "uptime": {
-        "name": "Counter 0x032E (meaning unverified)"
+        "name": "Device calendar (raw)"
       },
       "counter_02d0": {
         "name": "Operating hours fan level 1"
@@ -249,6 +249,12 @@
           "recording": "Recording after event",
           "ready": "Capture ready"
         }
+      },
+      "device_datetime": {
+        "name": "Device date and time (local)"
+      },
+      "room_power": {
+        "name": "Heater power"
       }
     },
     "button": {
@@ -263,6 +269,9 @@
       },
       "event_capture_clear": {
         "name": "Clear event captures"
+      },
+      "clock_sync": {
+        "name": "Align device time"
       }
     },
     "binary_sensor": {
@@ -277,26 +286,87 @@
       },
       "connection": {
         "name": "Gateway connection"
+      },
+      "room_reachable": {
+        "name": "All heater switches reachable"
+      },
+      "room_actuator_on": {
+        "name": "At least one heater switch on"
+      },
+      "room_heating": {
+        "name": "Electrical heating detected"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Capture options",
+        "title": "Capture and room options",
         "description": "Applies to the next recording. Running and saved recordings are preserved. Memory limits may end a recording earlier.",
         "data": {
           "capture_duration": "Capture duration (seconds)",
-          "event_capture_enabled": "Automatic event capture"
+          "event_capture_enabled": "Automatic event capture",
+          "manage_rooms": "Manage heating rooms"
         },
         "data_description": {
           "capture_duration": "30–600 seconds; default: 120.",
-          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start or stop. Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them."
+          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start or stop. Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them.",
+          "manage_rooms": "Continue to add, edit or remove one room. Recording options are saved when the room change is completed."
+        }
+      },
+      "rooms": {
+        "title": "Heating rooms",
+        "menu_options": {
+          "room_add": "Add room",
+          "room_edit": "Edit room",
+          "room_remove": "Remove room"
+        }
+      },
+      "room_edit": {
+        "title": "Edit room",
+        "data": {
+          "room": "Room"
+        }
+      },
+      "room_remove": {
+        "title": "Remove room",
+        "data": {
+          "room": "Room"
+        }
+      },
+      "room_delete": {
+        "title": "Remove room",
+        "description": "Remove {name} and its PROXON monitoring entities? Linked thermostats, switches, sensors and source devices are retained."
+      },
+      "room": {
+        "title": "Configure heating room",
+        "description": "Read-only monitoring. Existing thermostats remain responsible for control. Select only dedicated heater power measurements without overlapping totals. Without power sensors, heating remains unknown.",
+        "data": {
+          "name": "Room device name",
+          "area": "Home Assistant area",
+          "actuators": "Heater switches",
+          "power_sensors": "Heater power sensors",
+          "thermostat": "Existing thermostat (reference)",
+          "temperature": "Temperature sensor (reference)",
+          "humidity": "Humidity sensor (reference)",
+          "threshold": "Heating threshold (W)",
+          "max_age": "Maximum power reading age (seconds)"
+        },
+        "data_description": {
+          "threshold": "Heating is detected when the sum of valid measurements exceeds this threshold. Adjust above standby consumption.",
+          "max_age": "30–86400 seconds. Based on the last report to HA; choose a value longer than the source reporting interval.",
+          "actuators": "One or more switch entities. These are observed, never controlled."
         }
       }
     },
     "error": {
-      "invalid_duration": "Enter a whole number between 30 and 600."
+      "invalid_duration": "Enter a whole number between 30 and 600.",
+      "invalid_room": "Enter a name, at least one external switch and valid settings.",
+      "missing_source": "A selected entity no longer exists. Select an existing entity.",
+      "source_in_use": "A switch or power sensor is already assigned to another room."
+    },
+    "abort": {
+      "no_rooms": "No configured room is available."
     }
   }
 }
