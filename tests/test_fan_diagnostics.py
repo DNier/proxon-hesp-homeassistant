@@ -61,7 +61,9 @@ def test_recorded_diagnostics_at_every_stream_split(raw, expected):
     for split in range(len(frame) + 1):
         decoder = Decoder()
         readings = decoder.feed(frame[:split]) + decoder.feed(frame[split:])
-        assert {r.key: r.value for r in readings} == expected_values
+        assert {
+            r.key: r.value for r in readings if r.key != "experimental_status_0208"
+        } == expected_values
 
 
 @pytest.mark.parametrize("raw", [LEVELS[0][0], CONTROLS[0][0]])
@@ -95,7 +97,8 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
 )
 def test_unknown_status_is_not_a_guessed_level(status):
     header = bytes.fromhex(LEVELS[0][0])[:8]
-    assert Decoder().feed(checked(header + struct.pack("<I", status))) == []
+    readings = Decoder().feed(checked(header + struct.pack("<I", status)))
+    assert [r.key for r in readings] == ["experimental_status_0208"]
 
 
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -1.0, 10001.0])
@@ -213,4 +216,4 @@ def test_recorded_transition_preserves_independent_readings_at_every_split(raw):
             "fan_extract_control": 5200.0,
         }
         assert decoder.stats.checksum_rejected == 0
-        assert decoder.stats.value_rejected == 1
+        assert decoder.stats.value_rejected == 0

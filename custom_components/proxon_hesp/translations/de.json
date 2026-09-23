@@ -295,6 +295,15 @@
       },
       "room_heating": {
         "name": "Elektrischer Heizbetrieb erkannt"
+      },
+      "experimental_0208_bit_8": {
+        "name": "Experimentell: Status 0x0208 Bit 8"
+      },
+      "experimental_0208_bit_9": {
+        "name": "Experimentell: Status 0x0208 Bit 9"
+      },
+      "experimental_0208_bit_28": {
+        "name": "Experimentell: Status 0x0208 Bit 28"
       }
     }
   },

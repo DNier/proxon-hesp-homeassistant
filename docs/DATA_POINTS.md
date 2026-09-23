@@ -214,3 +214,13 @@ This does not establish general control support or persistence across power loss
 
 For known SET messages, external-write evidence and limits of automated testing,
 see [control evidence](CONTROL_EVIDENCE.md).
+
+## Experimental status-bit observations (0.12.0b5)
+
+Three disabled-by-default diagnostic binary sensors expose bits 8, 9 and 28 of
+validated 224000/0208/4 responses. No actuator semantics are assigned. Raw bytes,
+full little-endian status word and reception time accompany each observation.
+Unknown words are accepted as raw observations but do not refresh the allowlisted
+fan-level reading. Structural/checksum failures remain rejected; normal 30-second
+freshness and immediate disconnect unavailability apply. This adds three entities
+(65 on the main device). See the [German comparison guide](EXPERIMENTAL.md).

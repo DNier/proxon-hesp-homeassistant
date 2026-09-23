@@ -19,6 +19,7 @@ def test_recorded_controller_values_and_every_split():
     stream = b"".join(FRAMES.values())
     expected = {
         "controller_fan_level": 3,
+        "experimental_status_0208": "1a100080",
         "fan_supply_control": 5200.0,
         "fan_extract_control": 5200.0,
         "bypass_status": True,

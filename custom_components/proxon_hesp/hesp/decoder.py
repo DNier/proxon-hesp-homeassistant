@@ -153,6 +153,13 @@ class Decoder:
 
     @classmethod
     def _readings(cls, key: str, payload: bytes) -> list[Reading]:
+        if key == "controller_fan_level":
+            # Raw status is evidence, not a validated fan/valve interpretation.
+            readings = [Reading("experimental_status_0208", payload.hex())]
+            level = cls._value(key, payload)
+            if level is not None:
+                readings.append(Reading(key, level))
+            return readings
         if key == "fan_controls":
             if len(payload) != 8:
                 return []

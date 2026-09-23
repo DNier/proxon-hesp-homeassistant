@@ -11,7 +11,7 @@ This independent project is not affiliated with the equipment manufacturer.
 ## Install
 
 Home Assistant **2026.9 or later** is required for stable **0.11.0** and beta
-**0.12.0b4**. Add this repository to HACS as a custom repository, category
+**0.12.0b5**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -34,10 +34,10 @@ The optional device-time button is the only HESP write action: one explicit
 calendar correction, no automatic synchronization or retries. Corrected time can
 change which existing time-program period is active. Setup and capture stay passive.
 
-Back up HA before upgrading to 0.12.0b4: its configuration format cannot be loaded
+Back up HA before upgrading to 0.12.0b5: its configuration format cannot be loaded
 by older versions. Downgrading requires the previous backup. Keep the existing
 entry to preserve identities and preferences. Download recordings before restarting;
-they exist only in memory. Beta 0.12.0b4 groups technical telemetry under Diagnostics and makes detailed
+they exist only in memory. Beta 0.12.0b5 groups technical telemetry under Diagnostics and makes detailed
 readings optional on new installations. Existing activation preferences remain unchanged.
 
 ## Documentation and contributing
@@ -56,3 +56,5 @@ For installation, room configuration, diagnostics and upgrades, see the
 [German documentation index](README.md#dokumentation) and [release notes](RELEASE_NOTES.md).
 Original code is [MIT licensed](LICENSE); protocol attribution and exclusions
 are documented in [NOTICE.md](NOTICE.md).
+
+[Experimental status-bit comparison guide (German)](docs/EXPERIMENTAL.md).

@@ -20,20 +20,21 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 - **0.11.0** ist die stabile Version. Sie enthält automatische Aufnahmen bei
   Verdichterstarts und -stopps mit bis zu 180 Sekunden Vor- und Nachlauf und
   bewahrt die vier jüngsten Ereignisaufnahmen auf.
-- **0.12.0b4** ist eine Vorabversion. Sie ergänzt optionale Heizräume als native
+- **0.12.0b5** ist eine Vorabversion. Sie ergänzt optionale Heizräume als native
   HA-Untereinträge sowie Gerätezeit-Anzeige und manuellen Zeitabgleich.
   Die praktische Abnahme der Raumüberwachung ist noch offen.
-- **0.12.0b4** überarbeitet außerdem die [Einteilung der Entitäten](docs/ENTITY_ORGANIZATION.md)
-  und vereinheitlicht die Nutzerdokumentation auf Deutsch.
+- **0.12.0b5** überarbeitet außerdem die [Einteilung der Entitäten](docs/ENTITY_ORGANIZATION.md)
+  und vereinheitlicht die Nutzerdokumentation auf Deutsch. Neu sind drei optionale
+  experimentelle Statusbits zum Vergleich mit dem BDE.
 
-Vor dem Wechsel auf 0.12.0b4 ein HA-Backup erstellen: Das Konfigurationsformat
+Vor dem Wechsel auf 0.12.0b5 ein HA-Backup erstellen: Das Konfigurationsformat
 steigt auf Version 2. Ältere Integrationsversionen können es nicht laden;
 für ein Zurückwechseln ist das vorherige Backup erforderlich.
 Details stehen in den [Versionshinweisen](RELEASE_NOTES.md).
 
 ## Voraussetzungen und Kompatibilität
 
-0.11.0 und 0.12.0b4 benötigen **Home Assistant ab 2026.9**.
+0.11.0 und 0.12.0b5 benötigen **Home Assistant ab 2026.9**.
 Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
 Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
 Konfiguration. Andere Revisionen sind damit nicht automatisch unterstützt.
@@ -120,6 +121,7 @@ Beim Update von 0.8.0 auf 0.11.0 bleiben die 54 bisherigen Entitätsidentitäten
 erhalten; sechs kommen hinzu (60 insgesamt). Automatische Ereignisaufnahmen
 sind zunächst deaktiviert. Die manuelle Aufnahmedauer bleibt ohne Änderung
 bei 120 Sekunden. Die Beta ergänzt zwei Gerätezeit-Entitäten (62 am Hauptgerät)
+sowie ab 0.12.0b5 drei experimentelle Statusbits (65 am Hauptgerät)
 und die jeweils eingerichteten Raum-Entitäten.
 
 Seit 0.8.0 sind `proxon_hesp.prepare_target_temperature_test` und
@@ -170,3 +172,5 @@ Prüfsummenherleitung bauen auf [Markus Mauchs HESP-Dokumentation](https://marku
 unter CC BY 4.0 auf. Für übernommenes bzw. angepasstes Material bleiben
 Quellenangabe und Lizenz erhalten; siehe [NOTICE.md](NOTICE.md).
 Das PROXON-Logo ist von der MIT-Lizenz ausgenommen und gehört den jeweiligen Rechteinhabern.
+
+[Experimentelle Statusbits zum BDE-Vergleich](docs/EXPERIMENTAL.md).

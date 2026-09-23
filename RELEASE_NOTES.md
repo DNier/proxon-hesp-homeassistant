@@ -3,6 +3,30 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0b5 — Experimentelle Statusbits für BDE-Vergleiche (Beta)
+
+- Drei zunächst deaktivierte Diagnoseentitäten für Bits 8, 9 und 28 von
+  Statuswort 0x0208 ergänzen. Neutrale Namen; keine unbestätigte Heiz-/Kühl-,
+  PTC- oder Ventilinterpretation.
+- Rohbytes, Statuswort, Telegrammkennung und Empfangszeit als Attribute anzeigen.
+  Bei fehlenden/veralteten Daten oder Verbindungsabbruch nicht verfügbar.
+- Bisherige Luftstufen-Zuordnungen, Entitätsidentitäten und Einstellungen erhalten.
+  Die reine Bitansicht akzeptiert auch bislang nicht interpretierte Statuswörter;
+  sie aktualisieren weiterhin keine unbestätigte Regler-Luftstufe.
+- Deutsche Anleitung für zeitgleiche Vergleiche mit dem BDE ergänzen.
+
+### Update und Prüfung
+
+Backup erstellen, benötigte Mitschnitte herunterladen, **0.12.0b5** über HACS
+installieren und HA neu starten. Gewünschte experimentelle Entitäten auf der
+Geräteseite aktivieren. Es werden keine Steuerbefehle gesendet.
+
+261 automatisierte Tests einschließlich aufgezeichneter Übergänge, Prüfsummenfehler,
+Datenalter, Verbindungsabbruch und Upgrade bestanden; Ruff-Prüfungen ebenfalls.
+Die physikalische Bedeutung der Bits bleibt unbestätigt. **0.11.0 bleibt stabil**.
+Bei Wechsel von vor 0.12.0b3 gilt weiterhin die Migration auf Konfigurationsformat 2;
+ein Zurückwechseln erfordert das Backup vor der Migration.
+
 ## 0.12.0b4 — Übersichtliche Gerätediagnose und deutsche Dokumentation (Beta)
 
 - Interne Temperaturen, Lüfter-/Verdichterdrehzahlen und Filterrestlaufzeit der

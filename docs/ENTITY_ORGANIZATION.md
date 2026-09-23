@@ -28,3 +28,5 @@ in Dashboards, Verlauf oder Automationen gebraucht werden. Die Integration nimmt
 keine pauschale Deaktivierung oder Umbenennung bestehender Entitäts-IDs vor.
 Die Standard-Geräteseite bestimmt ihr Layout selbst; frei gestaltete fachliche
 Abschnitte gehören in ein eigenes Dashboard.
+
+Ab 0.12.0b5 ergänzen drei standardmäßig deaktivierte [experimentelle Statusbits](EXPERIMENTAL.md) die Diagnose.

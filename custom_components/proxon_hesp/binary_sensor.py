@@ -1,5 +1,8 @@
 """Read-only reported panel and controller switching states."""
 
+import time
+from datetime import UTC, datetime, timedelta
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -36,6 +39,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),
+            *(ProxonExperimentalBit(entry, bit) for bit in (8, 9, 28)),
             ProxonCompressorSensor(
                 entry,
                 BinarySensorEntityDescription(
@@ -116,3 +120,67 @@ class ProxonConnectionSensor(ProxonBinarySensor):
     @property
     def is_on(self) -> bool:
         return self.runtime.connected
+
+
+class ProxonExperimentalBit(ProxonBinarySensor):
+    """Expose an observed bit without assigning an actuator meaning."""
+
+    def __init__(self, entry, bit):
+        super().__init__(
+            entry,
+            BinarySensorEntityDescription(
+                key=f"experimental_0208_bit_{bit}",
+                translation_key=f"experimental_0208_bit_{bit}",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=False,
+                icon="mdi:flask-outline",
+            ),
+        )
+        self.bit = bit
+        self._sample_stamp = None
+        self._received_at = None
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.runtime.listen(self._update_sample))
+        self._update_sample()
+
+    def _update_sample(self):
+        sample = self.runtime.values.get("experimental_status_0208")
+        if sample is not None and sample[1] != self._sample_stamp:
+            self._sample_stamp = sample[1]
+            self._received_at = (
+                datetime.now(UTC)
+                - timedelta(seconds=max(0, time.monotonic() - sample[1]))
+            ).isoformat()
+        self.async_write_ha_state()
+
+    @property
+    def available(self):
+        return self.runtime.get("experimental_status_0208") is not None
+
+    @property
+    def is_on(self):
+        reading = self.runtime.get("experimental_status_0208")
+        if reading is None:
+            return None
+        return bool(
+            int.from_bytes(bytes.fromhex(reading.value), "little") & (1 << self.bit)
+        )
+
+    @property
+    def extra_state_attributes(self):
+        reading = self.runtime.get("experimental_status_0208")
+        return {
+            "data_point": "0x0208",
+            "telegram_identity": "224000",
+            "bit": self.bit,
+            "bit_numbering": "LSB 0, little-endian uint32",
+            "payload_hex": reading.value if reading else None,
+            "status_word_hex": (
+                f"{int.from_bytes(bytes.fromhex(reading.value), 'little'):08X}"
+                if reading
+                else None
+            ),
+            "last_valid_update": self._received_at,
+            "interpretation": "unconfirmed",
+        }

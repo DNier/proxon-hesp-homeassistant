@@ -295,6 +295,15 @@
       },
       "room_heating": {
         "name": "Electrical heating detected"
+      },
+      "experimental_0208_bit_8": {
+        "name": "Experimental: status 0x0208 bit 8"
+      },
+      "experimental_0208_bit_9": {
+        "name": "Experimental: status 0x0208 bit 9"
+      },
+      "experimental_0208_bit_28": {
+        "name": "Experimental: status 0x0208 bit 28"
       }
     }
   },
