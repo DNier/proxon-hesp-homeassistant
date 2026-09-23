@@ -19,11 +19,16 @@ from .const import (
     PROFILE,
 )
 from .hesp.transport import NoSupportedData, probe
-from .room_flow import RoomOptionsMixin
+from .room_flow import RoomSubentryFlow
 
 
 class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
-    VERSION = 1
+    VERSION = 2
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry):
+        return {"room": RoomSubentryFlow}
 
     @staticmethod
     @callback
@@ -91,7 +96,7 @@ class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._step("reconfigure", user_input)
 
 
-class ProxonOptionsFlow(RoomOptionsMixin, OptionsFlow):
+class ProxonOptionsFlow(OptionsFlow):
     """Configure recording limits without touching the gateway connection."""
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
@@ -102,12 +107,6 @@ class ProxonOptionsFlow(RoomOptionsMixin, OptionsFlow):
             except ValueError, KeyError:
                 errors[CONF_CAPTURE_DURATION] = "invalid_duration"
             else:
-                if user_input.get("manage_rooms", False):
-                    self._pending_capture = {
-                        CONF_CAPTURE_DURATION: duration,
-                        CONF_EVENT_CAPTURE: user_input.get(CONF_EVENT_CAPTURE, False),
-                    }
-                    return await self.async_step_rooms()
                 return self.async_create_entry(
                     data={
                         **self.config_entry.options,
@@ -134,7 +133,6 @@ class ProxonOptionsFlow(RoomOptionsMixin, OptionsFlow):
                             CONF_EVENT_CAPTURE, False
                         ),
                     ): bool,
-                    vol.Optional("manage_rooms"): bool,
                 }
             ),
             errors=errors,

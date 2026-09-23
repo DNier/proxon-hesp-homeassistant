@@ -13,12 +13,15 @@ The integration receives existing bus traffic without polling. The optional
 update when pressed. Setup, reconnects and recordings never send commands.
 The existing controller continues to operate the system.
 
-## Beta 0.12.0b2
+## Beta 0.12.0b3
 
 Optional manufacturer-independent heating rooms group existing HA entities into
 virtual room devices and report electrical heating from valid power measurements.
-Area assignment on room creation is corrected in beta 2; saved selections on
-unassigned room devices are recovered automatically after updating.
+Each room now appears as a native HA subentry with its own configuration and
+delete actions. Room setup is separate from recording options and organized into
+three short steps. Existing beta rooms are migrated automatically with stable IDs.
+Create a backup before upgrading: older beta versions cannot load the new
+configuration format.
 Existing thermostats remain responsible for switching. The beta also adds an
 optional device calendar sensor and manual time-alignment button.
 
@@ -57,7 +60,7 @@ supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
 
 ## Compatibility
 
-Versions **0.11.0** and **0.12.0b2** require **Home Assistant 2026.9 or later**. Development tests
+Versions **0.11.0** and **0.12.0b3** require **Home Assistant 2026.9 or later**. Development tests
 use Home Assistant 2026.9.2 and Python 3.14.
 
 The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
@@ -190,7 +193,7 @@ remains the property of its rights holders.
 ## Optionale Heizräume
 
 Vorhandene Heizschalter, Leistungssensoren und Thermostate lassen sich über die
-Integrationsoptionen beliebig vielen Räumen zuordnen. Jeder Raum erhält ein eigenes
+Funktion **Heizraum hinzufügen** beliebig vielen Räumen zuordnen. Jeder Raum erhält ein eigenes
 virtuelles Gerät mit lesender Überwachung von Erreichbarkeit, Schaltzustand und
 elektrischem Heizbetrieb. Die bestehende Temperaturregelung bleibt verantwortlich.
 Es sind keine bestimmten Hersteller oder privaten Entitätsnamen vorausgesetzt.

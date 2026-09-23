@@ -1,3 +1,31 @@
+## 0.12.0b3 — Native heating room configuration (beta)
+
+- Show each heating room as a native Home Assistant subentry under PROXON HESP,
+  with direct add, configure and delete actions. Recording options stay separate.
+- Split room configuration into three short steps: room/heaters, optional
+  references, and measurement settings. Save only when the last step completes.
+- Automatically migrate existing beta rooms, preserving device and entity IDs,
+  names, areas, source links, disabled entities and recording settings.
+- Keep room changes read-only and independent of the gateway connection and
+  ongoing recordings. Existing thermostats remain responsible for switching.
+
+### Upgrade
+
+Create a Home Assistant backup before updating. Install **0.12.0b3** through HACS
+and restart Home Assistant. Export recordings needed before the restart, because
+recordings are held in memory only. Existing rooms do not need to be recreated.
+
+Use **Settings → Devices & services → PROXON HESP → Add heating room** for a new
+room. Configure existing rooms directly on their subentry. The parent entry's
+Configure action now contains recording options only.
+
+The stored configuration format changes from version 1 to 2. Older integration
+versions cannot load it; downgrading requires restoring a pre-migration backup.
+
+260 automated tests passed, including migration of existing registry entries,
+native room add/reconfigure/delete, cancellation and preservation of recordings.
+This remains a prerelease; **0.11.0 remains the stable version**.
+
 ## 0.12.0b2 — Fix heating room area assignment (beta)
 
 - Apply the selected HA area when adding a room, including when HA registers

@@ -18,7 +18,27 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
-CONF_ROOMS = "rooms"
+CONF_ROOMS = "rooms"  # Legacy beta options, migrated to native subentries.
+ROOM_SUBENTRY = "room"
+
+
+def configured_rooms(entry):
+    """Read room configuration from native subentries."""
+    return [
+        dict(sub.data)
+        for sub in entry.subentries.values()
+        if sub.subentry_type == ROOM_SUBENTRY
+    ]
+
+
+def room_subentry_id(entry, room):
+    return next(
+        sub.subentry_id
+        for sub in entry.subentries.values()
+        if sub.subentry_type == ROOM_SUBENTRY and sub.data["id"] == room["id"]
+    )
+
+
 SOURCE_FIELDS = ("actuators", "power_sensors", "thermostat", "temperature", "humidity")
 
 
@@ -62,7 +82,7 @@ async def async_setup_rooms(hass, entry, add_entities, platform):
     entities = {}
 
     async def update():
-        rooms = entry.options.get(CONF_ROOMS, [])
+        rooms = configured_rooms(entry)
         desired = {
             (room["id"], key): room
             for room in rooms
@@ -78,7 +98,7 @@ async def async_setup_rooms(hass, entry, add_entities, platform):
             )
             if registered_id:
                 registry.async_remove(registered_id)
-        added = []
+        added = {}
         for identity, room in desired.items():
             if identity in entities:
                 entity = entities[identity]
@@ -89,9 +109,9 @@ async def async_setup_rooms(hass, entry, add_entities, platform):
             else:
                 cls = RoomPowerSensor if platform == "sensor" else RoomBinarySensor
                 entity = entities[identity] = cls(entry, room, identity[1])
-                added.append(entity)
-        if added:
-            add_entities(added)
+                added.setdefault(room_subentry_id(entry, room), []).append(entity)
+        for subentry_id, new_entities in added.items():
+            add_entities(new_entities, config_subentry_id=subentry_id)
 
     entry.runtime_data.room_updates.append(update)
     entry.async_on_unload(lambda: entry.runtime_data.room_updates.remove(update))
@@ -101,7 +121,7 @@ async def async_setup_rooms(hass, entry, add_entities, platform):
 def sync_room_devices(hass, entry, previous=None):
     """Update virtual devices and remove only obsolete integration-owned records."""
     registry = dr.async_get(hass)
-    rooms = entry.options.get(CONF_ROOMS, [])
+    rooms = configured_rooms(entry)
     desired = {room_device_id(entry, room) for room in rooms}
     entity_ids = {
         f"{room_device_id(entry, room)}_{key}"
@@ -142,6 +162,7 @@ def sync_room_devices(hass, entry, previous=None):
     for room in rooms:
         device = registry.async_get_or_create(
             config_entry_id=entry.entry_id,
+            config_subentry_id=room_subentry_id(entry, room),
             identifiers={(DOMAIN, room_device_id(entry, room))},
             name=room["name"],
             entry_type=dr.DeviceEntryType.SERVICE,

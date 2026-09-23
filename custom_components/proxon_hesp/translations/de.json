@@ -301,72 +301,77 @@
   "options": {
     "step": {
       "init": {
-        "title": "Aufnahme- und Raumoptionen",
+        "title": "Aufnahmeoptionen",
         "description": "Die Dauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
         "data": {
           "capture_duration": "Aufnahmedauer (Sekunden)",
-          "event_capture_enabled": "Automatische Ereignisaufnahme",
-          "manage_rooms": "Heizräume verwalten"
+          "event_capture_enabled": "Automatische Ereignisaufnahme"
         },
         "data_description": {
           "capture_duration": "30–600 Sekunden; Standard: 120.",
-          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie.",
-          "manage_rooms": "Weiter zum Hinzufügen, Bearbeiten oder Entfernen eines Raums. Aufnahmeoptionen werden beim Abschluss der Raumänderung gespeichert."
-        }
-      },
-      "rooms": {
-        "title": "Heizräume",
-        "menu_options": {
-          "room_add": "Raum hinzufügen",
-          "room_edit": "Raum bearbeiten",
-          "room_remove": "Raum entfernen"
-        }
-      },
-      "room_edit": {
-        "title": "Raum bearbeiten",
-        "data": {
-          "room": "Raum"
-        }
-      },
-      "room_remove": {
-        "title": "Raum entfernen",
-        "data": {
-          "room": "Raum"
-        }
-      },
-      "room_delete": {
-        "title": "Raum entfernen",
-        "description": "{name} und die zugehörigen PROXON-Überwachungsentitäten entfernen? Verknüpfte Thermostate, Schalter, Sensoren und Quellgeräte bleiben erhalten."
-      },
-      "room": {
-        "title": "Heizraum konfigurieren",
-        "description": "Nur lesende Überwachung. Vorhandene Thermostate bleiben für die Regelung zuständig. Nur Leistungsmessungen der Heizelemente auswählen, ohne überlappende Summen. Ohne Leistungssensoren bleibt der Heizbetrieb unbekannt.",
-        "data": {
-          "name": "Name des Raumgeräts",
-          "area": "Home-Assistant-Bereich",
-          "actuators": "Schalter der Heizelemente",
-          "power_sensors": "Leistungssensoren der Heizelemente",
-          "thermostat": "Vorhandenes Thermostat (Verknüpfung)",
-          "temperature": "Temperatursensor (Verknüpfung)",
-          "humidity": "Luftfeuchtigkeitssensor (Verknüpfung)",
-          "threshold": "Schwelle für Heizbetrieb (W)",
-          "max_age": "Maximales Alter der Leistungswerte (Sekunden)"
-        },
-        "data_description": {
-          "threshold": "Heizbetrieb wird erkannt, wenn die Summe gültiger Messungen diese Schwelle überschreitet. Oberhalb des Standby-Verbrauchs einstellen.",
-          "max_age": "30–86400 Sekunden. Bezug ist die letzte Meldung an HA; länger als das Meldeintervall der Quelle wählen.",
-          "actuators": "Eine oder mehrere switch-Entitäten. Diese werden beobachtet, niemals geschaltet."
+          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
         }
       }
     },
     "error": {
-      "invalid_duration": "Eine ganze Zahl zwischen 30 und 600 eingeben.",
-      "invalid_room": "Namen, mindestens einen externen Schalter und gültige Einstellungen angeben.",
-      "missing_source": "Eine ausgewählte Entität existiert nicht mehr. Eine vorhandene Entität auswählen.",
-      "source_in_use": "Ein Schalter oder Leistungssensor ist bereits einem anderen Raum zugeordnet."
-    },
-    "abort": {
-      "no_rooms": "Kein konfigurierter Raum vorhanden."
+      "invalid_duration": "Eine ganze Zahl zwischen 30 und 600 eingeben."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "entry_type": "Heizraum",
+      "initiate_flow": {
+        "user": "Heizraum hinzufügen",
+        "reconfigure": "Heizraum konfigurieren"
+      },
+      "step": {
+        "user": {
+          "title": "Raum und Heizelemente (1/3)",
+          "description": "Vorhandene Schalter und optionale Leistungsmessungen für diesen Raum auswählen. Die Überwachung ist nur lesend; bestehende Thermostate bleiben für die Regelung zuständig.",
+          "data": {
+            "name": "Name des Raumgeräts",
+            "area": "Home-Assistant-Bereich",
+            "actuators": "Schalter der Heizelemente",
+            "power_sensors": "Leistungssensoren der Heizelemente"
+          },
+          "data_description": {
+            "actuators": "Eine oder mehrere switch-Entitäten. Diese werden beobachtet, niemals geschaltet."
+          }
+        },
+        "references": {
+          "title": "Optionale Verknüpfungen (2/3)",
+          "description": "Alle Felder sind optional. Diese Verknüpfungen dokumentieren die vorhandene Einrichtung; sie erzeugen keine doppelten Sensoren oder ein neues Thermostat. Bei Bedarf leer lassen und weitergehen.",
+          "data": {
+            "thermostat": "Vorhandenes Thermostat (Verknüpfung)",
+            "temperature": "Temperatursensor (Verknüpfung)",
+            "humidity": "Luftfeuchtigkeitssensor (Verknüpfung)"
+          },
+          "data_description": {}
+        },
+        "advanced": {
+          "title": "Messwert-Einstellungen (3/3)",
+          "description": "Die Standardwerte sind ein Ausgangspunkt. Schwelle oberhalb des Standby-Verbrauchs und Altersgrenze länger als das Meldeintervall wählen. Ohne Leistungsmessungen bleibt der Heizbetrieb unbekannt. Beim Abschluss wird der Raum gespeichert.",
+          "data": {
+            "threshold": "Schwelle für Heizbetrieb (W)",
+            "max_age": "Maximales Alter der Leistungswerte (Sekunden)"
+          },
+          "data_description": {
+            "threshold": "Heizbetrieb wird erkannt, wenn die Summe gültiger Messungen diese Schwelle überschreitet. Oberhalb des Standby-Verbrauchs einstellen.",
+            "max_age": "30–86400 Sekunden. Bezug ist die letzte Meldung an HA; länger als das Meldeintervall der Quelle wählen."
+          }
+        }
+      },
+      "error": {
+        "invalid_room": "Namen, mindestens einen externen Schalter und gültige Einstellungen angeben.",
+        "missing_source": "Eine ausgewählte Entität existiert nicht mehr. Eine vorhandene Entität auswählen.",
+        "source_in_use": "Ein Schalter oder Leistungssensor ist bereits einem anderen Raum zugeordnet."
+      },
+      "abort": {
+        "invalid_room": "Namen, mindestens einen externen Schalter und gültige Einstellungen angeben.",
+        "missing_source": "Eine ausgewählte Entität existiert nicht mehr. Eine vorhandene Entität auswählen.",
+        "source_in_use": "Ein Schalter oder Leistungssensor ist bereits einem anderen Raum zugeordnet.",
+        "reconfigure_successful": "Raumeinstellungen aktualisiert."
+      }
     }
   }
 }

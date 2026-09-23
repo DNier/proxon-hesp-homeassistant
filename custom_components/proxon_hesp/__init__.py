@@ -1,6 +1,8 @@
 """Read-only local PROXON HESP reception."""
 
-from homeassistant.config_entries import ConfigEntry
+from types import MappingProxyType
+
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,7 +17,7 @@ from .const import (
     PROFILE,
 )
 from .coordinator import ProxonRuntime
-from .rooms import CONF_ROOMS, sync_room_devices
+from .rooms import CONF_ROOMS, ROOM_SUBENTRY, configured_rooms, sync_room_devices
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
@@ -40,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
         raise ConfigEntryNotReady("No supported HESP data received") from err
     entry.runtime_data = runtime
     sync_room_devices(hass, entry)
-    runtime.room_config = entry.options.get(CONF_ROOMS, [])
+    runtime.room_config = configured_rooms(entry)
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:
@@ -59,15 +61,40 @@ async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) ->
         entry.options.get(CONF_EVENT_CAPTURE, False)
     )
     entry.runtime_data._notify_diagnostics()
-    rooms = entry.options.get(CONF_ROOMS, [])
-    if rooms != entry.runtime_data.room_config:
-        for update in entry.runtime_data.room_updates:
-            await update()
-        sync_room_devices(hass, entry, entry.runtime_data.room_config)
-        entry.runtime_data.room_config = rooms
+    async with entry.runtime_data.room_update_lock:
+        rooms = configured_rooms(entry)
+        if rooms != entry.runtime_data.room_config:
+            for update in entry.runtime_data.room_updates:
+                await update()
+            sync_room_devices(hass, entry, entry.runtime_data.room_config)
+            entry.runtime_data.room_config = rooms
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bool:
     if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.stop()
     return unloaded
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Move beta room options to subentries without changing room identities."""
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        existing = {sub.unique_id for sub in entry.subentries.values()}
+        for room in entry.options.get(CONF_ROOMS, []):
+            if room["id"] not in existing:
+                hass.config_entries.async_add_subentry(
+                    entry,
+                    ConfigSubentry(
+                        data=MappingProxyType(dict(room)),
+                        subentry_type=ROOM_SUBENTRY,
+                        title=room["name"],
+                        unique_id=room["id"],
+                    ),
+                )
+                existing.add(room["id"])
+        options = dict(entry.options)
+        options.pop(CONF_ROOMS, None)
+        hass.config_entries.async_update_entry(entry, options=options, version=2)
+    return True

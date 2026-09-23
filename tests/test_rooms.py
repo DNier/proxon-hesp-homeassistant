@@ -4,9 +4,11 @@ import asyncio
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
+from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -121,9 +123,24 @@ async def test_expiry_and_unchanged_report_refresh(hass, room_entry):
 
 
 async def update_rooms(hass, entry, rooms):
-    hass.config_entries.async_update_entry(
-        entry, options={**entry.options, "rooms": rooms}
-    )
+    desired = {room["id"]: room for room in rooms}
+    for sub in list(entry.subentries.values()):
+        if sub.data["id"] not in desired:
+            hass.config_entries.async_remove_subentry(entry, sub.subentry_id)
+        else:
+            hass.config_entries.async_update_subentry(
+                entry, sub, data=desired.pop(sub.data["id"])
+            )
+    for room in desired.values():
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(room),
+                subentry_type="room",
+                title=room["name"],
+                unique_id=room["id"],
+            ),
+        )
     await hass.async_block_till_done()
 
 
@@ -210,77 +227,84 @@ async def test_registered_source_rename_and_delete(hass, room_entry):
     assert state(hass, "heating").state == "unknown"
 
 
-async def options_action(hass, entry, action):
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "capture_duration": 600,
-            "event_capture_enabled": True,
-            "manage_rooms": True,
-        },
+async def subentry_flow(hass, entry, subentry=None):
+    context = (
+        {"source": "user"}
+        if subentry is None
+        else {
+            "source": "reconfigure",
+            "subentry_id": subentry.subentry_id,
+        }
     )
-    return await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            "next_step_id": action,
-        },
+    return await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "room"),
+        context=context,
     )
 
 
-async def test_options_add_edit_remove_and_validation(hass, room_entry):
+async def test_subentry_add_edit_remove_and_validation(hass, room_entry):
     hass.states.async_set("switch.other", "off")
     hass.states.async_set(
         "sensor.other", "0", {"device_class": "power", "unit_of_measurement": "W"}
     )
-    result = await options_action(hass, room_entry, "room_add")
+    result = await subentry_flow(hass, room_entry)
     data = {
         "name": "Other",
         "actuators": ["switch.other"],
         "power_sensors": ["sensor.other"],
-        "threshold": 15,
-        "max_age": 600,
     }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {**data, "name": " "}
-    )
+    configure = hass.config_entries.subentries.async_configure
+    result = await configure(result["flow_id"], {**data, "name": " "})
     assert result["errors"] == {"base": "invalid_room"}
-    result = await hass.config_entries.options.async_configure(
+    result = await configure(
         result["flow_id"], {**data, "actuators": ["switch.missing"]}
     )
     assert result["errors"] == {"base": "missing_source"}
     hass.states.async_set("switch.heater", "off")
-    result = await hass.config_entries.options.async_configure(
+    result = await configure(
         result["flow_id"], {**data, "actuators": ["switch.heater"]}
     )
     assert result["errors"] == {"base": "source_in_use"}
-    result = await hass.config_entries.options.async_configure(result["flow_id"], data)
+    result = await configure(result["flow_id"], data)
+    assert result["step_id"] == "references"
+    assert len(room_entry.subentries) == 1
+    result = await configure(result["flow_id"], {})
+    assert result["step_id"] == "advanced"
+    result = await configure(result["flow_id"], {"threshold": 15, "max_age": 600})
     await hass.async_block_till_done()
     assert result["type"] == "create_entry"
-    room_id = room_entry.options["rooms"][1]["id"]
-    assert room_entry.options["capture_duration"] == 600
-    assert room_entry.options["event_capture_enabled"] is True
+    sub = next(sub for sub in room_entry.subentries.values() if sub.title == "Other")
+    room_id = sub.data["id"]
     entity_id = state(hass, "heating", room_id).entity_id
-    result = await options_action(hass, room_entry, "room_edit")
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"room": room_id}
-    )
-    await hass.config_entries.options.async_configure(
+    registry = er.async_get(hass)
+    assert registry.async_get(entity_id).config_subentry_id == sub.subentry_id
+    device = dr.async_get(hass).async_get(registry.async_get(entity_id).device_id)
+    assert device.config_subentry_id == sub.subentry_id
+    options = dict(room_entry.options)
+    runtime = room_entry.runtime_data
+    runtime.capture.start()
+    result = await subentry_flow(hass, room_entry, sub)
+    result = await configure(
         result["flow_id"], {**data, "name": "New name", "power_sensors": []}
     )
+    result = await configure(result["flow_id"], {})
+    result = await configure(result["flow_id"], {})
     await hass.async_block_till_done()
+    assert result["reason"] == "reconfigure_successful"
+    assert sub.title == "New name"
     assert state(hass, "heating", room_id).entity_id == entity_id
     assert state(hass, "heating", room_id).state == "unknown"
-    result = await options_action(hass, room_entry, "room_remove")
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"room": room_id}
-    )
-    assert result["step_id"] == "room_delete"
-    assert len(room_entry.options["rooms"]) == 2
-    await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert sub.data["threshold"] == 15
+    assert sub.data["max_age"] == 600
+    assert room_entry.options == options
+    assert runtime.capture.reason == "recording"
+    hass.config_entries.async_remove_subentry(room_entry, sub.subentry_id)
     await hass.async_block_till_done()
-    assert len(room_entry.options["rooms"]) == 1
+    assert len(room_entry.subentries) == 1
+    assert registry.async_get(entity_id) is None
+    assert dr.async_get(hass).async_get(device.id) is None
     assert hass.states.get("switch.other").state == "off"
+    assert runtime.capture.reason == "recording"
 
 
 async def test_reload_preserves_identity_and_area(hass, room_entry):
@@ -337,13 +361,22 @@ async def test_disabled_room_entity_removal(hass, room_entry):
     assert registry.async_get(entity_id) is None
 
 
-async def test_empty_room_menu_and_cancel(hass, room_entry):
-    await update_rooms(hass, room_entry, [])
-    before = dict(room_entry.options)
-    result = await options_action(hass, room_entry, "room_edit")
-    assert result["type"] == "abort"
-    assert result["reason"] == "no_rooms"
-    assert room_entry.options == before
+async def test_cancel_room_flow_and_capture_options_are_independent(hass, room_entry):
+    result = await subentry_flow(hass, room_entry)
+    hass.config_entries.subentries.async_abort(result["flow_id"])
+    assert len(room_entry.subentries) == 1
+    options = await hass.config_entries.options.async_init(room_entry.entry_id)
+    assert "manage_rooms" not in options["data_schema"]({})
+    await hass.config_entries.options.async_configure(
+        options["flow_id"],
+        {
+            "capture_duration": 600,
+            "event_capture_enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(room_entry.subentries) == 1
+    assert room_entry.options["capture_duration"] == 600
 
 
 async def test_invalid_measurement_type_rejected(hass, room_entry):
@@ -351,15 +384,13 @@ async def test_invalid_measurement_type_rejected(hass, room_entry):
     hass.states.async_set(
         "sensor.energy", "200", {"device_class": "energy", "unit_of_measurement": "kWh"}
     )
-    result = await options_action(hass, room_entry, "room_add")
-    result = await hass.config_entries.options.async_configure(
+    result = await subentry_flow(hass, room_entry)
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             "name": "Another room",
             "actuators": ["switch.other"],
             "power_sensors": ["sensor.energy"],
-            "threshold": 10,
-            "max_age": 300,
         },
     )
     assert result["errors"] == {"base": "invalid_room"}
@@ -435,3 +466,103 @@ async def test_existing_unassigned_room_recovers_saved_area(hass, room_entry):
     devices.async_update_device(device_id, area_id=manual.id)
     sync_room_devices(hass, room_entry)
     assert devices.async_get(device_id).area_id == manual.id
+
+
+async def test_beta_migration_preserves_registry_identity_and_configuration(hass):
+    """Migrate already-created beta devices, including disabled entity settings."""
+    from homeassistant.helpers import area_registry as ar
+
+    from custom_components.proxon_hesp import async_migrate_entry
+    from custom_components.proxon_hesp.coordinator import ProxonRuntime
+
+    area = ar.async_get(hass).async_create("Room area")
+    room = {**ROOM, "area": area.id, "threshold": 17, "max_age": 720}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="PROXON",
+        unique_id="unit",
+        version=1,
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+        options={
+            "rooms": [room],
+            "capture_duration": 600,
+            "event_capture_enabled": True,
+        },
+    )
+    entry.add_to_hass(hass)
+    devices = dr.async_get(hass)
+    device = devices.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "unit_room_room-one")},
+        name="Heating room",
+    )
+    devices.async_update_device(device.id, area_id=area.id, name_by_user="My room")
+    entities = er.async_get(hass)
+    entity = entities.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        "unit_room_room-one_heating",
+        config_entry=entry,
+        device_id=device.id,
+        suggested_object_id="existing_heating",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    entities.async_update_entity(entity.entity_id, name="My heating", icon="mdi:fire")
+
+    async def start(runtime, entry):
+        runtime.ready.set()
+
+    with patch.object(ProxonRuntime, "start", start):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.version == 2
+        assert "rooms" not in entry.options
+        assert entry.options == {"capture_duration": 600, "event_capture_enabled": True}
+        assert len(entry.subentries) == 1
+        sub = next(iter(entry.subentries.values()))
+        assert dict(sub.data) == room
+        current = entities.async_get(entity.entity_id)
+        assert current.id == entity.id
+        assert current.device_id == device.id
+        assert current.config_subentry_id == sub.subentry_id
+        assert current.name == "My heating"
+        assert current.disabled_by == er.RegistryEntryDisabler.USER
+        assert current.icon == "mdi:fire"
+        assert devices.async_get(device.id).config_subentry_id == sub.subentry_id
+        assert devices.async_get(device.id).area_id == area.id
+        assert devices.async_get(device.id).name_by_user == "My room"
+        assert await async_migrate_entry(hass, entry)
+        assert len(entry.subentries) == 1
+        await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_subentry_reconfigure_cancel_and_clear_references(hass, room_entry):
+    sub = next(iter(room_entry.subentries.values()))
+    hass.states.async_set("switch.heater", "off")
+    hass.states.async_set(
+        "sensor.power", "0", {"device_class": "power", "unit_of_measurement": "W"}
+    )
+    hass.states.async_set("climate.other", "heat")
+    original = dict(sub.data)
+    flow = await subentry_flow(hass, room_entry, sub)
+    configure = hass.config_entries.subentries.async_configure
+    flow = await configure(
+        flow["flow_id"], {"name": "Changed", "actuators": ["switch.heater"]}
+    )
+    flow = await configure(flow["flow_id"], {"thermostat": "climate.other"})
+    assert dict(sub.data) == original
+    hass.config_entries.subentries.async_abort(flow["flow_id"])
+    assert dict(sub.data) == original
+    hass.config_entries.async_update_subentry(
+        room_entry, sub, data={**original, "thermostat": "climate.other"}
+    )
+    await hass.async_block_till_done()
+    flow = await subentry_flow(hass, room_entry, sub)
+    flow = await configure(
+        flow["flow_id"], {"name": "Changed", "actuators": ["switch.heater"]}
+    )
+    flow = await configure(flow["flow_id"], {})
+    await configure(flow["flow_id"], {})
+    await hass.async_block_till_done()
+    assert "thermostat" not in sub.data
+    assert sub.data["power_sensors"] == []

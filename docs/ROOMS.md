@@ -7,26 +7,40 @@ zugeordnet werden. Ohne konfigurierte Räume bleibt die Integration unverändert
 
 ## Einrichtung
 
-1. Unter **Einstellungen → Geräte & Dienste → PROXON HESP → Konfigurieren**
-   die Option **Heizräume verwalten** auswählen und bestätigen.
-2. **Raum hinzufügen** wählen.
-3. Einen Namen und mindestens eine `switch`-Entität der Heizelemente auswählen.
-   Mehrere Schalter pro Raum sind möglich. Optional einen HA-Bereich zuordnen.
-4. Optional Leistungssensoren der Heizelemente auswählen. Unterstützt werden
-   Leistungssensoren mit der Geräteklasse `power` und W oder kW.
-5. Optional das bestehende Thermostat und Temperatur-/Luftfeuchtigkeitssensoren
-   verknüpfen. Diese Verknüpfungen werden als Quellattribute dokumentiert; sie
-   erzeugen keine Kopien der vorhandenen Entitäten und keine neue Regelung.
-6. Leistungsschwelle und maximales Messwertalter passend zur Installation setzen.
+1. Unter **Einstellungen → Geräte & Dienste → PROXON HESP** am
+   Integrationseintrag **Heizraum hinzufügen** wählen.
+2. **Raum und Heizelemente:** Namen, optionalen HA-Bereich und mindestens eine
+   `switch`-Entität auswählen. Optional Leistungssensoren der Heizelemente
+   zuordnen. Mehrere Schalter und Messungen pro Raum sind möglich.
+3. **Optionale Verknüpfungen:** Bestehendes Thermostat, Temperatur und
+   Luftfeuchtigkeit auswählen oder leer lassen. Diese Referenzen erzeugen keine
+   doppelten Sensoren und keine neue Regelung.
+4. **Messwert-Einstellungen:** Leistungsschwelle und maximales Messwertalter
+   passend zur Installation wählen. Mit dem Abschluss wird der Raum gespeichert.
 
-Derselbe Dialog bietet **Raum bearbeiten** und **Raum entfernen**. Beim Entfernen
-wird eine Bestätigung angezeigt. Nur die virtuellen Raumgeräte und deren
-Überwachungsentitäten werden entfernt. Die verknüpften Fremdgeräte, Sensoren,
-Schalter, Thermostate und HA-Bereiche bleiben erhalten.
+Jeder Raum erscheint als eigener Untereintrag unter der PROXON-Integration.
+Dort kann er direkt konfiguriert oder über die native HA-Löschfunktion entfernt
+werden. Nur die virtuellen Raumgeräte und deren Überwachungsentitäten werden
+entfernt. Die verknüpften Fremdgeräte, Sensoren, Schalter, Thermostate und
+HA-Bereiche bleiben erhalten.
 
-Die Aufnahmeoptionen aus dem ersten Formular werden beim Abschluss der
-Raumänderung mitgespeichert. Ein abgebrochener Dialog speichert nichts.
-Raumänderungen starten weder die Gateway-Verbindung noch laufende Aufnahmen neu.
+Aufnahmeoptionen werden ausschließlich über **Konfigurieren** am übergeordneten
+PROXON-Eintrag geändert. Die Raumdialoge verändern diese Einstellungen nicht.
+Ein abgebrochener Raumdialog speichert nichts. Raumänderungen starten weder die
+Gateway-Verbindung noch laufende Aufnahmen neu.
+
+### Übernahme bestehender Räume
+
+Ab **0.12.0b3** werden die in früheren Betaversionen konfigurierten Räume beim
+Laden automatisch in HA-Untereinträge überführt. Die bisherigen Raum-IDs,
+Geräte- und Entitätsidentitäten, Bereiche und Quellverknüpfungen bleiben erhalten;
+die Räume müssen nicht neu angelegt werden. Auch die Aufnahmeoptionen bleiben
+bestehen.
+
+Dabei steigt die Version des gespeicherten Konfigurationsformats von 1 auf 2.
+Frühere Integrationsversionen können dieses Format nicht laden. Vor einem
+Downgrade ist eine Sicherung von vor der Migration wiederherzustellen; bloßes
+Installieren einer älteren Beta ist kein unterstützter Rückweg.
 
 ## Entitäten und Bedeutung
 
