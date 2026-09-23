@@ -3,6 +3,20 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0b6 — Lesbare HACS-Übersicht und Updatehinweise (Beta)
+
+- HACS-Einstiegsseite kürzen: klare Abschnitte und Listen statt breiter Tabelle,
+  großem Logo und vollständiger Anleitung auf einer Seite.
+- Vollständige Anleitung separat erhalten. Dokumentationslinks in der README
+  als vollständige GitHub-Adressen angeben, damit HACS sie nicht falsch umschreibt.
+- Beta-Auswahl, regelmäßige Updateprüfung und Unterschied zwischen Updateanzeige,
+  Installation und Pushnachricht erläutern.
+
+Keine Änderung an Messwerten, Steuerfunktionen, Identitäten oder Raumkonfiguration.
+**0.11.0 bleibt stabil.** Für die neue HACS-Ansicht 0.12.0b6 installieren;
+HACS kann die README der installierten Version anzeigen. Vor dem nötigen
+HA-Neustart wichtige Mitschnitte sichern. Es gibt keine neue Datenmigration.
+
 ## 0.12.0b5 — Experimentelle Statusbits für BDE-Vergleiche (Beta)
 
 - Drei zunächst deaktivierte Diagnoseentitäten für Bits 8, 9 und 28 von
