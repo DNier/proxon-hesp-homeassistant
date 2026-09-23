@@ -2,200 +2,171 @@
   <img src="https://raw.githubusercontent.com/DNier/proxon-hesp-homeassistant/main/custom_components/proxon_hesp/brand/logo.png" alt="PROXON HESP" width="160" height="160">
 </p>
 
-# PROXON HESP for Home Assistant
+# PROXON HESP für Home Assistant
 
-A local Home Assistant integration for PROXON P-series systems using
-a transparent RS485-to-TCP gateway on the HESP bus. No MQTT broker, cloud service
-or separate application is required.
+[English overview](README.en.md) · [Installation](#installation-mit-hacs) · [Dokumentation](#dokumentation)
 
-The integration receives existing bus traffic without polling. The optional
-**Align device time** button is the only write action: it sends one calendar
-update when pressed. Setup, reconnects and recordings never send commands.
-The existing controller continues to operate the system.
+Lokale Integration für PROXON-Anlagen der P-Serie mit einem transparenten
+RS485-zu-TCP-Gateway am HESP-Bus. MQTT, Cloud oder eine zusätzliche Anwendung
+sind nicht erforderlich. Die vorhandene Anlagensteuerung bleibt verantwortlich.
 
-## Beta 0.12.0b3
+Die Integration empfängt den bestehenden Busverkehr ohne eigene Abfragen.
+Die optionale Schaltfläche **Gerätezeit abgleichen** ist die einzige
+Schreibfunktion: Auf Tastendruck sendet sie einmalig eine Kalenderkorrektur.
+Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
-Optional manufacturer-independent heating rooms group existing HA entities into
-virtual room devices and report electrical heating from valid power measurements.
-Each room now appears as a native HA subentry with its own configuration and
-delete actions. Room setup is separate from recording options and organized into
-three short steps. Existing beta rooms are migrated automatically with stable IDs.
-Create a backup before upgrading: older beta versions cannot load the new
-configuration format.
-Existing thermostats remain responsible for switching. The beta also adds an
-optional device calendar sensor and manual time-alignment button.
+## Versionsstand
 
-See [room setup](docs/ROOMS.md), [time alignment](docs/CLOCK_SYNC.md) and the
-[release notes](RELEASE_NOTES.md). Physical acceptance of room monitoring is pending;
-**0.11.0 remains the stable release**.
+- **0.11.0** ist die stabile Version. Sie enthält automatische Aufnahmen bei
+  Verdichterstarts und -stopps mit bis zu 180 Sekunden Vor- und Nachlauf und
+  bewahrt die vier jüngsten Ereignisaufnahmen auf.
+- **0.12.0b4** ist eine Vorabversion. Sie ergänzt optionale Heizräume als native
+  HA-Untereinträge sowie Gerätezeit-Anzeige und manuellen Zeitabgleich.
+  Die praktische Abnahme der Raumüberwachung ist noch offen.
+- **0.12.0b4** überarbeitet außerdem die [Einteilung der Entitäten](docs/ENTITY_ORGANIZATION.md)
+  und vereinheitlicht die Nutzerdokumentation auf Deutsch.
 
-## New in 0.11.0
+Vor dem Wechsel auf 0.12.0b4 ein HA-Backup erstellen: Das Konfigurationsformat
+steigt auf Version 2. Ältere Integrationsversionen können es nicht laden;
+für ein Zurückwechseln ist das vorherige Backup erforderlich.
+Details stehen in den [Versionshinweisen](RELEASE_NOTES.md).
 
-Optional **Automatic event capture** saves up to 180 seconds before and after
-compressor starts or stops. Enable it under **Settings → Devices & services →
-PROXON HESP → Configure**. The four latest recordings are kept automatically;
-new recordings replace the oldest. Download device diagnostics to retrieve them.
-**Clear event captures** clears all saved events; restart also discards them.
-Manual captures remain independent. The receive-block limit is now 16384 per
-recording to accommodate fragmented TCP traffic. See
-[recording instructions](docs/DIAGNOSTICS.md).
+## Voraussetzungen und Kompatibilität
 
-The **Compressor running** binary sensor derives on/off from fresh, validated
-compressor speed. It becomes unavailable with the speed reading. This indicates
-rotation only; current heating, cooling, defrost and PTC activity remain
-unclassified. Existing entities and settings are preserved.
+0.11.0 und 0.12.0b4 benötigen **Home Assistant ab 2026.9**.
+Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
+Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
+Konfiguration. Andere Revisionen sind damit nicht automatisch unterstützt.
+Das Profil wird bei der Einrichtung ausgewählt, nicht vom Gateway erkannt.
 
-## New in 0.9.1
+Bitte vor der Installation die [Kompatibilität](docs/COMPATIBILITY.md) prüfen.
+Dieses unabhängige Projekt steht in keiner Verbindung zum Gerätehersteller.
 
-The optional controller fan-level diagnostic now recognizes two additional
-status words observed with displayed level 3 in Stove mode. Existing entities
-and settings are preserved. Unknown words remain unavailable.
+## Funktionen und Grenzen
 
-## Capture diagnostics since 0.9.0
-
-Capture status now shows recording progress and the stopping reason. Recording
-duration is configurable from 30 to 600 seconds (default 120), with bounded
-memory use. Optional diagnostics report TCP connectivity and the last valid
-supported data receipt. See [capture diagnostics](docs/DIAGNOSTICS.md).
-
-## Compatibility
-
-Versions **0.11.0** and **0.12.0b3** require **Home Assistant 2026.9 or later**. Development tests
-use Home Assistant 2026.9.2 and Python 3.14.
-
-The validated hardware profile is **LT-ZIM V1.6 with PTC 4× V1.2 and BDE Comfort**.
-Support is based on recordings and display comparisons from this configuration;
-other PROXON revisions are not automatically supported. The profile is selected
-during setup, not detected from the gateway.
-
-See [hardware compatibility](docs/COMPATIBILITY.md) before installing.
-This independent project is not affiliated with the equipment manufacturer.
-
-## Features
-
-| Feature | Availability |
+| Funktion | Umfang |
 |---|---|
-| Room and target temperatures, requested fan level, operating mode | Enabled by default |
-| Ten controller temperatures and supply/extract fan speeds | Enabled by default |
-| Compressor speed, bypass switching state, intensive ventilation state | Enabled by default |
-| Filter remaining days and eight operating-hour counters | Enabled by default |
-| Controller fan level and two raw fan control values | Optional diagnostics |
-| Local device date/time, experimental device clock and raw response payloads | Optional diagnostics |
-| Start, stop and clear a passive recording | Diagnostic buttons |
-| Align device time with Home Assistant | Optional configuration button |
+| Betriebsart, angeforderte Luftstufe, Raum- und Solltemperatur | Lesend |
+| Zehn Anlagentemperaturen sowie Lüfter- und Verdichterdrehzahlen | Lesend |
+| Verdichter läuft, Bypass-Schaltzustand, Intensivlüftung | Lesend; kein Nachweis von Heiz-/Kühlbetrieb |
+| Filterrestlaufzeit und acht Betriebsstundenzähler | Lesend |
+| Regler-Luftstufe, rohe Stellwerte und Hex-Datenpunkte | Optionale Diagnose |
+| Manuelle und automatische Mitschnitte | Passiv, zeitlich und im Speicher begrenzt |
+| Gerätedatum/-uhrzeit und manueller Zeitabgleich | Optional, ab 0.12.0b1 |
+| Heizräume mit vorhandenen HA-Entitäten | Herstellerunabhängige Überwachung, ab 0.12.0b1 |
 
-Values become unavailable after 30 seconds without a valid update, or immediately
-on disconnect. Missing data is not interpreted as zero, off or fault-free.
-The optional local date/time sensor validates calendar fields and weekday but
-does not assume a timezone or synchronize the device clock.
-Requested fan level can differ from the controller's reported level. Switching
-states are not measurements of physical actuator position.
+Nach 30 Sekunden ohne gültige Aktualisierung wird der jeweilige Messwert nicht
+verfügbar; bei Verbindungsabbruch sofort. Fehlende Daten bedeuten nicht null,
+„aus“ oder „störungsfrei“. Die angeforderte Luftstufe kann von der Reglerstufe
+abweichen. Ein gemeldeter Schaltzustand ist keine Messung der mechanischen Position.
 
-There are no climate/fan controls, fault-text sensor, intensive-ventilation
-countdown or hot-water integration. See [data points and limitations](docs/DATA_POINTS.md)
-for units, validation rules and experimental features.
+Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keinen bestätigten
+Heizen/Kühlen/Abtauen-Sensor, keinen Fehlertextsensor, keinen Countdown für
+Intensivlüftung und keine Warmwasserintegration. Die technische
+[Datenpunktreferenz (Englisch)](docs/DATA_POINTS.md) beschreibt die Beleglage.
 
-## Installation with HACS
+## Installation mit HACS
 
-[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
+[![Repository in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-1. Add `https://github.com/DNier/proxon-hesp-homeassistant` to HACS as a custom
-   repository with category **Integration**, or use the button above.
-2. Download **PROXON HESP** and restart Home Assistant.
-3. Open **Settings → Devices & services → Add integration → PROXON HESP**.
-4. Enter the gateway host, TCP server port (default `4196`), name and profile.
+1. In HACS `https://github.com/DNier/proxon-hesp-homeassistant` als
+   benutzerdefiniertes Repository der Kategorie **Integration** hinzufügen
+   oder die Schaltfläche oben verwenden.
+2. **PROXON HESP** herunterladen und Home Assistant neu starten.
+3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → PROXON HESP** öffnen.
+4. Gateway-Adresse, TCP-Port (Standard `4196`), Namen und Hardwareprofil eintragen.
 
-For manual installation, copy `custom_components/proxon_hesp` into your Home
-Assistant configuration's `custom_components` directory, restart, then add the
-integration as above.
+Für eine Beta in HACS gegebenenfalls Vorabversionen zulassen und über
+**Erneut herunterladen** die gewünschte Version wählen.
 
-Configure the gateway separately for transparent TCP server operation at
-**19200 baud, 8N1** on the supported HESP segment. Do not enable Modbus conversion.
-The integration does not configure the gateway. Connector labels and pinouts
-vary by board revision; this project does not provide universal wiring instructions.
+Bei manueller Installation den Ordner `custom_components/proxon_hesp` in den
+Ordner `custom_components` der HA-Konfiguration kopieren. Danach HA neu starten
+und die Integration wie oben hinzufügen.
 
-Setup listens for up to 20 seconds for supported, checksum-verified data.
-A reachable TCP port alone is insufficient. Stop other capture clients first:
-the gateway may accept only one connection. Each integration entry uses one
-receiving connection, including during passive recording.
+Das Gateway separat als transparenten TCP-Server mit **19200 Baud, 8N1** für den
+unterstützten Busabschnitt konfigurieren. Keine Modbus-Konvertierung aktivieren.
+Die Integration konfiguriert das Gateway nicht. Anschlussbezeichnungen und
+Belegungen unterscheiden sich je nach Platinenrevision; es gibt hier keine
+universelle Verdrahtungsanleitung.
 
-## Updates and reconfiguration
-
-Install updates through HACS and restart Home Assistant. Use **Reconfigure** to
-change the host, port or name while preserving entity identity and history.
-Deleting and recreating the entry creates a new identity. Different host aliases
-for the same gateway cannot currently be detected as duplicates.
-
-### Calendar diagnostics (next version)
-
-The next version adds a local date/time sensor and an explicit time-alignment
-button, both disabled by default (62 entities in total). Existing identities, enabled/disabled preferences and numeric raw
-calendar values are preserved. The raw calendar sensor receives a clearer name.
-The time-alignment button is the only new write action; no general control
-service is added. See [time alignment](docs/CLOCK_SYNC.md).
-
-### Upgrading from 0.8.0
-
-Download any recording you need, update to 0.11.0 through HACS and restart Home
-Assistant. Keep the existing integration entry: all 54 previous entity identities
-and user settings remain. Six entities are added, giving 60 entities in total. Automatic event recording
-is disabled by default; enable it through Configure when needed.
-The recording limit stays at 120 seconds until changed in the integration options.
-
-### Upgrading from 0.7.x
-
-Download recordings you need before restarting; they exist only in memory.
-Update to 0.8.0 and keep the existing integration entry. All 54 entity registrations,
-unique IDs and user preferences are retained.
-
-The experimental `proxon_hesp.prepare_target_temperature_test` and
-`proxon_hesp.send_target_temperature_test` actions have been removed. Remove any
-saved calls to them. There is no replacement target-temperature action. The experimental
-`target_temperature_test` diagnostic section is also removed; ordinary diagnostics
-and passive capture buttons remain available.
-
-## Troubleshooting and recordings
-
-If setup fails, check gateway mode, serial settings and competing TCP clients.
-If individual values become unavailable, the stream may lack supported valid
-updates for those data points. TCP connectivity alone does not prove fresh data.
-
-Download diagnostics from the integration to inspect counters and freshness.
-For a targeted investigation, use the device's **Start capture** button
-(**Start capture (2 minutes)** in 0.8.0),
-then **Stop capture** and download diagnostics. Recordings contain raw measurements
-and potentially device information; review them before sharing.
-
-See [diagnostics and offline analysis](docs/DIAGNOSTICS.md) for recording limits,
-privacy guidance and comparisons between captures or time windows.
-
-## Development
-
-See [contributing](CONTRIBUTING.md) for setup, checks, evidence requirements and
-release preparation. Tests use fixtures and simulated gateways; they do not
-connect to equipment. The protocol modules ship with the integration, so no
-unpublished external package is needed.
-
-- [Hardware compatibility](docs/COMPATIBILITY.md)
-- [Data points and limitations](docs/DATA_POINTS.md)
-- [Diagnostics and offline analysis](docs/DIAGNOSTICS.md)
-- [Checksum derivation](docs/CHECKSUM_ALGORITHM.md)
-- [Release notes](RELEASE_NOTES.md)
-
-## License and acknowledgements
-
-Original code is licensed under [MIT](LICENSE). Protocol interpretation and the
-checksum derivation build on [Markus Mauch's HESP documentation](https://markusmauch.github.io/proxon-hesp/),
-licensed under CC BY 4.0. Adapted material retains that attribution and license;
-see [NOTICE.md](NOTICE.md). The PROXON logo is excluded from the MIT license and
-remains the property of its rights holders.
+Die Einrichtung wartet bis zu 20 Sekunden auf unterstützte, prüfsummengültige
+Daten. Ein erreichbarer TCP-Port allein reicht nicht. Andere Aufnahmeprogramme
+vorher beenden: Das Gateway unterstützt möglicherweise nur eine Verbindung.
+Auch während Aufnahmen nutzt die Integration nur ihre bestehende Verbindung.
 
 ## Optionale Heizräume
 
-Vorhandene Heizschalter, Leistungssensoren und Thermostate lassen sich über die
-Funktion **Heizraum hinzufügen** beliebig vielen Räumen zuordnen. Jeder Raum erhält ein eigenes
-virtuelles Gerät mit lesender Überwachung von Erreichbarkeit, Schaltzustand und
-elektrischem Heizbetrieb. Die bestehende Temperaturregelung bleibt verantwortlich.
-Es sind keine bestimmten Hersteller oder privaten Entitätsnamen vorausgesetzt.
+Mit **Heizraum hinzufügen** lassen sich vorhandene Heizschalter, Leistungssensoren
+und optional Thermostate sowie Temperatur-/Feuchtesensoren zu Räumen verknüpfen.
+Jeder Raum erhält ein virtuelles Gerät mit Erreichbarkeit, Schaltzustand,
+Leistung und erkanntem elektrischem Heizbetrieb. Mehrere Heizelemente je Raum
+sind möglich. Die vorhandenen Thermostate regeln weiter; die Raumüberwachung
+schaltet nichts. Es sind keine bestimmten Hersteller vorausgesetzt.
 
-Einrichtung, Messwertgrenzen und Verhalten bei Ausfällen: [Heizräume](docs/ROOMS.md).
+Einrichtung und Verhalten bei fehlenden Werten: [Heizräume](docs/ROOMS.md).
+Aufnahmeoptionen bleiben am übergeordneten Integrationseintrag unter **Konfigurieren**.
+
+## Updates und bestehende Installationen
+
+Updates über HACS installieren und HA neu starten. Benötigte Mitschnitte zuvor
+herunterladen: Sie liegen nur im Arbeitsspeicher. Den bestehenden Eintrag behalten,
+damit Entitätsidentitäten, eigene Namen und Einstellungen erhalten bleiben.
+
+Gateway-Adresse, Port oder Namen über **Neu konfigurieren** ändern. Löschen und
+Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
+Gateway können derzeit nicht als Duplikat erkannt werden.
+
+Beim Update von 0.8.0 auf 0.11.0 bleiben die 54 bisherigen Entitätsidentitäten
+erhalten; sechs kommen hinzu (60 insgesamt). Automatische Ereignisaufnahmen
+sind zunächst deaktiviert. Die manuelle Aufnahmedauer bleibt ohne Änderung
+bei 120 Sekunden. Die Beta ergänzt zwei Gerätezeit-Entitäten (62 am Hauptgerät)
+und die jeweils eingerichteten Raum-Entitäten.
+
+Seit 0.8.0 sind `proxon_hesp.prepare_target_temperature_test` und
+`proxon_hesp.send_target_temperature_test` entfernt. Gespeicherte Aufrufe aus
+0.7.x entfernen; es gibt keine Ersatzaktion für die Solltemperatur. Der frühere
+Diagnoseabschnitt `target_temperature_test` entfällt ebenfalls.
+
+## Fehlerhilfe
+
+Bei fehlgeschlagener Einrichtung Gateway-Modus, serielle Einstellungen und
+konkurrierende TCP-Verbindungen prüfen. Sind nur einzelne Werte nicht verfügbar,
+fehlen möglicherweise unterstützte gültige Telegramme für diese Datenpunkte.
+Eine bestehende TCP-Verbindung belegt keine aktuellen Messwerte.
+
+Für Untersuchungen auf der Geräteseite **Aufnahme starten**, anschließend
+**Mitschnitt stoppen** und Diagnosedaten herunterladen. Dauer und automatische
+Ereignisaufnahmen werden am Integrationseintrag unter **Konfigurieren** eingestellt.
+Diagnosedateien vor dem Teilen auf private Angaben prüfen.
+
+## Dokumentation
+
+**Für die Einrichtung und Nutzung (Deutsch):**
+
+- [Hardware und Kompatibilität](docs/COMPATIBILITY.md)
+- [Heizräume](docs/ROOMS.md)
+- [Gerätezeit abgleichen](docs/CLOCK_SYNC.md)
+- [Diagnose und Aufnahmen](docs/DIAGNOSTICS.md)
+- [Entitäten am Hauptgerät](docs/ENTITY_ORGANIZATION.md)
+- [Versions- und Upgradehinweise](RELEASE_NOTES.md)
+
+**Für Entwicklung und Protokollanalyse (Englisch):**
+
+- [Mitwirken und Prüfungen](CONTRIBUTING.md)
+- [Datenpunkte und Validierungsgrenzen](docs/DATA_POINTS.md)
+- [Offline-Auswertung](docs/OFFLINE_ANALYSIS.md)
+- [Belege zu Steuerbefehlen](docs/CONTROL_EVIDENCE.md)
+- [Herleitung der Prüfsumme](docs/CHECKSUM_ALGORITHM.md)
+
+Nutzerdokumentation und Versionshinweise werden auf Deutsch gepflegt;
+[README.en.md](README.en.md) bietet einen kompakten englischen Einstieg.
+Code, Codekommentare und Entwicklerreferenzen bleiben englisch.
+Die HA-Oberfläche unterstützt Deutsch und Englisch.
+
+## Lizenz und Quellen
+
+Eigener Code steht unter der [MIT-Lizenz](LICENSE). Protokollinterpretation und
+Prüfsummenherleitung bauen auf [Markus Mauchs HESP-Dokumentation](https://markusmauch.github.io/proxon-hesp/)
+unter CC BY 4.0 auf. Für übernommenes bzw. angepasstes Material bleiben
+Quellenangabe und Lizenz erhalten; siehe [NOTICE.md](NOTICE.md).
+Das PROXON-Logo ist von der MIT-Lizenz ausgenommen und gehört den jeweiligen Rechteinhabern.

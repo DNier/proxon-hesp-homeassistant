@@ -1,48 +1,48 @@
-# Align device time
+# Gerätezeit abgleichen
 
-After power loss, some validated controllers return to an initial calendar date.
-This can affect time-program selection. The optional **Align device time**
-button corrects the device calendar using Home Assistant's configured timezone.
-It does not change the requested operating mode or send a fan-level command,
-but the corrected time can cause the existing time program to select a different
-fan level.
+Nach einem Stromausfall kehren manche geprüften Steuerungen zu einem anfänglichen
+Kalenderdatum zurück. Das kann die Auswahl des Zeitprogramms beeinflussen.
+Die optionale Schaltfläche **Gerätezeit abgleichen** korrigiert den Kalender
+anhand der in Home Assistant eingestellten Zeitzone.
 
-## Use
+Sie ändert weder direkt die Betriebsart noch sendet sie einen Luftstufenbefehl.
+Die korrigierte Uhrzeit kann jedoch dazu führen, dass das bestehende Zeitprogramm
+eine andere Luftstufe auswählt.
 
-1. Check that Home Assistant's date, time and timezone are correct.
-2. On the PROXON device page, enable **Align device time** in its entity settings.
-   The button is disabled by default and requires fresh calendar telemetry.
-3. Press the button once and check the BDE date/time display.
+## Verwendung
 
-The button sends exactly one calendar telegram on the existing connection and
-waits up to 20 seconds for a matching controller calendar response. A plain ACK
-is insufficient. Its `status` attribute changes to `confirmed` when a matching
-calendar response arrives, or `already_current` if no correction was needed.
-An update can cross a minute boundary, so the following calendar minute is also
-accepted as confirmation. Confirmation is not a guarantee of long-term retention.
+1. Datum, Uhrzeit und Zeitzone von Home Assistant prüfen.
+2. Auf der PROXON-Geräteseite **Gerätezeit abgleichen** in den Entitätseinstellungen
+   aktivieren. Die Schaltfläche ist zunächst deaktiviert und benötigt frische Kalenderdaten.
+3. Einmal drücken und Datum/Uhrzeit am BDE kontrollieren.
 
-A failed or interrupted attempt is `unconfirmed`, with an action error where
-applicable. Check the BDE before trying again: a failed response does not prove
-that the command was not applied. There are no automatic retries or queued
-presses. A 30-second cooldown applies after an attempted write. Disconnection
-aborts confirmation; reconnecting never resends the command.
+Die Aktion sendet genau ein Kalendertelegramm über die bestehende Verbindung
+und wartet bis zu 20 Sekunden auf eine passende Kalenderantwort der Steuerung.
+Ein ACK allein reicht nicht. Das Attribut `status` wird bei passender Antwort
+`confirmed`; ohne erforderliche Korrektur lautet es `already_current`.
+Wegen eines möglichen Minutenwechsels wird auch die folgende Kalenderminute
+als Bestätigung akzeptiert. Das belegt keine dauerhafte Speicherung.
 
-## Scope
+Ein fehlgeschlagener oder unterbrochener Versuch wird `unconfirmed`, gegebenenfalls
+mit einem Aktionsfehler. Vor einem erneuten Versuch am BDE prüfen: Eine fehlende
+Antwort beweist nicht, dass der Befehl wirkungslos war. Es gibt keine automatische
+Wiederholung oder Warteschlange. Nach einem Sendeversuch gilt eine Sperrzeit von
+30 Sekunden. Ein Verbindungsabbruch beendet die Bestätigungsprüfung; beim
+Wiederverbinden wird nichts erneut gesendet.
 
-The calendar includes year, month, day, weekday, hour and minute. Seconds are
-not set, so this is a calendar/minute correction, not exact clock synchronization.
-The protocol carries no timezone information. The button uses Home Assistant's
-configured local timezone, including its current daylight-saving offset.
-Existing numeric calendar data and entity identities remain unchanged.
+## Umfang und Grenzen
 
-The command was observed to work on the validated LT-ZIM V1.6 / PTC 4× V1.2 /
-BDE Comfort installation through the original PTC-to-controller connection.
-Other revisions are unverified. A short successful observation does not prove
-persistence across power loss. No startup synchronization, periodic writing,
-operating-mode control or arbitrary payload service is included.
+Korrigiert werden Jahr, Monat, Tag, Wochentag, Stunde und Minute, nicht die Sekunden.
+Das ist kein sekundengenauer Zeitabgleich. HESP enthält hier keine Zeitzone;
+die Aktion verwendet die lokale HA-Zeitzone einschließlich aktueller Sommerzeit.
+Bestehende numerische Kalenderwerte und Entitätsidentitäten bleiben erhalten.
 
-Telemetry, discovery/probing, recordings and connection recovery remain passive.
-Do not run a second TCP recorder against a single-client gateway while the
-integration is connected. Diagnostic RX captures contain received traffic only;
-the application byte counter and last time-alignment target describe writes
-separately.
+Die Funktion wurde an einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort über den
+ursprünglichen PTC-zur-Steuerung-Abgriff am Display bestätigt. Andere Revisionen
+und die Beibehaltung nach Stromausfall sind nicht bestätigt. Es gibt weder
+Startautomatik noch periodisches Schreiben oder einen Dienst für beliebige Telegramme.
+
+Empfang, Verbindungstest, Aufnahmen und Wiederverbindung bleiben passiv.
+Keinen zweiten TCP-Mitschnitt gegen ein Gateway mit nur einem Client öffnen,
+während die Integration verbunden ist. Empfangsmitschnitte enthalten ausschließlich
+RX-Daten; gesendete Bytes und das letzte Ziel des Zeitabgleichs werden separat erfasst.

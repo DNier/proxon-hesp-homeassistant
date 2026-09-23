@@ -65,6 +65,10 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             current = registry.async_get(entity_id)
             assert current.unique_id == unique_id
             assert current.disabled_by == disabled
+            if unique_id.endswith(
+                ("temperature_compressor", "compressor_rpm", "filter_days")
+            ):
+                assert current.entity_category.value == "diagnostic"
         assert (
             registry.async_get("sensor.existing_fan_level").name == "Custom ventilation"
         )

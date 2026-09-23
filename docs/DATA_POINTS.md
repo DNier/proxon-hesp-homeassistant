@@ -1,12 +1,14 @@
 # Data points and validation boundaries
 
+Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
+
 This table describes the data-point mappings retained from version 0.8.0.
 Version 0.9.0 adds capture status plus optional last-valid-data and connection
 diagnostics: 51 sensors, three binary sensors and three capture buttons,
 for 57 entities in total. Version 0.10.0's compressor-running binary sensor adds
 one entity, derived from the existing speed reading. Automatic event recording
 adds a diagnostic status and a clear/rearm button (60 entities total).
-The next version adds an optional local calendar sensor
+Beta 0.12.0b1 adds an optional local calendar sensor
 and an optional calendar-alignment button (62 entities total). Existing
 data-point mappings remain unchanged.
 See [capture diagnostics](DIAGNOSTICS.md). Hardware scope is documented in

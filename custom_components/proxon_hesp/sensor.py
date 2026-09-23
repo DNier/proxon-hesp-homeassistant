@@ -18,6 +18,8 @@ from .event_capture import EVENT_STATUSES
 from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
 from .rooms import async_setup_rooms
 
+AIR_TEMPERATURE_KEYS = frozenset(TEMPERATURE_KEYS[:4])
+
 DESCRIPTIONS = (
     *(
         SensorEntityDescription(
@@ -37,6 +39,10 @@ DESCRIPTIONS = (
         SensorEntityDescription(
             key=key,
             translation_key=key,
+            entity_category=(
+                None if key in AIR_TEMPERATURE_KEYS else EntityCategory.DIAGNOSTIC
+            ),
+            entity_registry_enabled_default=key in AIR_TEMPERATURE_KEYS,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -48,6 +54,8 @@ DESCRIPTIONS = (
         SensorEntityDescription(
             key=key,
             translation_key=key,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
             native_unit_of_measurement="rpm",
             state_class=SensorStateClass.MEASUREMENT,
             suggested_display_precision=0,
@@ -108,6 +116,7 @@ DESCRIPTIONS = (
     SensorEntityDescription(
         key="filter_days",
         translation_key="filter_days",
+        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         suggested_display_precision=0,
@@ -116,6 +125,7 @@ DESCRIPTIONS = (
     SensorEntityDescription(
         key="uptime",
         translation_key="uptime",
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
     ),

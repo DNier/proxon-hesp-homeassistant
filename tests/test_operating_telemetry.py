@@ -95,6 +95,14 @@ async def test_ha_defaults_raw_identity_expiry_recovery_and_disconnect(hass, fra
         suggested_object_id="my_existing_compressor_hex",
         disabled_by=None,
     )
+    # A previously enabled RPM entity remains usable after defaults change.
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "stable-unit_compressor_rpm",
+        config_entry=entry,
+        disabled_by=None,
+    )
     with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

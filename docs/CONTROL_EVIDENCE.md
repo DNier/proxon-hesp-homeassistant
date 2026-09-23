@@ -1,5 +1,7 @@
 # Control evidence and bounded test planning
 
+Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
+
 This is an evidence inventory, not an additional transmission API. The only
 implemented write action is [device time alignment](CLOCK_SYNC.md). Captured SET
 traffic does not establish that an external controller can own the setting.

@@ -1,6 +1,6 @@
 [project]
 name = "proxon-hesp-homeassistant"
-version = "0.12.0b3"
+version = "0.12.0b4"
 description = "PROXON HESP telemetry and explicit device time alignment for Home Assistant"
 requires-python = ">=3.14.2"
 

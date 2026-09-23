@@ -68,7 +68,12 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert hass.states.get(hours_id).attributes["unit_of_measurement"] == "h"
         assert hass.states.get(hours_id).attributes["device_class"] == "duration"
         uptime_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_uptime")
-        assert "unit_of_measurement" not in hass.states.get(uptime_id).attributes
+        assert (
+            registry.async_get(uptime_id).disabled_by
+            == er.RegistryEntryDisabler.INTEGRATION
+        )
+        assert hass.states.get(uptime_id) is None
+        assert registry.async_get(filter_id).entity_category.value == "diagnostic"
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
         assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 62
@@ -98,10 +103,16 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
             entity_id = registry.async_get_entity_id(
                 "sensor", DOMAIN, f"stable-unit_{key}"
             )
-            new_ids.append(entity_id)
             registered = registry.async_get(entity_id)
             assert registered.device_id == device.id
+            if key not in TEMPERATURE_KEYS[:4]:
+                assert registered.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+                assert registered.entity_category.value == "diagnostic"
+                assert hass.states.get(entity_id) is None
+                continue
+            new_ids.append(entity_id)
             assert registered.disabled_by is None
+            assert registered.entity_category is None
             state = hass.states.get(entity_id)
             assert state.state not in ("unavailable", "unknown")
             assert state.attributes["state_class"] == "measurement"

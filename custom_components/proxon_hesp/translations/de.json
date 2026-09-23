@@ -174,16 +174,16 @@
         "name": "Kondensatortemperatur (T10)"
       },
       "temperature_compressor": {
-        "name": "Kompressortemperatur (T13)"
+        "name": "Verdichtertemperatur (T13)"
       },
       "fan_supply_rpm": {
-        "name": "Drehzahl Zuluft"
+        "name": "Zuluftdrehzahl"
       },
       "fan_extract_rpm": {
-        "name": "Drehzahl Abluft"
+        "name": "Abluftdrehzahl"
       },
       "compressor_rpm": {
-        "name": "Kompressordrehzahl"
+        "name": "Verdichterdrehzahl"
       },
       "controller_fan_level": {
         "name": "Luftstufe laut Steuerung"

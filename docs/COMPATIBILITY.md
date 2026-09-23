@@ -1,49 +1,67 @@
-# Hardware compatibility
+# Hardware und Kompatibilität
 
-## Validated profile
+## Bestätigtes Profil
 
-The `lt_zim_16_observed` profile is based on passive recordings and BDE display
-comparisons with the following hardware:
+Das Profil `lt_zim_16_observed` beruht auf passiven Mitschnitten und
+BDE-Displayvergleichen mit dieser Hardware:
 
-| Component | Observed configuration |
+| Bestandteil | Beobachtete Ausführung |
 |---|---|
-| Mainboard | Hermes LT-ZIM V1.6 |
-| PTC board | PTC module 4× V1.2 |
-| User interface | BDE Comfort, displayed version V03.6.07A0 |
-| Connection | Transparent RS485-to-TCP gateway |
-| Serial mode | 19200 baud, 8N1 |
+| Hauptplatine | Hermes LT-ZIM V1.6 |
+| PTC-Platine | PTC-Modul 4× V1.2 |
+| Bedienteil | BDE Comfort, angezeigte Version V03.6.07A0 |
+| Verbindung | Transparentes RS485-zu-TCP-Gateway |
+| Serielle Einstellungen | 19200 Baud, 8N1 |
 
-These are compatibility reference details, not automatically detected device
-attributes. A matching product name alone does not establish compatibility.
-Telemetry availability also depends on installed options and existing bus traffic.
+Diese Angaben beschreiben die Referenzkonfiguration. Sie sind keine automatisch
+erkannten Geräteattribute. Ein gleicher Produktname allein belegt keine
+Kompatibilität. Verfügbare Messwerte hängen auch von Ausstattung und Busverkehr ab.
 
-## Bus boundary
+## Busabschnitt
 
-In the validated configuration, the BDE connects to PTC-X1. The passive HESP tap
-is on the connection from **PTC-X2 to mainboard-X5**. This is distinct from the
-direct BDE-to-PTC segment. Results from one segment do not establish the protocol
-or electrical characteristics of the other.
+In der geprüften Konfiguration ist das BDE mit PTC-X1 verbunden. Der passive
+HESP-Abgriff liegt zwischen **PTC-X2 und Hauptplatine-X5**. Dieser Abschnitt ist
+vom direkten BDE-PTC-Anschluss zu unterscheiden. Ergebnisse eines Abschnitts
+belegen nicht automatisch Protokoll und elektrische Eigenschaften eines anderen.
 
-Connector labels differ across revisions. Do not infer pinouts from labels,
-wire colours or photographs of another system. This documentation is not a
-wiring guide. The gateway must forward raw serial data rather than convert it
-to Modbus.
+Steckerbezeichnungen unterscheiden sich je nach Revision. Belegungen nicht aus
+Kabelfarben, Steckerbezeichnungen oder Fotos anderer Anlagen ableiten.
+Diese Dokumentation ist keine Verdrahtungsanleitung. Das Gateway muss rohe
+serielle Daten weiterreichen und darf sie nicht in Modbus umwandeln.
 
-## Scope and limitations
+## Grenzen
 
-- The integration monitors the P-series ventilation/heating controller. It does
-  not provide T300 hot-water telemetry or support for FWT/Modbus devices.
-- Cooling observations do not establish cooling capability on every installation.
-- Controller, BDE and other appliance firmware versions are separate properties.
-- Choosing a profile is an explicit user choice. Model, serial number and
-  firmware are not inferred from the gateway address.
-- Validated values and unresolved interpretations are listed in
-  [data-point coverage](DATA_POINTS.md).
+- Unterstützt wird die Lüftungs-/Heizungssteuerung der P-Serie, keine T300-
+  Warmwassertelemetrie und keine FWT-/Modbus-Anlage.
+- Beobachteter Kühlbetrieb belegt keine Kühlfunktion jeder Anlage.
+- Firmware von Steuerung, BDE und weiteren Komponenten ist getrennt zu betrachten.
+- Das Profil wird ausdrücklich ausgewählt. Modell, Seriennummer und Firmware
+  werden nicht aus der Gateway-Adresse abgeleitet.
+- Bestätigte und offene Zuordnungen stehen in der [Datenpunktreferenz (Englisch)](DATA_POINTS.md).
 
-## Reporting another configuration
+## Andere Konfiguration melden
 
-Include the board revisions, BDE version, installed options, software version
-and the specific entities compared with the display. Describe which bus segment
-was observed. Do not include serial numbers, service documents, addresses or
-network credentials. Start with a concise description and sanitized diagnostics;
-full recordings are not required for an initial compatibility report.
+Platinenrevisionen, BDE-Version, Ausstattung, Integrationsversion und die mit dem
+Display verglichenen Werte angeben. Den beobachteten Busabschnitt beschreiben.
+Keine Seriennummern, privaten Serviceunterlagen, Adressen oder Zugangsdaten
+öffentlich einstellen. Eine kurze Beschreibung und geprüfte Diagnosedaten genügen
+zunächst; vollständige Aufnahmen sind nicht grundsätzlich erforderlich.
+
+## Stand der Geräteerkennung
+
+In 32 untersuchten Aufnahmen wurden 95.885 prüfsummengültige Telegramme mit
+100 Kombinationen aus Telegrammkennung, Datenpunkt und Nutzdatenlänge gefunden.
+Die Suche in einzelnen gültigen Nutzdaten nach der angezeigten BDE-Bezeichnung,
+Version sowie Hersteller-/Platinennamen ergab keine Treffer in ASCII oder UTF-16
+(beide Byte-Reihenfolgen). Drei mögliche binäre Anordnungen der Versionsbestandteile
+blieben ebenfalls ohne Treffer.
+
+Das ist eine begrenzte Mustersuche, keine vollständige Entschlüsselung unbekannter
+Daten. Über mehrere Telegramme verteilte Angaben oder ausschließlich beim Start
+übertragene Informationen sind damit nicht ausgeschlossen. Beim Öffnen der
+Systeminformationen erschienen im untersuchten Mitschnitt keine neuen Kennungen.
+Die BDE-Version beschreibt das Bedienteil, nicht zwingend die Gesamtanlage.
+
+Eine automatische Modell-, Seriennummern- oder Firmwareerkennung ist daher nicht
+implementiert. Die Referenzversion wird nicht als vermeintlich erkannte Firmware
+in die HA-Geräteinformationen eingetragen.

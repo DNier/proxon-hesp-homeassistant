@@ -1,221 +1,242 @@
-## 0.12.0b3 — Native heating room configuration (beta)
+# Versionshinweise
 
-- Show each heating room as a native Home Assistant subentry under PROXON HESP,
-  with direct add, configure and delete actions. Recording options stay separate.
-- Split room configuration into three short steps: room/heaters, optional
-  references, and measurement settings. Save only when the last step completes.
-- Automatically migrate existing beta rooms, preserving device and entity IDs,
-  names, areas, source links, disabled entities and recording settings.
-- Keep room changes read-only and independent of the gateway connection and
-  ongoing recordings. Existing thermostats remain responsible for switching.
+Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
+GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
-### Upgrade
+## 0.12.0b4 — Übersichtliche Gerätediagnose und deutsche Dokumentation (Beta)
 
-Create a Home Assistant backup before updating. Install **0.12.0b3** through HACS
-and restart Home Assistant. Export recordings needed before the restart, because
-recordings are held in memory only. Existing rooms do not need to be recreated.
+- Interne Temperaturen, Lüfter-/Verdichterdrehzahlen und Filterrestlaufzeit der
+  Diagnose zuordnen. Interne Temperaturen, Drehzahlen und rohen Kalender bei
+  Neueinrichtungen zunächst deaktivieren; weiterhin einzeln aktivierbar.
+- Deutsche Drehzahlbezeichnungen vereinheitlichen. Bestehende Entitäts-IDs,
+  eigene Namen und Aktivierungseinstellungen bleiben erhalten. Der Sensor
+  „Verdichter läuft“ arbeitet auch bei deaktivierter Drehzahlentität weiter.
+- README, Nutzeranleitungen und Versionshinweise auf Deutsch vereinheitlichen.
+  Englischen Einstieg ergänzen und englische Entwicklerreferenzen klar trennen.
+- Ergebnis der Suche nach Geräte-/Firmwarekennungen dokumentieren. Es wird keine
+  unbestätigte automatische Geräteerkennung ergänzt.
 
-Use **Settings → Devices & services → PROXON HESP → Add heating room** for a new
-room. Configure existing rooms directly on their subentry. The parent entry's
-Configure action now contains recording options only.
+### Update und Prüfung
 
-The stored configuration format changes from version 1 to 2. Older integration
-versions cannot load it; downgrading requires restoring a pre-migration backup.
+Vor dem Update ein HA-Backup erstellen und benötigte Mitschnitte exportieren.
+In HACS **0.12.0b4** auswählen, installieren und Home Assistant neu starten.
+Bestehende Einträge und Räume behalten. Bisher aktive Detailwerte bleiben aktiv;
+bei Bedarf nach Prüfung ihrer Verwendung manuell deaktivieren.
 
-260 automated tests passed, including migration of existing registry entries,
-native room add/reconfigure/delete, cancellation and preservation of recordings.
-This remains a prerelease; **0.11.0 remains the stable version**.
+Beim Wechsel von Versionen vor 0.12.0b3 gilt weiterhin die Migration auf
+Konfigurationsformat 2; ein Zurückwechseln benötigt das Backup vor der Migration.
 
-## 0.12.0b2 — Fix heating room area assignment (beta)
+260 automatisierte Tests einschließlich Update ab 0.8.0 bestanden; Ruff-Code-
+und Formatprüfung ebenfalls. Die praktische Raumabnahme bleibt offen.
+Dies ist eine Vorabversion; **0.11.0 bleibt die stabile Version**.
 
-- Apply the selected HA area when adding a room, including when HA registers
-  the virtual device before the options update finishes.
-- Restore a saved room area on load if the virtual device has no area. Existing
-  manual assignments to a different area are preserved. To remove an assignment
-  permanently, also clear the area in the room configuration.
-- Preserve room identities, linked source devices, thermostat control and captures.
+## 0.12.0b3 — Native Einrichtung von Heizräumen (Beta)
 
-### Upgrade
+- Jeder Heizraum erscheint als nativer HA-Untereintrag mit eigenen Aktionen zum
+  Hinzufügen, Konfigurieren und Löschen. Aufnahmeoptionen bleiben getrennt.
+- Die Einrichtung besteht aus drei Schritten: Raum/Heizelemente, optionale
+  Verknüpfungen und Messwerteinstellungen. Erst der letzte Schritt speichert.
+- Vorhandene Beta-Räume werden automatisch migriert. Geräte-/Entitäts-IDs,
+  Namen, Bereiche, Quellenverknüpfungen, deaktivierte Entitäten und Aufnahmeoptionen bleiben erhalten.
+- Raumänderungen bleiben lesend und unabhängig von Gateway-Verbindung und
+  laufenden Aufnahmen. Bestehende Thermostate schalten weiterhin selbst.
 
-Install **0.12.0b2** through HACS and restart Home Assistant. Export any recordings
-needed before restarting; recordings are held in memory only. Existing rooms do
-not need to be recreated: saved area selections are applied automatically.
+### Update
 
-This remains a prerelease; **0.11.0 remains the stable version**.
-Two regression tests cover the registration order and recovery of saved areas.
+Vorher ein HA-Backup erstellen. **0.12.0b3** über HACS installieren und HA neu
+starten. Benötigte Mitschnitte vorher exportieren; sie liegen nur im Arbeitsspeicher.
+Vorhandene Räume müssen nicht neu angelegt werden.
 
-## 0.12.0b1 — Heating rooms and optional device time alignment (beta)
+Neue Räume unter **Einstellungen → Geräte & Dienste → PROXON HESP → Heizraum
+hinzufügen** anlegen. Bestehende Räume direkt am Untereintrag konfigurieren.
+**Konfigurieren** am übergeordneten Eintrag enthält nur noch Aufnahmeoptionen.
 
-This is a prerelease for initial installation testing. **0.11.0 remains the stable release.**
+Das gespeicherte Konfigurationsformat steigt von Version 1 auf 2. Ältere
+Integrationsversionen können es nicht laden; ein Zurückwechseln erfordert das Backup vor der Migration.
 
-### Heating rooms
+260 automatisierte Tests bestanden, einschließlich Registry-Migration,
+Hinzufügen/Bearbeiten/Löschen, Abbruch und Erhalt von Aufnahmen.
+Dies bleibt eine Vorabversion; **0.11.0 bleibt die stabile Version**.
 
-- Configure optional rooms through the integration options, with a separate virtual
-  HA device and optional area assignment for each room.
-- Link existing switches, power sensors, thermostats and temperature/humidity
-  sensors from any manufacturer. Multiple heaters per room are supported.
-- Report switch availability, switch state, complete heater power and electrical
-  heating detected above a configurable threshold. Missing, invalid, restored or
-  expired power readings remain unknown; they are never assumed to be 0 W.
-- Keep existing thermostats responsible for control. Room monitoring sends no
-  switching commands. Editing or removing rooms preserves linked source devices
-  and ongoing recordings. Renaming registered sources preserves their links.
+## 0.12.0b2 — Bereichszuordnung der Heizräume korrigiert (Beta)
 
-### Device time
+- Den ausgewählten HA-Bereich auch dann zuweisen, wenn HA das virtuelle Gerät
+  bereits vor der Synchronisierung der Raumoptionen registriert.
+- Gespeicherte Bereiche bei bisher nicht zugeordneten Geräten wiederherstellen.
+  Abweichende manuelle Zuordnungen bleiben erhalten. Zum dauerhaften Entfernen
+  auch die Bereichsauswahl in der Raumkonfiguration löschen.
+- Raumidentitäten, verknüpfte Quellgeräte, Thermostatregelung und Aufnahmen erhalten.
 
-- Add an optional local-calendar sensor and a disabled-by-default manual time
-  alignment button using Home Assistant's timezone. This button is the only
-  implemented HESP write action; it sends one calendar telegram and waits for
-  controller readback, with no automatic retries or startup synchronization.
-- The command was display-confirmed on one LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort
-  installation. Other revisions and retention after power loss remain unverified.
-  Correcting the calendar can change which existing time-program period is active.
+### Update
 
-### Compatibility and installation
+**0.12.0b2** über HACS installieren und HA neu starten. Benötigte Mitschnitte
+zuvor exportieren. Räume müssen nicht neu angelegt werden; gespeicherte
+Bereichsauswahlen werden automatisch angewendet.
 
-Requires **Home Assistant 2026.9 or later**. Existing entity identities, settings
-and thermostat control remain in place. New rooms are opt-in.
+Zwei Regressionstests prüfen die Registrierungsreihenfolge und Wiederherstellung.
+Dies bleibt eine Vorabversion; **0.11.0 bleibt die stabile Version**.
 
-In HACS, open PROXON HESP and use **Redownload** to select **0.12.0b1**;
-allow beta/prerelease versions if necessary. Export any recordings needed before
-restarting Home Assistant, because recordings are kept in memory only.
-Start with one room via **Configure → Manage heating rooms → Add room**.
+## 0.12.0b1 — Heizräume und optionaler Gerätezeitabgleich (Beta)
 
-Automated validation covers room lifecycle, missing/stale measurements, source
-renames, upgrade from 0.8.0 and bounded calendar writes. Physical acceptance of
-room monitoring is pending. Reachability is not proof of central heating release;
-room electrical consumption does not classify central heating, cooling or defrost.
+Vorabversion für erste Installationstests. **0.11.0 bleibt die stabile Version.**
 
-See [room setup](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/ROOMS.md)
-and [device time alignment](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/CLOCK_SYNC.md).
+### Heizräume
 
-## 0.11.0 — Continuous event recording
+- Optionale Räume über die Integrationsoptionen einrichten, jeweils mit virtuellem
+  HA-Gerät und optionaler Bereichszuordnung.
+- Vorhandene Schalter, Leistungssensoren, Thermostate und Temperatur-/Feuchtesensoren
+  beliebiger Hersteller verknüpfen. Mehrere Heizelemente pro Raum sind möglich.
+- Erreichbarkeit, Schaltzustand, vollständige Heizleistung und elektrischen
+  Heizbetrieb oberhalb einer einstellbaren Schwelle anzeigen. Fehlende, ungültige,
+  wiederhergestellte oder veraltete Messwerte bleiben unbekannt, niemals pauschal 0 W.
+- Bestehende Thermostate regeln weiter; die Überwachung schaltet nichts.
+  Raumänderungen erhalten Quellgeräte und laufende Aufnahmen. Umbenannte
+  registrierte Quellen behalten ihre Verknüpfungen.
 
-- Extend automatic compressor event prehistory to 180 seconds; retain 180 seconds
-  after the triggering transition. Windows remain subject to memory limits.
-- Automatically retain the four latest event recordings, replacing the oldest
-  when a new window starts. Expose recording and replacement counts. Clear all
-  saved events with the existing clear button; manual recording stays independent.
-- Increase the per-recording receive-block limit to 16384 and the continuous
-  prebuffer to 512 KiB / 8192 chunks, accommodating small TCP receive blocks.
-- Include earlier recordings in diagnostic exports. Offline inventory, replay
-  and comparison support `--event --event-index 0` for the oldest retained window;
-  `--event` alone still selects the latest.
-- Preserve all 60 entity identities and existing settings. Compressor rotation
-  still does not classify heating, cooling, defrost or PTC activity.
+### Gerätezeit
 
-### Upgrade and validation
+- Optionalen lokalen Kalendersensor und zunächst deaktivierte Schaltfläche für
+  manuellen Zeitabgleich in der HA-Zeitzone ergänzen. Die einzige HESP-Schreibaktion
+  sendet ein Kalendertelegramm und wartet auf Rückmeldung der Steuerung.
+  Keine automatische Wiederholung und kein Zeitabgleich beim Start.
+- An einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort am Display bestätigt.
+  Andere Revisionen und Speicherung nach Stromausfall sind unbestätigt.
+  Die Kalenderkorrektur kann die aktive Phase eines bestehenden Zeitprogramms ändern.
 
-Install 0.11.0 through HACS and restart Home Assistant. Keep the existing entry.
-Download existing recordings before restarting; recordings are held in memory only.
-The automatic recording option is preserved. If not already enabled, enable it
-under Settings → Devices & services → PROXON HESP → Configure. Download diagnostics
-after the relevant transitions; clearing between events is no longer necessary.
+### Kompatibilität und Installation
 
-197 automated tests passed; Ruff lint and formatting passed. Validation covers upgrade from 0.8.0, automatic rollover, continuous prehistory,
-full windows with small TCP chunks, independent manual recording and offline
-selection. Physical-device acceptance remains pending.
+Benötigt **HA ab 2026.9**. Bestehende Identitäten, Einstellungen und Thermostatregelung
+bleiben erhalten. Neue Räume sind optional.
 
-## 0.10.0 — Automatic compressor event recording
+In HACS über **Erneut herunterladen** die Version **0.12.0b1** wählen und
+gegebenenfalls Vorabversionen zulassen. Vor HA-Neustart benötigte Mitschnitte
+exportieren. In dieser Version zunächst einen Raum über **Konfigurieren →
+Heizräume verwalten → Raum hinzufügen** einrichten.
 
-- Add a default-enabled compressor-running binary sensor derived from validated
-  speed: on above 0 rpm, off at 0 rpm. Missing, expired or disconnected telemetry
-  is unavailable, never assumed off. Invalid frames cannot refresh the state.
-- Add opt-in passive event recording with up to 60 seconds of prehistory and
-  180 seconds after a fresh validated compressor start or stop. Keep the first
-  event capture until explicitly cleared; expose status and a clear/rearm button.
-- Keep manual recording independent and provide a separate diagnostic export;
-  inventory, replay and comparison accept `--event`. Both captures are bounded.
-- Keep all 57 existing entity identities and settings; add three entities (60 total).
-- Do not classify heating, cooling, defrost or PTC activity from rotation,
-  requested mode or temperature differences. Recorded transitions do not yet
-  validate a complete thermal-state classifier.
+Automatisiert geprüft: Raumlebenszyklus, fehlende/veraltete Werte, Quellenumbenennung,
+Update ab 0.8.0 und begrenzte Kalenderschreibzugriffe. Die praktische Abnahme der
+Raumüberwachung steht aus. Erreichbarkeit beweist keine zentrale Heizfreigabe;
+Raumverbrauch klassifiziert weder zentralen Heiz-/Kühlbetrieb noch Abtauen.
 
-### Upgrade and validation
+Siehe [Heizräume](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/ROOMS.md)
+und [Zeitabgleich](https://github.com/DNier/proxon-hesp-homeassistant/blob/v0.12.0b1/docs/CLOCK_SYNC.md).
+Die verlinkten Dateien zeigen den damaligen Dokumentationsstand.
 
-Install 0.10.0 through HACS and restart Home Assistant. Keep the existing entry.
-Export saved recordings before restarting; captures are held in memory only.
-Under Settings → Devices & services → PROXON HESP → Configure, enable
-Automatic event capture. Download diagnostics when Event capture shows Ready,
-then use Clear event capture and rearm for the next event.
+## 0.11.0 — Fortlaufende Ereignisaufnahmen
 
-185 automated tests passed, including upgrade from 0.8.0, bounded pre/post
-recording, invalid/fragmented telegrams, disconnect handling, independent manual
-recording and offline event export selection. Ruff lint and formatting passed.
-Offline replay of 23 existing captures detected the recorded compressor stop.
-Live acceptance of this version on physical hardware is still pending.
+- Automatischen Vorlauf bei Verdichterereignissen auf 180 Sekunden erweitern;
+  Nachlauf bleibt 180 Sekunden. Speichergrenzen gelten weiterhin.
+- Die vier jüngsten Ereignisaufnahmen behalten, beim nächsten Fenster die älteste
+  ersetzen und Aufnahme-/Ersetzungszähler anzeigen. Vorhandene Löschaktion löscht
+  alle Ereignisse; manuelle Mitschnitte bleiben unabhängig.
+- Grenze je Aufnahme auf 16.384 Blöcke, Vorlaufpuffer auf 512 KiB / 8.192 Blöcke
+  erhöhen, damit kleine TCP-Blöcke besser aufgenommen werden können.
+- Frühere Aufnahmen mit exportieren. Inventarisierung, Wiedergabe und Vergleich
+  unterstützen `--event --event-index 0` für das älteste Fenster;
+  `--event` allein wählt weiterhin das jüngste.
+- Alle 60 Entitätsidentitäten und Einstellungen erhalten. Rotation klassifiziert
+  weiterhin keinen Heiz-/Kühl-/Abtau- oder PTC-Zustand.
 
-## 0.9.1 — Controller fan level in Stove mode
+### Update und Prüfung
 
-- Recognize the observed status words `8000921A` and `8000931A` as controller
-  fan level 3. The optional diagnostic previously rejected these words and
-  became unavailable after its freshness timeout.
-- Keep validation limited to complete, display-confirmed words. No PTC,
-  valve or heating-state interpretation is added.
-- Preserve all 57 entity identities, user settings and passive operation.
+0.11.0 über HACS installieren, bestehenden Eintrag behalten und HA neu starten.
+Benötigte Mitschnitte vorher herunterladen. Die automatische Aufnahmeoption
+bleibt erhalten; gegebenenfalls unter **Einstellungen → Geräte & Dienste →
+PROXON HESP → Konfigurieren** aktivieren. Nach den Übergängen Diagnosedaten
+herunterladen; Löschen zwischen Ereignissen ist nicht mehr nötig.
 
-### Upgrade and validation
+197 Tests sowie Ruff-Code- und Formatprüfung bestanden. Geprüft wurden Update
+ab 0.8.0, Ersetzen alter Fenster, fortlaufender Vorlauf, kleine TCP-Blöcke,
+unabhängige manuelle Aufnahmen und Offline-Auswahl. Praktische Geräteabnahme steht aus.
 
-Install 0.9.1 through HACS and restart Home Assistant. Keep the existing
-integration entry. Export any recording you need before restarting.
+## 0.10.0 — Automatische Aufnahme von Verdichterereignissen
 
-174 automated tests passed, including recorded frames at every stream split,
-unknown-word rejection, HA entity updates and existing upgrade/lifecycle checks.
-Ruff lint and formatting checks passed. Offline replay of the supporting
-recordings recognizes both new words; unrelated unknown words remain rejected.
+- Standardmäßig aktiven Sensor für Verdichterrotation aus gültiger Drehzahl
+  ergänzen: über 0 rpm ein, bei 0 rpm aus. Fehlende, veraltete oder getrennte
+  Telemetrie bleibt nicht verfügbar; ungültige Telegramme aktualisieren nichts.
+- Optionale passive Ereignisaufnahme mit bis zu 60 Sekunden Vorlauf und
+  180 Sekunden Nachlauf bei frischem Start-/Stoppübergang ergänzen.
+  Erste Aufnahme bis zum ausdrücklichen Löschen behalten; Status und
+  Lösch-/Bereitschaftsaktion bereitstellen.
+- Manuelle Aufnahme unabhängig halten; separater Diagnoseexport und
+  `--event` für Inventarisierung, Wiedergabe und Vergleich. Beide Aufnahmen sind begrenzt.
+- 57 bestehende Identitäten und Einstellungen erhalten, drei Entitäten ergänzen (60 insgesamt).
+- Keine Heizen/Kühlen/Abtauen/PTC-Klassifikation aus Rotation, Betriebsart oder Temperaturdifferenzen.
 
-## 0.9.0 — Capture and connection diagnostics
+### Update und Prüfung
 
-- Add an enabled capture-status sensor with actual duration, start/stop times,
-  size and separate reasons for duration, byte and chunk limits or disconnect.
-- Add recording options from 30 to 600 seconds (default 120). Changes apply to
-  the next recording without reload, connection changes or loss of captured data.
-- Add optional TCP connection and last supported valid-data timestamp diagnostics.
-- Export format version 2 includes measured duration, stop time, integration
-  version and profile. The receive-chunk format is unchanged; offline analysis
-  continues to support older exports.
-- Preserve the original 54 entity identities and settings; add three diagnostics.
-  Recording remains passive and bounded to 1 MiB / 4096 chunks.
+0.10.0 über HACS installieren, Eintrag behalten und HA neu starten. Aufnahmen
+vorher exportieren. Unter **Konfigurieren** die automatische Ereignisaufnahme
+aktivieren. Bei fertiger Aufnahme Diagnose herunterladen, anschließend löschen
+und erneut für das nächste Ereignis bereitstellen.
 
-### Upgrade and validation
+185 Tests bestanden: Update ab 0.8.0, begrenzter Vor-/Nachlauf, ungültige und
+fragmentierte Telegramme, Verbindungsabbruch, unabhängige manuelle Aufnahme und
+Offline-Auswahl. Ruff-Code- und Formatprüfung bestanden. Offline-Wiedergabe von
+23 Aufnahmen erkannte den enthaltenen Verdichterstopp. Praktische Abnahme dieser Version steht aus.
 
-Download recordings you need before updating; they exist only in memory. Install
-0.9.0 through HACS, restart Home Assistant and keep the existing integration entry.
-The recording limit defaults to 120 seconds for existing entries.
+## 0.9.1 — Regler-Luftstufe im Ofenbetrieb
 
-170 automated tests passed, including upgrade from the 0.8.0 entity contract,
-timer completion without traffic, options persistence and resource cleanup.
-Ruff lint and formatting checks passed. These are simulated checks, not a claim
-of compatibility with every hardware configuration.
+- Die am Display mit Stufe 3 verglichenen Statuswörter `8000921A` und `8000931A`
+  erkennen. Zuvor verwarf die optionale Diagnose diese Wörter und wurde nach
+  Ablauf der Aktualitätsfrist nicht verfügbar.
+- Nur vollständige bestätigte Wörter zulassen. Keine PTC-, Ventil- oder Heizinterpretation ergänzen.
+- Alle 57 Identitäten, Einstellungen und passiven Betrieb erhalten.
 
-## 0.8.0 — Read-only telemetry and passive diagnostics
+### Update und Prüfung
 
-This release removes the experimental temperature-write actions. The integration
-receives existing bus traffic without sending HESP requests or control commands.
+0.9.1 über HACS installieren, Eintrag behalten und HA neu starten. Mitschnitte
+vorher exportieren. 174 Tests bestanden, darunter Fragmentierung an jeder
+Streamposition, Ablehnung unbekannter Wörter, HA-Aktualisierung und bestehende
+Upgrade-/Lebenszyklusprüfungen. Ruff-Code- und Formatprüfung bestanden.
+Offline-Wiedergabe erkennt beide neuen Wörter; andere unbekannte bleiben abgelehnt.
 
-- Retains all 54 sensor, binary-sensor and capture-button registrations, unique
-  IDs, user preferences and existing telemetry decoding.
-- Retains passive capture start, stop and clear, plus ordinary diagnostics.
-- Removes the experimental sender, preparation/confirmation state and dedicated
-  write-test diagnostic data.
+## 0.9.0 — Aufnahme- und Verbindungsdiagnose
 
-### Upgrade from 0.7.x
+- Aktiven Aufnahmestatus mit tatsächlicher Dauer, Start/Stopp, Größe und getrennten
+  Abschlussgründen für Zeit-, Byte-, Blocklimit und Verbindungsabbruch ergänzen.
+- Dauer auf 30–600 Sekunden einstellbar machen (Standard 120). Änderungen gelten
+  für die nächste Aufnahme ohne Neuladen, Verbindungswechsel oder Datenverlust.
+- Optionale TCP-Verbindungsdiagnose und Zeitpunkt des letzten gültigen unterstützten Werts ergänzen.
+- Exportformat 2 mit tatsächlicher Dauer, Stoppzeit, Version und Profil ergänzen.
+  Blockformat bleibt gleich; alte Exporte bleiben offline auswertbar.
+- 54 bisherige Identitäten und Einstellungen erhalten, drei Diagnosen ergänzen.
+  Aufnahme bleibt passiv und auf 1 MiB / 4.096 Blöcke begrenzt.
 
-Download recordings you need before updating; they exist only in memory.
-Update through HACS to **0.8.0**, restart Home Assistant and keep the existing
-PROXON entry. No removal or reconfiguration is required.
+### Update und Prüfung
 
-The actions `proxon_hesp.prepare_target_temperature_test` and
-`proxon_hesp.send_target_temperature_test` are no longer available. Remove saved
-calls to them. The `target_temperature_test` diagnostics section has also been
-removed. `application_bytes_sent` remains present and zero. There is no replacement
-write action or climate/fan control.
+Mitschnitte vorher herunterladen, 0.9.0 über HACS installieren und HA neu starten.
+Eintrag behalten. Ohne Änderung gilt weiterhin 120 Sekunden.
 
-### Validation
+170 Tests bestanden, darunter Update ab 0.8.0, Timerabschluss ohne Busverkehr,
+Erhalt von Optionen und Ressourcenfreigabe. Ruff-Code- und Formatprüfung bestanden.
+Simulierte Prüfungen belegen keine Kompatibilität mit jeder Hardwarevariante.
 
-At release: 150 tests passed; Ruff lint and formatting checks also passed. Lifecycle
-coverage verifies capture buttons, reconnect, reload, unload, retained identity
-and custom names, removal of the experimental actions and zero payload writes.
-These checks use simulated streams and do not establish compatibility with every
-hardware variant. Current development checks are described in
-[CONTRIBUTING.md](CONTRIBUTING.md).
+## 0.8.0 — Lesende Telemetrie und passive Diagnose
+
+Diese Version entfernt die experimentellen Solltemperatur-Schreibaktionen.
+Die Integration empfängt bestehenden Busverkehr ohne HESP-Abfragen oder Steuerbefehle.
+
+- Alle 54 Sensor-, Binärsensor- und Aufnahmeentitäten mit Identitäten,
+  Nutzereinstellungen und bisheriger Dekodierung erhalten.
+- Passives Starten, Stoppen und Löschen von Aufnahmen sowie gewöhnliche Diagnose erhalten.
+- Experimentellen Sender, Vorbereitungs-/Bestätigungszustand und spezielle Schreibtest-Diagnose entfernen.
+
+### Update von 0.7.x
+
+Benötigte Mitschnitte herunterladen, über HACS auf **0.8.0** aktualisieren und HA
+neu starten. Bestehenden PROXON-Eintrag behalten; kein Neuanlegen erforderlich.
+
+`proxon_hesp.prepare_target_temperature_test` und
+`proxon_hesp.send_target_temperature_test` sind entfernt; gespeicherte Aufrufe
+löschen. Der Diagnoseabschnitt `target_temperature_test` entfällt ebenfalls.
+`application_bytes_sent` bleibt vorhanden und null. Diese Version enthält keine
+Ersatz-Schreibaktion und keine Heizungs-/Lüftersteuerung.
+
+### Prüfung
+
+Zur Veröffentlichung bestanden 150 Tests sowie Ruff-Code- und Formatprüfung.
+Geprüft wurden Aufnahmetasten, Wiederverbindung, Neuladen/Entladen, Identitäten,
+eigene Namen, entfernte Testaktionen und das Ausbleiben von Nutzdaten-Schreibzugriffen.
+Simulierte Datenströme belegen keine Kompatibilität mit jeder Hardwarevariante.
+Aktuelle Entwicklungsprüfungen: [CONTRIBUTING.md (Englisch)](CONTRIBUTING.md).

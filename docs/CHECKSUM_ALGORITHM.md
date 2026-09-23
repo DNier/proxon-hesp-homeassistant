@@ -1,5 +1,7 @@
 # HESP checksum: reconstructed byte recurrence
 
+Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
+
 Implemented checksum derivation for the supported HESP message shapes.
 
 ## Algorithm

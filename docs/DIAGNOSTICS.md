@@ -1,241 +1,163 @@
-# Diagnostics and offline analysis
+# Diagnose und Aufnahmen
 
-The capture enhancements below are available in **version 0.9.0**.
-Version 0.8.0 has a fixed 120-second limit and no capture-status entity. Existing
-format-version-1 exports remain supported by the offline tools.
+Seit 0.9.0 sind Aufnahmedauer und Aufnahmestatus verfügbar. In 0.8.0 beträgt die
+Dauer fest 120 Sekunden; eine Statusentität fehlt dort. Ältere Exporte werden
+von den Offline-Werkzeugen weiterhin unterstützt.
 
-## Downloading diagnostics
+## Diagnosedaten herunterladen
 
-Home Assistant diagnostics include connection and decoder counters, freshness
-information and an optional passive recording. Version 0.9.0 also
-includes the integration version, explicitly selected profile and last supported
-valid-data receipt timestamp. The integration omits configured
-network addresses and identifiers from its diagnostic data. Review the complete
-export before sharing it: Home Assistant metadata and recorded bus bytes can
-still contain information about your installation.
+Die HA-Diagnose enthält Verbindungs- und Decoderzähler, Angaben zur Aktualität
+und gegebenenfalls Mitschnitte. Seit 0.9.0 gehören auch Integrationsversion,
+ausgewähltes Hardwareprofil und Zeitpunkt des letzten gültigen unterstützten
+Messwerts dazu. Konfigurierte Netzwerkadressen und Identifikatoren werden von
+der Integration ausgelassen. Den gesamten Export vor dem Teilen trotzdem prüfen:
+HA-Metadaten und Busdaten können Angaben zur eigenen Anlage enthalten.
 
-`application_bytes_sent` counts bytes handed to the TCP writer since the
-integration was loaded. It stays zero unless the time-alignment button is
-pressed and a correction is needed; it does not prove physical delivery.
-`clock_sync_status` reports idle, waiting, confirmed, already_current or
-unconfirmed; `clock_sync_target` records the last requested local date/minute. A connected TCP socket
-does not guarantee that supported, fresh telemetry is being received.
+`application_bytes_sent` zählt die seit dem Laden der Integration an den TCP-
+Schreiber übergebenen Bytes. Ohne notwendigen manuellen Zeitabgleich bleibt der
+Wert null; er beweist keine physische Zustellung. `clock_sync_status` meldet
+`idle`, `waiting`, `confirmed`, `already_current` oder `unconfirmed`.
+`clock_sync_target` enthält die zuletzt angeforderte lokale Kalenderzeit.
+Details: [Gerätezeit abgleichen](CLOCK_SYNC.md).
 
-## Recording
+## Manuelle Aufnahme
 
-On the device page, select **Start capture**. If investigating a
-specific reading, note the corresponding BDE display and the time. Select
-**Stop capture**, then download diagnostics. The capture uses the existing
-receiver; it does not open another connection or send requests.
+1. Auf der Geräteseite **Aufnahme starten** wählen.
+2. Bei einer gezielten Untersuchung Uhrzeit und zugehörige BDE-Anzeige notieren.
+3. **Mitschnitt stoppen** wählen und anschließend Diagnosedaten herunterladen.
 
-Open **Settings → Devices & services → PROXON HESP**, then **Configure**
-next to the entry (not **System options**). Choose a manual recording duration
-from **30 to 600 seconds** (default **120**). Changes apply to the next manual
-recording without reconnecting or clearing a running/saved recording. The current
-recording retains its original limit. Existing button identities are preserved.
+Die Aufnahme nutzt die vorhandene Verbindung und sendet keine Abfragen.
+Unter **Einstellungen → Geräte & Dienste → PROXON HESP → Konfigurieren** am
+Integrationseintrag lässt sich die Dauer auf **30 bis 600 Sekunden** einstellen
+(Standard **120 Sekunden**). Gemeint ist nicht der Dialog **Systemoptionen**.
 
-### Automatic event recording (since 0.10.0)
+Eine Änderung gilt für die nächste manuelle Aufnahme. Sie verbindet das Gateway
+nicht neu und löscht keinen Mitschnitt. Laufende Aufnahmen behalten ihr ursprüngliches
+Limit. Die Aufnahme stoppt bei Zeitlimit, **1 MiB**, **16.384 Empfangsblöcken**,
+manuellem Stopp oder Verbindungsabbruch. Mehr eingestellte Zeit garantiert daher
+keine längere Aufnahme.
 
-In the same **Configure** dialog, enable **Automatic event capture**. No camera
-or manual start at the moment of a transition is needed. This is disabled by
-default and remains completely passive, using the existing receiver.
+Erneutes Starten ersetzt die vorherige Aufnahme. **Mitschnitt löschen**, Neuladen
+und HA-Neustart entfernen sie. Ein gestoppter Mitschnitt bleibt ansonsten im
+Arbeitsspeicher und in späteren Diagnoseexporten enthalten. Vor einem Update
+oder Neustart benötigte Aufnahmen herunterladen.
 
-- Since 0.11.0, a continuous rolling memory buffer retains up to 180 seconds
-  of traffic, bounded to 512 KiB of raw bytes and 8192 receive chunks.
-- A fresh, validated compressor speed transition from zero to positive or back
-  triggers a capture with that prehistory and 180 seconds of subsequent traffic.
-  Initial readings, stale gaps of 30 seconds or more, and reconnects establish
-  a baseline rather than manufacturing a transition. Invalid frames cannot trigger.
-- The **Event capture** diagnostic shows Disabled, Waiting, Recording or Ready.
-  Download ordinary device diagnostics when Ready; the separate `event_capture`
-  object contains the capture and relative `compressor_started`/`compressor_stopped`
-  event timestamps. A snapshot during Recording is incomplete.
-- Up to four event captures are retained, including an active recording. After
-  completion, capture remains armed: the next transition starts another window.
-  A fifth recording replaces the oldest; `overwritten_captures` counts replacements.
-  Further transitions within an active window are annotated (up to 32; additional
-  events are counted) without extending it. **Clear event captures** clears all.
-  `capture_count` includes the current recording. Ready means data is available,
-  not that automatic recording has stopped. Download before older events roll out.
-- The latest recording remains at `event_capture.chunks` / `events`. Earlier
-  recordings are in `event_capture.previous_captures`, oldest first, with their
-  own timestamps and completion reasons. No raw data appears in entity attributes.
-- Manual recording controls operate independently. Changing manual duration does
-  not change the automatic 180/180-second windows. Turning automatic capture off
-  drops the rolling buffer and ends an active event capture with reason `disabled`,
-  retaining the partial result for download. Re-enabling preserves saved data
-  and starts a fresh transition baseline.
-- Disconnect ends an active capture with reason `disconnected` and resets the
-  baseline/prebuffer. Reload and restart discard all recordings and timers;
-  the enable option is retained, so buffering resumes after setup.
+## Automatische Ereignisaufnahmen
 
-Each recording is bounded to 1 MiB and 16384 receive chunks, including prehistory.
-Byte/chunk limits can shorten either window. Summary attributes expose actual
-prehistory, elapsed duration, counts and completion reason, never raw traffic.
-Total raw retention is bounded to one manual capture, four automatic captures
-and the continuous rolling buffer (up to 5.5 MiB). Python objects and hexadecimal
-diagnostic exports require additional memory.
+Seit 0.10.0 kann unter **Konfigurieren** die automatische Ereignisaufnahme
+aktiviert werden. Sie ist zunächst deaktiviert, bleibt vollständig passiv und
+benötigt keinen manuellen Start im Moment eines Verdichterwechsels.
 
-The trigger reports compressor rotation only, not heating, cooling, defrost or
-PTC power. Event time is when the complete valid reading was decoded from TCP,
-not a precise electrical switching timestamp. Buffer edges can split telegrams;
-the existing parser resynchronizes. Device display evidence may still be needed
-to establish the meaning of unknown protocol bits.
+Seit **0.11.0** gilt:
 
-Manual recording stops at its selected time limit, 1 MiB, 16384 chunks, a stop or
-disconnect. A longer time limit does not guarantee a longer recording: the same
-memory and chunk limits still apply.
-Starting again replaces the previous recording. **Clear capture**, reload and
-restart remove the recording. A stopped capture stays in memory and appears in
-subsequent diagnostic downloads until cleared or replaced. Download it before
-updating or restarting Home Assistant.
+- Ein fortlaufender Puffer hält bis zu **180 Sekunden Vorgeschichte**, begrenzt
+  auf 512 KiB und 8.192 Empfangsblöcke.
+- Eine frische, gültige Verdichterdrehzahl von null auf positiv oder umgekehrt
+  startet eine Aufnahme mit Vorgeschichte und **180 Sekunden Nachlauf**.
+  Erste Messwerte, mindestens 30 Sekunden alte Daten und Wiederverbindungen
+  bilden nur eine neue Ausgangsbasis. Ungültige Telegramme lösen nichts aus.
+- **Ereignisaufnahme** zeigt den Zustand deaktiviert, wartend, aufzeichnend oder
+  bereit sinngemäß in der HA-Oberflächensprache. Sobald eine Aufnahme bereit ist,
+  die gewöhnlichen Diagnosedaten herunterladen. Während der Aufnahme ist der
+  Export nur ein Zwischenstand.
+- Bis zu **vier Aufnahmen einschließlich einer laufenden** bleiben erhalten.
+  Eine fünfte ersetzt die älteste; `overwritten_captures` zählt Ersetzungen.
+  Weitere Übergänge innerhalb eines laufenden Fensters werden als Ereignisse
+  vermerkt, ohne es zu verlängern. Maximal 32 Ereignisse werden einzeln gespeichert;
+  weitere werden gezählt. „Bereit“ bedeutet nicht, dass die Automatik angehalten ist.
+- **Ereignisaufnahmen löschen** entfernt alle gespeicherten Ereignisaufnahmen.
+  Die nächste gültige Zustandsänderung kann erneut eine Aufnahme auslösen.
+- Die jüngste Aufnahme steht in `event_capture.chunks` und `events`.
+  Frühere liegen in `event_capture.previous_captures`, älteste zuerst, jeweils
+  mit eigenen Zeitstempeln und Abschlussgründen. `capture_count` zählt auch
+  eine laufende Aufnahme.
+- Manuelle Aufnahmen sind unabhängig. Ihre Dauer verändert nicht die automatischen
+  180/180-Sekunden-Fenster. Deaktivieren der Automatik verwirft den Vorlaufpuffer
+  und beendet eine laufende Ereignisaufnahme mit `disabled`; das Teilergebnis
+  bleibt herunterladbar. Erneutes Aktivieren erhält gespeicherte Aufnahmen und
+  beginnt mit einer neuen Ausgangsbasis.
+- Verbindungsabbruch beendet eine Aufnahme mit `disconnected` und verwirft
+  Ausgangsbasis und Vorlaufpuffer. Neuladen oder Neustart verwirft alle Aufnahmen
+  und Timer. Die Aktivierungseinstellung bleibt erhalten.
 
-The export includes:
+Jede Aufnahme einschließlich Vorgeschichte ist auf 1 MiB und 16.384 Blöcke
+begrenzt. Tatsächlicher Vorlauf, Dauer, Zähler und Abschlussgrund sind sichtbar;
+Speicherlimits können beide Zeitfenster verkürzen. Insgesamt sind höchstens
+5,5 MiB Rohdaten vorgesehen: eine manuelle, vier automatische Aufnahmen und der
+Vorlaufpuffer. Python-Objekte und Hex-Exporte benötigen zusätzlichen Speicher.
 
-- `started_utc`: recording start time;
-- `stopped_utc`: stop time, or null while recording/idle;
-- `status`: `idle`, `recording`, `manual`, `duration_limit`, `byte_limit`,
-  `chunk_limit` or `disconnected`;
-- `actual_duration_seconds`: monotonic time from start until stop (or now while
-  recording), including periods without received data;
-- `bytes` and `chunk_count`: recorded data size and receive-block count;
-- `duration_seconds`: time limit chosen for this recording, not measured duration;
-- `configured_duration_seconds`: current option for the next recording;
-- `integration_version`, `profile`, `max_bytes`, `max_chunks`: interpretation
-  context and memory limits;
-- `chunks`: hexadecimal TCP receive blocks and relative `elapsed_ms` timestamps.
+Ein Verdichterereignis belegt Rotation, nicht Heizen, Kühlen, Abtauen oder PTC-
+Leistung. Der Zeitpunkt entspricht dem vollständig dekodierten TCP-Messwert,
+nicht einem genauen elektrischen Schaltzeitpunkt. Pufferränder können Telegramme
+teilen; der vorhandene Parser synchronisiert sich erneut. Für unbekannte Bits
+kann weiterhin eine unabhängige Displaybeobachtung erforderlich sein.
 
-Chunks are not telegram boundaries and a recording may start or end mid-frame.
-The final chunk time measures the observed receive span, not the exact stop time.
-`actual_duration_seconds` measures the recording lifecycle independently of chunk
-arrival. After stopping, its value is frozen. Wall-clock start/stop timestamps may
-be affected by clock corrections; duration uses a monotonic clock.
-A `recording` export is a snapshot of a recording still in progress.
+## Status und Exportfelder
 
-New exports use **format version 2** and retain the existing `chunks` format.
-Older format-version-1 exports use `size_limit` for both memory limits and do not
-provide an exact stop time or actual duration. Offline tools do not manufacture
-these missing values.
+**Aufnahmestatus** ist standardmäßig aktiv. Attribute enthalten Start/Stopp,
+tatsächliche Dauer, Größe, Anzahl der Blöcke und Grenzen, niemals rohe Nutzdaten.
+Fortschritt wird ungefähr alle fünf Sekunden aktualisiert. Start, Stopp, Löschen,
+Grenzen und Verbindungsabbruch werden unmittelbar gemeldet, auch wenn nach
+Ablauf des Timers kein weiteres Telegramm eintrifft.
 
-Recording includes unknown and rejected bytes. It is kept in memory, not in
-entity attributes, Recorder or log files. Keep full recordings, display photos,
-network details and personal notes outside the public repository.
+| Feld | Bedeutung |
+|---|---|
+| `started_utc` | Startzeit |
+| `stopped_utc` | Stoppzeit; während Aufnahme oder im Leerlauf `null` |
+| `status` | `idle`, `recording`, `manual`, `duration_limit`, `byte_limit`, `chunk_limit` oder `disconnected` |
+| `actual_duration_seconds` | Tatsächliche Dauer einschließlich Zeiten ohne Empfang; nach Stopp eingefroren |
+| `bytes`, `chunk_count` | Rohdatenmenge und Anzahl der Empfangsblöcke |
+| `duration_seconds` | Für diese Aufnahme festgelegtes Zeitlimit |
+| `configured_duration_seconds` | Aktuell eingestelltes Limit für die nächste Aufnahme |
+| `integration_version`, `profile` | Kontext für die Interpretation |
+| `max_bytes`, `max_chunks` | Speichergrenzen |
+| `chunks` | Hexadezimale TCP-Blöcke mit relativem `elapsed_ms` |
 
-## Diagnostic entities
+Empfangsblöcke sind keine Telegrammgrenzen. Der letzte Blockzeitpunkt ist nicht
+die genaue Stoppzeit. Die tatsächliche Dauer verwendet eine monotone Uhr und
+ist unabhängig von Empfang und Systemzeitkorrekturen. Ein Export mit `recording`
+ist ein Zwischenstand.
 
-**Capture status** is enabled by default. Its translated state shows whether a
-recording is running or why it stopped. Attributes include start/stop timestamps,
-actual duration, size, chunk count and limits; raw payloads are never attributes.
-Progress is refreshed approximately every five seconds while the entry is loaded.
-Start, stop, clear and limit/disconnect changes are delivered immediately, including
-when a recording's timer expires without any subsequent bus telegram.
+Aktuelle Exporte nutzen **Formatversion 2** mit unverändertem `chunks`-Format.
+Ältere Exporte nutzen `size_limit` für beide Speichergrenzen und enthalten keine
+genaue Stoppzeit oder tatsächliche Dauer. Werkzeuge erfinden diese fehlenden Werte nicht.
+Auch unbekannte und verworfene Bytes werden aufgezeichnet. Rohdaten liegen nur
+im Arbeitsspeicher, nicht in Entitätsattributen, Recorder oder Protokolldateien.
 
-Two optional diagnostic entities are disabled by default:
+## Weitere Diagnoseentitäten
 
-- **Gateway connection** reports TCP connectivity, not freshness of telemetry.
-- **Last valid data received** reports the UTC timestamp of the latest received
-  supported decoder reading. Unsupported or invalid bytes do not advance it.
-  It is not a statement that every channel is fresh. The timestamp is retained
-  on disconnect, refreshed in HA within approximately five seconds during normal
-  reception, and reset to unknown on reload until valid data arrives.
+Zwei optionale Entitäten sind zunächst deaktiviert:
 
-Status and connection diagnostics remain readable during a disconnect. Existing
-telemetry continues to become unavailable according to its own freshness rules.
-Reload/unload cancels recording and freshness timers and removes entity listeners.
-Starting again replaces the previous recording; clearing returns status to idle.
+- **Gateway-Verbindung** beschreibt ausschließlich die TCP-Verbindung.
+- **Letzter gültiger Datenempfang** zeigt den Zeitpunkt des jüngsten unterstützten,
+  gültigen Decoderwerts. Unbekannte oder ungültige Daten aktualisieren ihn nicht.
+  Er belegt nicht die Aktualität aller Kanäle. Bei Verbindungsabbruch bleibt der
+  Zeitpunkt erhalten; nach Neuladen ist er bis zum ersten gültigen Wert unbekannt.
+  Während des Empfangs erfolgt die HA-Aktualisierung ungefähr alle fünf Sekunden.
 
-### Upgrade from 0.8.0
+Status- und Verbindungsdiagnosen bleiben bei Verbindungsabbruch lesbar.
+Messwerte werden nach ihren eigenen Aktualitätsregeln nicht verfügbar.
+Neuladen/Entladen beendet Timer und entfernt Listener. Löschen setzt den
+manuellen Aufnahmestatus auf Leerlauf zurück.
 
-Keep the existing entry. The original 54 entity identities, user names and
-activation preferences remain; three diagnostic entities are added (57 total).
-Entries without recording options use 120 seconds automatically. No config-entry
-migration or extra gateway connection is required. Download any recording before
-updating because reload/restart still clears the in-memory buffer.
+## Hinweise zum Update
 
-## Offline tools
+Beim damaligen Update 0.8.0 → 0.9.0 blieben 54 Entitätsidentitäten, eigene Namen
+und Aktivierungseinstellungen erhalten; drei Diagnosen kamen hinzu (57 insgesamt).
+Ohne gesetzte Option gilt eine Aufnahmedauer von 120 Sekunden. Dafür war keine
+Konfigurationsmigration oder zusätzliche Verbindung nötig. Für aktuelle Versionen
+und die spätere Beta-Migration gelten die [Versionshinweise](../RELEASE_NOTES.md).
 
-Use `--event` with inventory, replay or comparison to select the latest
-automatic recording from a full diagnostic export; the default remains the manual
-capture. Add `--event-index 0` for the oldest retained event (`1` for the next,
-and `-1` for the latest). Older single-event exports remain supported:
+## Auswertung und Fehlermeldungen
 
-```sh
-uv run python -m tools.inventory_capture diagnostics.json --event --output tmp/event.json
-uv run python -m tools.replay_diagnosis diagnostics.json --event --output tmp/event-replay.json
-uv run python -m tools.compare_captures diagnostics.json --event \
-  --before-end-ms 60000 --after-start-ms 60000 \
-  --output tmp/event-comparison.json --report tmp/event-comparison.md
-```
+Für die technische Analyse gibt es [Offline-Werkzeuge (Englisch)](OFFLINE_ANALYSIS.md).
+Sie arbeiten ohne Geräteverbindung und unterstützen alte sowie neue Exportformate.
+Die Inventarisierung erfasst auch unbekannte Telegrammkennungen; die Wiedergabe
+zeigt nur vom Produktionsdecoder verstandene Werte.
 
-For comparisons, replace the example 60000 ms with the actual first event's
-`elapsed_ms`; a short prebuffer means the event occurs earlier in the export.
-
-Run from a development checkout after following [setup instructions](../CONTRIBUTING.md).
-These commands do not connect to equipment. Store reports in the ignored `tmp/`
-directory or another private location.
-
-```sh
-mkdir -p tmp
-uv run python -m tools.inventory_capture capture.json --output tmp/inventory.json
-uv run python -m tools.replay_diagnosis capture.json --output tmp/replay.json
-uv run python -m tools.compare_captures before.json after.json \
-  --output tmp/comparison.json --report tmp/comparison.md
-```
-
-Inventory retains unknown identities within supported frame shapes. Replay uses
-the production decoder and therefore reports only implemented readings. A frame
-present in inventory but absent from replay is not necessarily corrupt.
-
-### Comparing time windows
-
-Omit the second filename to compare two windows within one recording:
-
-```sh
-uv run python -m tools.compare_captures capture.json \
-  --before-end-ms 30000 --after-start-ms 30000 \
-  --after-event-ms 31000 --after-event-description 'Display observation' \
-  --output tmp/windows.json --report tmp/windows.md
-```
-
-Times in this example are illustrative. Each optional event is relative to its
-own recording start. Event deltas express temporal correlation, not causation
-or a confirmed interpretation of a bit.
-
-Windows are half-open `[start_ms, end_ms)`. The full stream is parsed first so
-fragmented frames crossing a window boundary are retained. A frame is assigned
-the timestamp of the TCP chunk that completes it, not an electrical bus timestamp.
-The first observation in a window is a baseline, not a confirmed transition.
-
-Reports include:
-
-- complete three-byte identity, data point and payload length per group;
-- new, missing and shared groups, distinct payloads and their frequencies;
-- each actual payload transition, timestamp, previous value and changed bits;
-- final observed values on each side, without assuming simultaneous sampling;
-- available recording metadata, differences in capture conditions and byte coverage.
-
-Bit positions are LSB-first, with zero-based byte offsets. Different payload
-lengths remain separate groups and are not compared bitwise. Repetitions increase
-frequency but not the transition count. Missing observations mean neither
-unchanged nor off.
-
-Unparsed bytes include noise, unsupported shapes, invalid candidates and incomplete
-frames; the tool does not infer which cause applies. Reserved bytes 5/6 must be
-zero under the existing inventory rules. Byte coverage and maximum chunk gap
-refer to the **whole recording**, even when comparing windows. Gaps can reflect
-silence or missing traffic, so complete exported-byte coverage does not prove
-continuous capture of the electrical bus.
-
-The inventory and comparison tools accept HA exports (`data.capture`), `capture`
-wrappers and bare capture objects. Timestamps must be nonnegative monotonic
-integers. Missing metadata remains `null`. Comparison output paths must differ
-from the inputs and from each other.
-
-## Sharing a useful report
-
-Include the integration and Home Assistant versions, selected hardware profile,
-affected entity and a short description of expected versus observed behaviour.
-For a decoding issue, a reviewed minimal telegram and expected interpretation
-are more useful than an unfiltered dump. Remove addresses, device identifiers,
-serial numbers, personal file paths and unrelated measurements. Do not cause an
-equipment fault to obtain a sample.
+Bei einer Fehlermeldung Integrations- und HA-Version, Hardwareprofil, betroffene
+Entität sowie erwartetes und beobachtetes Verhalten nennen. Ein geprüftes minimales
+Telegramm mit erwarteter Interpretation ist hilfreicher als ein ungefilterter Dump.
+Adressen, Kennungen, Seriennummern, private Pfade und nicht benötigte Messwerte
+entfernen. Keine Anlagenstörung absichtlich auslösen. Vollständige Aufnahmen,
+Displayfotos und persönliche Notizen außerhalb des öffentlichen Repositorys aufbewahren.

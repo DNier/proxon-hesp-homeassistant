@@ -1,7 +1,8 @@
 # Contributing
 
 Contributions to documentation, passive telemetry, diagnostics and test coverage
-are welcome. The integration's production path is receive-only. Changes must
+are welcome. Telemetry and recordings are passive; the explicit device-time
+alignment button is the only production write action. Changes must
 preserve one receiving TCP connection per entry and must not introduce polling
 or control commands as a side effect of setup, reconnect or recording.
 
@@ -57,7 +58,8 @@ tools instead of introducing incompatible framing or checksum rules.
 
 ## Documentation and privacy
 
-Write public documentation for users and contributors, in English. Explain
+Write user documentation in German and developer references in English, following
+the language policy below. Explain
 supported behaviour, reproducible evidence and limitations. Keep implementation
 history only when it helps migration or understanding a current design decision.
 
@@ -89,3 +91,20 @@ Before a functional release:
 
 A development push does not publish a release or update a user's installation.
 HACS updates still require user installation and a Home Assistant restart.
+
+## Documentation language
+
+User documentation and release notes are maintained in German. README.en.md is
+an English entry point, not a complete translated manual. Code, code comments,
+this contribution guide and protocol/offline-analysis references remain English.
+The Home Assistant UI retains both German and English translations.
+
+Keep each document in its assigned language and label links to English technical
+references from user guides. Preserve protocol identifiers, CLI arguments and
+machine-readable status values literally. Do not translate license texts.
+Distinguish released behavior from unreleased changes. Release bodies must contain
+only the matching version section; translating the local changelog does not update
+previously published GitHub release bodies or files in existing tags.
+
+See [offline analysis](docs/OFFLINE_ANALYSIS.md) for the command-line workflow
+and [German documentation](README.md#dokumentation) for user-facing instructions.
