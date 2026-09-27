@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up PROXON HESP",
-        "description": "Receive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -16,7 +16,7 @@
       },
       "reconfigure": {
         "title": "Set up PROXON HESP",
-        "description": "Receive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -245,7 +245,7 @@
         "name": "Event capture",
         "state": {
           "disabled": "Disabled",
-          "waiting": "Waiting for compressor transition",
+          "waiting": "Waiting for event",
           "recording": "Recording after event",
           "ready": "Capture ready"
         }
@@ -318,7 +318,7 @@
         },
         "data_description": {
           "capture_duration": "30–600 seconds; default: 120.",
-          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start or stop. Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them."
+          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start/stop or a change of experimental status bit 28 (0x0208). Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them."
         }
       }
     },

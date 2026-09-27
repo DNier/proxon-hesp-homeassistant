@@ -266,3 +266,63 @@ def test_load_retained_event_index(tmp_path):
     assert load_capture(path, event=True, event_index=0)["chunks"] == ["oldest"]
     with pytest.raises(ValueError, match="outside retained"):
         load_capture(path, event=True, event_index=2)
+
+
+async def test_status_edges_share_window_with_compressor_and_preserve_raw():
+    e = EventCapture(True)
+    with patch("custom_components.proxon_hesp.event_capture.time.monotonic") as clock:
+        clock.return_value = 100
+        e.feed(b"before")
+        e.observe_status("1a100080")
+        e.observe_rpm(2000)
+        clock.return_value = 110
+        e.feed(b"edge")
+        e.observe_status("1a100090")
+        timer = e.capture.timer
+        assert e.events == [
+            {
+                "elapsed_ms": 10000,
+                "type": "status_0208_bit_28_changed",
+                "active": True,
+                "raw": "1a100090",
+            }
+        ]
+        e.observe_status("1a110090")  # Another bit cannot trigger this recorder.
+        e.observe_rpm(0)
+        e.observe_status("1a110080")
+        assert [event["type"] for event in e.events] == [
+            "status_0208_bit_28_changed",
+            "compressor_stopped",
+            "status_0208_bit_28_changed",
+        ]
+        assert e.events[-1]["active"] is False
+        assert e.capture.timer is timer
+        assert e.capture.recording_duration == 190
+    e.clear()
+
+
+async def test_status_baseline_disabled_stale_reconnect_and_clear():
+    e = EventCapture()
+    e.observe_status("1a100090")
+    assert e.status_baseline is None
+    e.configure(True)
+    with patch("custom_components.proxon_hesp.event_capture.time.monotonic") as clock:
+        clock.return_value = 100
+        e.observe_status("1a100080")
+        clock.return_value = 130
+        e.observe_status("1a100090")
+        assert not e.events
+        e.disconnect()
+        e.observe_status("1a100080")
+        assert not e.events
+        e.observe_status("1a100090")
+        assert len(e.events) == 1
+        e.clear()
+        assert e.status_baseline is None
+        e.observe_status("1a100080")
+        assert not e.events
+        e.configure(False)
+        e.configure(True)
+        e.observe_status("1a100090")
+        assert not e.events
+    e.clear()

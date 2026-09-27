@@ -1,4 +1,4 @@
-"""Opt-in, bounded pre/post recording of validated compressor transitions."""
+"""Opt-in, bounded recording of validated compressor and status transitions."""
 
 import time
 from collections import deque
@@ -27,6 +27,7 @@ class EventCapture:
         self.ring = deque()
         self.ring_size = 0
         self.baseline = None
+        self.status_baseline = None
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
@@ -56,6 +57,7 @@ class EventCapture:
         self.ring.clear()
         self.ring_size = 0
         self.baseline = None
+        self.status_baseline = None
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
@@ -67,6 +69,7 @@ class EventCapture:
         self.ring.clear()
         self.ring_size = 0
         self.baseline = None
+        self.status_baseline = None
         self.capture.stop(reason)
 
     def feed(self, data):
@@ -99,6 +102,29 @@ class EventCapture:
             or previous[0] == running
         ):
             return
+        self._record_event(
+            now, "compressor_started" if running else "compressor_stopped", rpm=rpm
+        )
+
+    def observe_status(self, raw):
+        """Observe bit 28 of a validated 0208 response, without assigning meaning."""
+        if not self.enabled:
+            return
+        now = time.monotonic()
+        word = int.from_bytes(bytes.fromhex(raw), "little")
+        active = bool(word & (1 << 28))
+        previous = self.status_baseline
+        self.status_baseline = (active, now)
+        if (
+            previous is None
+            or now - previous[1] >= STALE_SECONDS
+            or previous[0] == active
+        ):
+            return
+        self._record_event(now, "status_0208_bit_28_changed", active=active, raw=raw)
+
+    def _record_event(self, now, event_type, **details):
+        """Share bounded recording windows across independent trigger sources."""
         if self.capture.reason != "recording":
             if self.capture.reason != "idle":
                 self.previous_captures.append(self._export_current())
@@ -126,8 +152,8 @@ class EventCapture:
             self.events.append(
                 {
                     "elapsed_ms": round((now - self.capture.monotonic_start) * 1000),
-                    "type": "compressor_started" if running else "compressor_stopped",
-                    "rpm": rpm,
+                    "type": event_type,
+                    **details,
                 }
             )
         else:

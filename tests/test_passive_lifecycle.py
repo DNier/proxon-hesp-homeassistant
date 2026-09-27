@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.hesp.checksum import checksum
 
 
 async def test_receive_capture_reconnect_reload_remain_read_only(hass, frames):
@@ -64,6 +65,24 @@ async def test_receive_capture_reconnect_reload_remain_read_only(hass, frames):
             )
 
         runtime = entry.runtime_data
+        runtime.event_capture.configure(True)
+
+        def status_frame(raw):
+            body = bytes.fromhex("2240000802000008" + raw)
+            return body + checksum(body).to_bytes(2, "little")
+
+        streams[0][0].feed_data(status_frame("1a100080"))
+        await hass.async_block_till_done()
+        assert runtime.event_capture.events == []
+        valid = status_frame("1a100090")
+        streams[0][0].feed_data(valid[:-1] + bytes([valid[-1] ^ 1]))
+        await hass.async_block_till_done()
+        assert runtime.event_capture.events == []
+        streams[0][0].feed_data(valid)
+        await hass.async_block_till_done()
+        assert runtime.event_capture.events[0]["type"] == "status_0208_bit_28_changed"
+        assert runtime.event_capture.events[0]["active"] is True
+        runtime.event_capture.configure(False)
         await press("start")
         streams[0][0].feed_data(b"".join(frames.values()))
         await hass.async_block_till_done()

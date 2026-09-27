@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "PROXON HESP einrichten",
-        "description": "Rein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -16,7 +16,7 @@
       },
       "reconfigure": {
         "title": "PROXON HESP einrichten",
-        "description": "Rein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -245,7 +245,7 @@
         "name": "Ereignisaufnahme",
         "state": {
           "disabled": "Deaktiviert",
-          "waiting": "Wartet auf Verdichterwechsel",
+          "waiting": "Wartet auf Ereignis",
           "recording": "Nachlauf wird aufgezeichnet",
           "ready": "Aufnahme bereit"
         }
@@ -318,7 +318,7 @@
         },
         "data_description": {
           "capture_duration": "30–600 Sekunden; Standard: 120.",
-          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart oder -stopp. Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
+          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart/-stopp oder einem Wechsel des experimentellen Statusbits 28 (0x0208). Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
         }
       }
     },

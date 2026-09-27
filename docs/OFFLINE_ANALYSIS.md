@@ -80,3 +80,24 @@ wrappers and bare capture objects. Timestamps must be nonnegative monotonic
 integers. Missing metadata remains `null`. Comparison output paths must differ
 from the inputs and from each other.
 
+
+## Metadatenantworten prüfen
+
+`python -m tools.audit_metadata input.json --output result.json` prüft vollständige
+Antworttelegramme auf `0033`, `0034` und `0038`. Die Eingabe ist ein JSON-Objekt
+mit diesen drei Schlüsseln und je einem vollständigen Hex-Telegramm als Wert.
+Das Werkzeug verwendet die vorhandene Inventarisierung und Prüfsumme; es öffnet
+keine Verbindung zur Anlage. Abgeschnittene Antworten, abweichende Identitäten,
+leere Nutzdaten und unterschiedlich lange Listen werden zurückgewiesen.
+
+Die Ausgabe enthält positionsweise Datenpunkt, Typcode und Maskencode. Sie
+bestätigt weder deren Bedeutung noch Schreibrechte oder einen vollständigen
+Gerätekatalog. Das bislang ungeklärte Längenformat mit `00` wird nicht als lange
+Metadatenantwort geraten. Dafür werden vollständige Originaltelegramme benötigt.
+
+Der getrennte `ReadProbe` ist weiterhin nur für die bereits beobachtete
+Filterabfrage `0x00ED` vorbereitet. Er besitzt keinen Netzwerkzugriff und verlangt
+einen koordinierten Sender. Ein erfolgreicher Offline-Test belegt keine sichere
+Busarbitrierung über TCP. Empfangene passende Antworten können außerdem vom
+regulären Master ausgelöst worden sein; sie beweisen allein keine Reaktion auf
+eine eigene Abfrage. Die passive Integration startet keine solchen Tests.

@@ -114,6 +114,8 @@ class ProxonRuntime:
                         for reading in readings:
                             if reading.key == "compressor_rpm":
                                 self.event_capture.observe_rpm(reading.value)
+                            elif reading.key == "experimental_status_0208":
+                                self.event_capture.observe_status(reading.value)
                             self.values[reading.key] = (reading, now)
                             if (
                                 reading.key == "uptime"

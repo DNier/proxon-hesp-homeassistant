@@ -1,5 +1,7 @@
 # PROXON HESP für Home Assistant
 
+Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
+
 Lokale Integration für PROXON-Anlagen der P-Serie über ein transparentes
 RS485-zu-TCP-Gateway. Ohne Cloud, MQTT oder zusätzliche Anwendung.
 
@@ -30,7 +32,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabil: 0.11.0. Beta: 0.12.0b6.** Für weitere Beta-Updates in HACS die
+**Stabil: 0.11.0. Beta: 0.12.0b7.** Für weitere Beta-Updates in HACS die
 Vorabversionen für dieses Repository aktivieren. Eine einmalig manuell installierte
 Beta aktiviert diese Einstellung nicht zwingend.
 
@@ -56,7 +58,6 @@ ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalte
 - [English overview](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/README.en.md)
 - [Entwicklung – Englisch](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/CONTRIBUTING.md)
 
-Unabhängiges Projekt ohne Verbindung zum Gerätehersteller.
 Eigener Code: [MIT-Lizenz](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/LICENSE).
 Protokollquellen, CC-BY-4.0-Zuordnung und Markenhinweise:
 [Quellen und Rechte](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/NOTICE.md).

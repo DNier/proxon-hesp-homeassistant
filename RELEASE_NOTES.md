@@ -3,6 +3,18 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0b7 – Gezieltere automatische Diagnose
+
+- Automatische Ereignisaufnahmen erfassen jetzt zusätzlich das Ein- und Ausschalten des experimentellen Statusbits 28 (`0x0208`). Dadurch können Vorgänge mitten im Verdichterlauf untersucht werden. Die Bedeutung als Abtausignal ist noch nicht bestätigt.
+- Verdichterstart und -stopp bleiben Auslöser. Alle Ereignisse teilen weiterhin bis zu drei Minuten Vor- und Nachlauf und höchstens vier gespeicherte Aufnahmen. Weitere Ereignisse innerhalb eines laufenden Fensters verlängern es nicht.
+- Die vorhandene Aktivierungseinstellung bleibt erhalten. Die Aufnahme funktioniert unabhängig davon, ob die experimentelle Bit-Entität aktiviert ist, und sendet keine Abfragen oder Steuerbefehle.
+- Einrichtung und Dokumentation kennzeichnen das Projekt deutlicher als unabhängige Community-Integration.
+- Für die Entwicklung gibt es eine Offline-Prüfung vollständiger Metadatenantworten. Sie ergänzt keine neuen Sensoren oder aktiven Busabfragen.
+
+Nach dem Update Home Assistant neu starten. Falls noch nicht aktiviert: in den Integrationsoptionen **Automatische Ereignisaufnahme** einschalten. Bereits gespeicherte Aufnahmen vorher als Diagnose herunterladen; sie liegen nur im Arbeitsspeicher und gehen beim Neustart verloren.
+
+Validierung: 270 Tests einschließlich Aufnahmegrenzen, Wiederverbindungen, ungültiger Telegramme, passivem HA-Lebenszyklus und Upgradeprüfungen; Ruff-Prüfung erfolgreich.
+
 ## 0.12.0b6 — Lesbare HACS-Übersicht und Updatehinweise (Beta)
 
 - HACS-Einstiegsseite kürzen: klare Abschnitte und Listen statt breiter Tabelle,

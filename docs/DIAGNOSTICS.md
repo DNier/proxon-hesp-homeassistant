@@ -44,6 +44,17 @@ oder Neustart benötigte Aufnahmen herunterladen.
 
 ## Automatische Ereignisaufnahmen
 
+Seit **0.12.0b7** lösen zusätzlich beide Zustandswechsel des experimentellen
+Bits 28 aus `0x0208` eine Aufnahme aus. Das Bit wird dabei ausdrücklich nicht als
+bestätigtes Abtausignal bezeichnet. Die Diagnose arbeitet auch dann, wenn die
+experimentelle Bit-Entität deaktiviert ist. Die bestehende Aktivierungseinstellung
+gilt weiterhin; Verdichterstart und -stopp bleiben als Auslöser erhalten.
+Alle Auslöser teilen dieselben vier Speicherplätze und festen Aufnahmefenster.
+Ein Wechsel innerhalb eines laufenden Fensters wird nur markiert. Ein späterer
+Wechsel kann ein neues Fenster mit überlappender Vorgeschichte starten.
+Im Export heißt das Ereignis `status_0208_bit_28_changed`; `active` enthält den
+neuen Bitzustand und `raw` die vier Statusbytes in Telegrammreihenfolge.
+
 Seit 0.10.0 kann unter **Konfigurieren** die automatische Ereignisaufnahme
 aktiviert werden. Sie ist zunächst deaktiviert, bleibt vollständig passiv und
 benötigt keinen manuellen Start im Moment eines Verdichterwechsels.
