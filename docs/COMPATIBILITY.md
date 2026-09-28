@@ -10,12 +10,18 @@ BDE-Displayvergleichen mit dieser Hardware:
 | Hauptplatine | Hermes LT-ZIM V1.6 |
 | PTC-Platine | PTC-Modul 4× V1.2 |
 | Bedienteil | BDE Comfort, angezeigte Version V03.6.07A0 |
-| Verbindung | Transparentes RS485-zu-TCP-Gateway |
+| Gateway | Waveshare RS232/485/422 TO POE ETH (B) |
+| Verbindung | RS485, transparent über TCP |
 | Serielle Einstellungen | 19200 Baud, 8N1 |
 
 Diese Angaben beschreiben die Referenzkonfiguration. Sie sind keine automatisch
 erkannten Geräteattribute. Ein gleicher Produktname allein belegt keine
 Kompatibilität. Verfügbare Messwerte hängen auch von Ausstattung und Busverkehr ab.
+
+Das Waveshare-Modell ist die eingesetzte Referenzhardware, keine Voraussetzung
+der Integration. Andere Gateways müssen rohe serielle Daten unverändert über TCP
+übertragen können. Eine pauschale Kompatibilität aller Waveshare-Modelle ist damit
+nicht bestätigt.
 
 ## Busabschnitt
 

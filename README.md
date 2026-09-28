@@ -1,15 +1,22 @@
-# PROXON HESP für Home Assistant
+# PROXON P2 mit Home Assistant – HESP-Integration ohne Modbus-Modul
 
 Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
 
-Lokale Integration für PROXON-Anlagen der P-Serie über ein transparentes
-RS485-zu-TCP-Gateway. Ohne Cloud, MQTT oder zusätzliche Anwendung.
+Die Custom Integration **PROXON HESP** verbindet eine **PROXON P2-Lüftungsheizung**
+mit **Home Assistant** über den vorhandenen HESP-Bus und ein transparentes
+RS485-zu-TCP-Gateway. Ein Modbus-Modul, MQTT oder eine Cloud sind dafür nicht
+erforderlich. Die Installation erfolgt über HACS als benutzerdefiniertes Repository.
+Die geprüfte P2-Hardware ist unten aufgeführt; andere Anlagen der P-Serie sind
+nicht automatisch kompatibel.
 
 ## Voraussetzungen
 
 - Home Assistant ab **2026.9**.
 - Geprüfte Referenz: **LT-ZIM V1.6, PTC 4× V1.2, BDE Comfort**.
 - Gateway im transparenten TCP-Modus mit **19200 Baud, 8N1**.
+- In der Referenzanlage eingesetzt: **Waveshare RS232/485/422 TO POE ETH (B)**
+  als RS485-zu-TCP-Gateway. Dieses Modell ist keine Voraussetzung; andere Gateways
+  müssen dieselbe transparente Übertragung unterstützen.
 - Andere Hardwarevarianten sind nicht automatisch unterstützt.
 
 ## Was die Integration bietet
@@ -26,6 +33,8 @@ Allgemeine Heizungs-/Lüftersteuerung und eine bestätigte Unterscheidung von
 Heizen, Kühlen und Abtauen sind nicht enthalten.
 
 ## Installation und Updates
+
+[![Repository in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
 1. Dieses Repository in HACS als benutzerdefinierte **Integration** hinzufügen.
 2. PROXON HESP herunterladen und Home Assistant neu starten.
@@ -44,6 +53,14 @@ separate Schritte; eine Handy-Pushnachricht wird dadurch nicht automatisch einge
 Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
+
+## Austausch und Mithilfe
+
+Im [Home-Assistant-Forum: PROXON P-series via HESP](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
+stehen die Anbindung und Möglichkeiten zur Mithilfe auf Englisch. Berichte anderer
+PROXON-Besitzer mit Platinenrevision, BDE-Version und Vergleich zur Geräteanzeige
+helfen, die Kompatibilität zu prüfen. Diagnosedaten bitte vor dem Teilen auf
+private Angaben prüfen; Details unter [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
 
 ## Dokumentation
 
