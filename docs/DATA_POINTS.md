@@ -143,13 +143,11 @@ unique IDs and user-selected enabled/disabled settings are preserved on upgrade.
 - **PTC state:** reviewed display comparisons show different PTC states with
   identical 006C and 0208 payloads. The 0168 value `02` also occurs with both
   displayed states. These values do not establish a direct PTC-state mapping.
-- **Valve states:** candidate bits in 006C/0208 correlate with defrost and
-  heating/cooling display states in a small sample, but compressor, bypass and
-  operating conditions also change. Preheating has no positive display example
-  in that sample. No valve mapping is validated. Further evidence needs
-  timestamped display observations during a captured transition that separates
-  the candidate state from those other changes; matching bits alone are
-  insufficient.
+- **Other valve states:** 006C bit 7 matches reviewed MV-Abtau indications,
+  but a directly observed transition is still missing. This valve indication
+  must not be confused with active defrost. MV-Vorwärme has no positive display
+  example, so no mapping is published. See the confirmed display correspondence
+  and compatibility limits for MV-Heizen/Kühlen below.
 - **Intensive duration or remaining time:** no validated data point. The
   integration does not substitute an estimated countdown.
 - **Negative temperatures and error sentinels:** require independent evidence
@@ -224,3 +222,40 @@ Unknown words are accepted as raw observations but do not refresh the allowliste
 fan-level reading. Structural/checksum failures remain rejected; normal 30-second
 freshness and immediate disconnect unavailability apply. This adds three entities
 (65 on the main device). See the [German comparison guide](EXPERIMENTAL.md).
+
+
+## BDE heating/cooling solenoid valve indication
+
+The optional diagnostic binary sensor **MV-Heizen/Kühlen** (English:
+**Heating/cooling solenoid valve**) mirrors bit 9 (LSB 0, little-endian) of
+`224000 / 006C / 4`. It is disabled by default and has no thermal device class.
+Enable it in the main device's entity settings. Existing entity IDs and user
+settings remain unchanged; the raw 006C sensor remains available separately.
+
+Display comparisons include both states, cooling with bypass off, and a filmed
+on-to-off transition after compressor shutdown. The valve indication remains on
+for approximately five minutes after reported RPM reaches zero, then the display
+and bit change in the same approximately one-second interval. This supports the
+BDE indication on the observed installation, not physical valve feedback or a
+universal mapping across untested models/firmware. It is **not cooling activity**.
+
+Only the display-backed payloads `25000000`, `27000000`, `a7000000`,
+`25020000`, `27020000`, and `a7020000` are interpreted. Other checksum-valid
+words remain raw diagnostics and immediately make this sensor unavailable.
+Malformed frames cannot refresh it. It also becomes unavailable after 30 seconds
+without fresh accepted source data or on disconnect. Missing data never mean off.
+Attributes identify the source, bit, raw payload and observed-installation scope.
+The entity only listens; no query, control command or extra polling is sent.
+
+PTC-Wohnen is deliberately omitted: a reviewed display-on example has zero in
+all three candidate panel fields (01F8 bit 11, 03B6 bit 1, 118007/0191 bit 1).
+Repeated agreement during other setpoint changes does not remove that
+counterexample. MV-Vorwärme remains omitted until a positive display example and
+corresponding telegram evidence are available.
+
+0208 bit 10 is not a copy of this valve indication: it can clear while the display
+still reads on. Bit 28 is absent during a display-confirmed cooling run. Neither
+is a generic cooling indicator. Positive RPM can also be reported only after the
+LED illuminates and supply air starts cooling, on both the BDE and HESP. The
+existing compressor entity reports RPM > 0, not an independently measured
+physical start time. Heating/cooling/defrost classification remains unimplemented.

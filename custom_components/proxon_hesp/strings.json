@@ -304,6 +304,9 @@
       },
       "experimental_0208_bit_28": {
         "name": "Experimental: status 0x0208 bit 28"
+      },
+      "heat_cool_valve": {
+        "name": "Heating/cooling solenoid valve"
       }
     }
   },

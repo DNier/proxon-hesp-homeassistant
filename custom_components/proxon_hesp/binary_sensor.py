@@ -40,6 +40,7 @@ async def async_setup_entry(
         [
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),
             *(ProxonExperimentalBit(entry, bit) for bit in (8, 9, 28)),
+            ProxonHeatCoolValve(entry),
             ProxonCompressorSensor(
                 entry,
                 BinarySensorEntityDescription(
@@ -183,4 +184,50 @@ class ProxonExperimentalBit(ProxonBinarySensor):
             ),
             "last_valid_update": self._received_at,
             "interpretation": "unconfirmed",
+        }
+
+
+class ProxonHeatCoolValve(ProxonBinarySensor):
+    """Mirror the observed BDE valve indication, never thermal activity."""
+
+    # Complete payloads with display references, including post-stop valve hold.
+    # Unknown words remain available as raw diagnostics, not as a guessed state.
+    _observed_payloads = frozenset(
+        ("25000000", "27000000", "a7000000", "25020000", "27020000", "a7020000")
+    )
+
+    def __init__(self, entry: ProxonConfigEntry) -> None:
+        super().__init__(
+            entry,
+            BinarySensorEntityDescription(
+                key="heat_cool_valve",
+                translation_key="heat_cool_valve",
+                icon="mdi:valve",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=False,
+            ),
+        )
+
+    @property
+    def available(self) -> bool:
+        return self.is_on is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        reading = self.runtime.get("raw_006c")
+        if reading is None or reading.value not in self._observed_payloads:
+            return None
+        return bool(int.from_bytes(bytes.fromhex(reading.value), "little") & (1 << 9))
+
+    @property
+    def extra_state_attributes(self):
+        reading = self.runtime.get("raw_006c")
+        return {
+            "data_point": "0x006C",
+            "telegram_identity": "224000",
+            "bit": 9,
+            "bit_numbering": "LSB 0, little-endian uint32",
+            "payload_hex": reading.value if reading else None,
+            "interpretation": "bde_valve_indication",
+            "validation_scope": "observed_installation",
         }

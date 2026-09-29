@@ -3,6 +3,28 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0b9 – BDE-Schaltzustand MV-Heizen/Kühlen (Beta)
+
+- Neue lesende Diagnoseentität **MV-Heizen/Kühlen** mit Ein-/Aus-Anzeige wie
+  am BDE. Die Zuordnung ist anhand von Anzeigevergleichen und einem gefilmten
+  Wechsel an einer Anlage belegt; andere Anlagen und Firmwarestände sind noch
+  nicht bestätigt.
+- Die Entität ist standardmäßig deaktiviert. Nach dem Update auf der
+  PROXON-Geräteseite unter den deaktivierten Entitäten aktivieren.
+- Unbekannte Telegrammwerte, veraltete Daten und Verbindungsabbrüche ergeben
+  „Nicht verfügbar“. Die Entität sendet keine Abfragen oder Steuerbefehle.
+- Die Ventilanzeige ist **keine Anzeige aktiver Kühlung**: Sie kann nach dem
+  gemeldeten Verdichterstopp weiterhin eingeschaltet bleiben.
+- Grenzen für PTC-Wohnen, MV-Vorwärme und weitere Statusbits dokumentiert.
+  Für diese ungeklärten Schaltzustände werden keine neuen Entitäten angelegt.
+
+Bestehende Entitätsidentitäten, Raumkonfigurationen und Einstellungen bleiben
+erhalten. **0.11.0 bleibt die stabile Version.**
+
+In HACS Vorabversionen aktivieren und **0.12.0b9** installieren. Benötigte
+Diagnoseaufnahmen vor dem Neustart herunterladen, anschließend Home Assistant
+neu starten.
+
 ## 0.12.0b8 – Abgerundete Icons und ergänzte Dokumentation (Beta)
 
 - Integrationsicon und Logo erhalten geglättete, transparente Rundungen an den

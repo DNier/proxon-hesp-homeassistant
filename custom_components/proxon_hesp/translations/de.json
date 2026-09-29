@@ -304,6 +304,9 @@
       },
       "experimental_0208_bit_28": {
         "name": "Experimentell: Status 0x0208 Bit 28"
+      },
+      "heat_cool_valve": {
+        "name": "MV-Heizen/Kühlen"
       }
     }
   },
