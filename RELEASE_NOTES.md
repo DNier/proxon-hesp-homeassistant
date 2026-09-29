@@ -3,6 +3,51 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0 – Heizräume und erweiterte Gerätediagnose
+
+Erste stabile Veröffentlichung der 0.12-Reihe. Gegenüber 0.11.0 enthält sie:
+
+- **Optionale Heizräume:** Vorhandene Schalter und Leistungssensoren beliebiger
+  Hersteller zu Räumen verknüpfen, optional mit Thermostat, Temperatur und
+  Luftfeuchtigkeit. Jeder Raum erhält einen eigenen HA-Untereintrag und ein
+  virtuelles Gerät mit Bereichszuordnung. Bestehende Thermostate regeln weiter;
+  die Integration schaltet keine Heizelemente. Fehlende oder veraltete
+  Leistungsmessungen ergeben unbekannten Heizbetrieb.
+- **Gerätezeit:** Optionale Anzeige und manuell ausgelöster Zeitabgleich.
+  Ein Tastendruck sendet einmalig eine Kalenderkorrektur; es gibt keine
+  automatische Synchronisierung oder Wiederholungsversuche. Die Korrektur kann
+  den aktuell wirksamen Zeitraum eines vorhandenen Schaltplans ändern.
+- **Übersichtlichere Geräteinformationen:** Technische Werte unter Diagnose,
+  Detailwerte bei neuen Installationen standardmäßig deaktiviert. Bestehende
+  Identitäten und Aktivierungseinstellungen bleiben erhalten.
+- **BDE-Vergleich:** Optionaler Schaltzustand **MV-Heizen/Kühlen**, anhand von
+  Anzeigevergleichen und einem gefilmten Wechsel an einer Anlage belegt.
+  Unbekannte Telegrammwerte und veraltete Daten ergeben „Nicht verfügbar“.
+  Die Ventilanzeige ist keine Anzeige aktiver Kühlung.
+- **Gezieltere Aufnahmen:** Zusätzlich zu Verdichterstarts und -stopps lösen
+  Wechsel des experimentellen Statusbits 28 Ereignisaufnahmen aus. Optionale
+  Diagnoseentitäten zeigen die Rohbits 8, 9 und 28 ohne bestätigte Heiz-/Kühl-
+  oder Abtaubedeutung. Alle Aufnahmen bleiben passiv und speicherbegrenzt.
+- Aktualisierte deutsche und englische Dokumentation, Herstellerinformationen
+  und abgerundete Integrationsicons.
+
+### Installation und Upgrade
+
+Home Assistant **ab 2026.9** erforderlich. **0.12.0** regulär über HACS
+installieren; Vorabversionen müssen dafür nicht aktiviert sein. Auch von allen
+0.12-Betaversionen ist ein direktes Update möglich.
+
+Vor dem Update ein HA-Backup erstellen und benötigte Mitschnitte herunterladen;
+Aufnahmen liegen nur im Arbeitsspeicher. Anschließend Home Assistant neu starten.
+Den bestehenden Integrationseintrag behalten. Beim Wechsel von vor 0.12.0b3 wird
+das Konfigurationsformat auf Version 2 migriert; ein Downgrade auf diese älteren
+Versionen erfordert das vorherige Backup. Ab 0.12.0b3 ist keine weitere Migration
+nötig. Raumkonfigurationen und Entitätsidentitäten bleiben erhalten.
+
+Die stabile Freigabe erweitert nicht die bestätigte Hardwarekompatibilität.
+PTC-Wohnen, MV-Vorwärme und eine allgemeine Erkennung von Heizen/Kühlen/Abtauen
+bleiben offen. Experimentelle Diagnosebits bleiben ausdrücklich experimentell.
+
 ## 0.12.0b9 – BDE-Schaltzustand MV-Heizen/Kühlen (Beta)
 
 - Neue lesende Diagnoseentität **MV-Heizen/Kühlen** mit Ein-/Aus-Anzeige wie

@@ -30,8 +30,9 @@ erläutern den Geltungsbereich und die Grenzen.
 - Temperaturen, Luftstufen, Drehzahlen, Betriebsstunden und Filterrestlaufzeit.
 - Verdichterrotation, Bypass-Schaltzustand und Intensivlüftung.
 - Passive Diagnoseaufnahmen bei Bedarf oder bei Verdichterstarts und -stopps.
-- In der Beta: Raumüberwachung mit vorhandenen HA-Sensoren, manueller
+- Raumüberwachung mit vorhandenen HA-Sensoren, manueller
   Gerätezeitabgleich und optionale experimentelle Statusbits zum BDE-Vergleich.
+- Optionaler BDE-Schaltzustand **MV-Heizen/Kühlen**; keine Anzeige aktiver Kühlung.
 
 Die vorhandene Anlagensteuerung und deine Thermostate bleiben verantwortlich.
 Nur der ausdrücklich ausgelöste Gerätezeitabgleich schreibt einen Kalenderwert.
@@ -47,9 +48,8 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabil: 0.11.0. Beta: 0.12.0b8.** Für weitere Beta-Updates in HACS die
-Vorabversionen für dieses Repository aktivieren. Eine einmalig manuell installierte
-Beta aktiviert diese Einstellung nicht zwingend.
+**Stabile Version: 0.12.0.** Die Installation erfordert keine Freigabe von
+Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
 Home Assistant gepusht. Bei Bedarf in HACS **Informationen aktualisieren** verwenden.

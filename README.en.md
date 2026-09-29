@@ -36,8 +36,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.11.0** and beta
-**0.12.0b8**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.12.0**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -53,18 +52,24 @@ It supports passive manual and compressor-event recordings. Missing telemetry
 is unavailable, never assumed zero or off. Compressor rotation does not identify
 heating, cooling, defrost or PTC activity. General climate/fan control is unsupported.
 
-Beta 0.12 adds optional heating-room monitoring using existing switches, power
+Version 0.12.0 adds optional heating-room monitoring using existing switches, power
 sensors and optional thermostat/temperature/humidity references. Existing
-thermostats retain control. Physical acceptance of room monitoring is pending.
+thermostats retain control. Missing or stale power measurements leave heating
+activity unknown; availability alone does not prove central heating permission.
 The optional device-time button is the only HESP write action: one explicit
 calendar correction, no automatic synchronization or retries. Corrected time can
 change which existing time-program period is active. Setup and capture stay passive.
 
-Back up HA before upgrading to 0.12.0b8: its configuration format cannot be loaded
-by older versions. Downgrading requires the previous backup. Keep the existing
+Back up HA before upgrading from a version before 0.12.0b3: the migrated
+configuration format cannot be loaded by those older versions. Downgrading requires the previous backup. Keep the existing
 entry to preserve identities and preferences. Download recordings before restarting;
-they exist only in memory. Beta 0.12.0b8 groups technical telemetry under Diagnostics and makes detailed
+they exist only in memory. Version 0.12.0 groups technical telemetry under Diagnostics and makes detailed
 readings optional on new installations. Existing activation preferences remain unchanged.
+
+Optional diagnostic entities expose experimental status bits and the observed
+BDE heating/cooling solenoid-valve indication. The valve can remain on after
+compressor stop and does not establish active cooling. Stable release status
+does not extend the documented hardware compatibility or confirm unknown bits.
 
 ## Community discussion
 

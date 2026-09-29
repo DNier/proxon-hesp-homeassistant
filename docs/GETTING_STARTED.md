@@ -17,24 +17,27 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-- **0.11.0** ist die stabile Version. Sie enthält automatische Aufnahmen bei
-  Verdichterstarts und -stopps mit bis zu 180 Sekunden Vor- und Nachlauf und
-  bewahrt die vier jüngsten Ereignisaufnahmen auf.
-- **0.12.0b5** ist eine Vorabversion. Sie ergänzt optionale Heizräume als native
-  HA-Untereinträge sowie Gerätezeit-Anzeige und manuellen Zeitabgleich.
-  Die praktische Abnahme der Raumüberwachung ist noch offen.
-- **0.12.0b5** überarbeitet außerdem die [Einteilung der Entitäten](ENTITY_ORGANIZATION.md)
-  und vereinheitlicht die Nutzerdokumentation auf Deutsch. Neu sind drei optionale
-  experimentelle Statusbits zum Vergleich mit dem BDE.
+**0.12.0** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
+Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
+sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
+Optionale Diagnoseentitäten zeigen drei experimentelle Statusbits und den
+beobachteten BDE-Schaltzustand **MV-Heizen/Kühlen**. Dessen Anzeige belegt keine
+aktive Kühlung. Ungeklärte Bitbedeutungen bleiben auch in der stabilen Version
+ungeklärt; die dokumentierten Hardwaregrenzen gelten weiterhin.
 
-Vor dem Wechsel auf 0.12.0b5 ein HA-Backup erstellen: Das Konfigurationsformat
-steigt auf Version 2. Ältere Integrationsversionen können es nicht laden;
-für ein Zurückwechseln ist das vorherige Backup erforderlich.
+Automatische Aufnahmen erfassen Verdichterstarts und -stopps sowie Wechsel des
+experimentellen Bits 28 mit bis zu 180 Sekunden Vor- und Nachlauf. Die vier
+jüngsten Ereignisaufnahmen bleiben im Arbeitsspeicher erhalten.
+
+Vor dem Wechsel von einer Version vor 0.12.0b3 ein HA-Backup erstellen:
+Das Konfigurationsformat steigt auf Version 2. Ältere Integrationsversionen
+können es nicht laden; für ein Zurückwechseln ist das vorherige Backup erforderlich.
+Von 0.12.0b3–b9 ist keine weitere Migration nötig.
 Details stehen in den [Versionshinweisen](../RELEASE_NOTES.md).
 
 ## Voraussetzungen und Kompatibilität
 
-0.11.0 und 0.12.0b5 benötigen **Home Assistant ab 2026.9**.
+0.12.0 benötigt **Home Assistant ab 2026.9**.
 Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
 Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
 Konfiguration. Andere Revisionen sind damit nicht automatisch unterstützt.
@@ -121,12 +124,12 @@ Gateway-Adresse, Port oder Namen über **Neu konfigurieren** ändern. Löschen u
 Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
 Gateway können derzeit nicht als Duplikat erkannt werden.
 
-Beim Update von 0.8.0 auf 0.11.0 bleiben die 54 bisherigen Entitätsidentitäten
-erhalten; sechs kommen hinzu (60 insgesamt). Automatische Ereignisaufnahmen
-sind zunächst deaktiviert. Die manuelle Aufnahmedauer bleibt ohne Änderung
-bei 120 Sekunden. Die Beta ergänzt zwei Gerätezeit-Entitäten (62 am Hauptgerät)
-sowie ab 0.12.0b5 drei experimentelle Statusbits (65 am Hauptgerät)
-und die jeweils eingerichteten Raum-Entitäten.
+Beim Update von 0.8.0 bleiben die 54 bisherigen Entitätsidentitäten erhalten.
+0.12.0 registriert insgesamt 66 Entitäten am Hauptgerät, einschließlich
+standardmäßig deaktivierter Diagnose- und Zeitfunktionen. Jeder konfigurierte
+Heizraum ergänzt vier Entitäten. Bestehende Aktivierungseinstellungen bleiben
+erhalten. Automatische Ereignisaufnahmen sind ohne vorherige Aktivierung zunächst
+deaktiviert; die manuelle Aufnahmedauer bleibt ohne Änderung bei 120 Sekunden.
 
 Seit 0.8.0 sind `proxon_hesp.prepare_target_temperature_test` und
 `proxon_hesp.send_target_temperature_test` entfernt. Gespeicherte Aufrufe aus
