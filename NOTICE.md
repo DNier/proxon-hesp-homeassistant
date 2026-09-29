@@ -29,3 +29,10 @@ The supplied PROXON logo in `custom_components/proxon_hesp/brand/` is used
 to identify the integration. It is not licensed under the project MIT License.
 All rights in the logo remain with its respective rights holders. Its use does
 not imply manufacturer endorsement of this independent integration.
+
+In private correspondence shared with the project on 29 September 2026,
+Zimmermann did not grant permission for use of the logo in GitHub, Home Assistant,
+HACS or comparable public projects. The absence of an explicit removal request
+is not represented as consent. This notice does not assert that the specific
+use is legally permitted or prohibited. See docs/MANUFACTURER_INFORMATION.md
+for the scope of the manufacturer's response.

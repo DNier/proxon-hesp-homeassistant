@@ -23,6 +23,19 @@ der Integration. Andere Gateways müssen rohe serielle Daten unverändert über 
 übertragen können. Eine pauschale Kompatibilität aller Waveshare-Modelle ist damit
 nicht bestätigt.
 
+## Herstellerangaben für diese Generation
+
+Laut der dem Projekt am 29.09.2026 mitgeteilten Herstellerantwort besitzt die
+angefragte P-Serie keine Modbus-Schnittstelle und kann nicht nachgerüstet werden.
+Das frühere Modul war für FWT 1.0 vorgesehen. Externe HESP-Auswertung wird nicht
+unterstützt; öffentliche Modbus-Listen sind nicht auf HESP übertragbar.
+Die erwähnte T300-Anbindung an FWT-Systeme erweitert den Integrationsumfang nicht.
+[Quelle, Geltungsbereich und Einzelheiten](MANUFACTURER_INFORMATION.md).
+
+Das BDE bleibt im unterstützten Betrieb angeschlossen. Im dokumentierten Versuch
+ohne BDE wurden trotz offener TCP-Verbindung keine Bytes empfangen; nach dem
+Wiederanschließen kehrte der Verkehr zurück. Ein Steuerungstest fand nicht statt.
+
 ## Busabschnitt
 
 In der geprüften Konfiguration ist das BDE mit PTC-X1 verbunden. Der passive

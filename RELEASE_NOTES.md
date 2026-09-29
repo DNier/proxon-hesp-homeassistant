@@ -3,6 +3,25 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.0b8 – Abgerundete Icons und ergänzte Dokumentation (Beta)
+
+- Integrationsicon und Logo erhalten geglättete, transparente Rundungen an den
+  äußeren Ecken. Motiv, Farben und Auflösung bleiben unverändert.
+- Herstellerangaben für die angefragte P-Serie-Generation dokumentieren:
+  keine Modbus-Nachrüstung, keine Unterstützung externer HESP-Auswertung,
+  Grenzen der T300-Anbindung und erwarteter Zeitverlust nach Stromunterbrechung.
+- Den abgeschlossenen passiven Versuch ohne BDE einschließlich Wiederherstellung
+  und Aussagegrenzen beschreiben. Dabei wurde kein Steuerbefehl gesendet.
+- Quellen, unabhängige Beobachtungen und fehlende Logo-Freigabe klar unterscheiden.
+
+Keine Änderungen an Protokolldecoder, Entitätsidentitäten, Raumkonfiguration oder
+Steuerfunktionen. **0.11.0 bleibt die stabile Version.**
+
+In HACS Vorabversionen aktivieren und **0.12.0b8** installieren. Vor dem Neustart
+benötigte Diagnoseaufnahmen sichern. Anschließend Home Assistant neu starten und
+bei unverändertem Icon die Oberfläche vollständig neu laden; Bilder können
+zwischengespeichert sein. Bestehende Einstellungen bleiben erhalten.
+
 ## 0.12.0b7 – Gezieltere automatische Diagnose
 
 - Automatische Ereignisaufnahmen erfassen jetzt zusätzlich das Ein- und Ausschalten des experimentellen Statusbits 28 (`0x0208`). Dadurch können Vorgänge mitten im Verdichterlauf untersucht werden. Die Bedeutung als Abtausignal ist noch nicht bestätigt.

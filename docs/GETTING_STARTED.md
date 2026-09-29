@@ -42,6 +42,10 @@ Das Profil wird bei der Einrichtung ausgewählt, nicht vom Gateway erkannt.
 
 Bitte vor der Installation die [Kompatibilität](COMPATIBILITY.md) prüfen.
 Dieses unabhängige Projekt steht in keiner Verbindung zum Gerätehersteller.
+Zimmermann unterstützt die externe HESP-Auswertung nicht. Für die angefragte
+P-Serie-Generation gibt es keine Modbus-Nachrüstung. BDE angeschlossen lassen;
+nach vollständiger Spannungsunterbrechung Datum und Uhrzeit kontrollieren.
+Details und Quellenabgrenzung: [Herstellerangaben](MANUFACTURER_INFORMATION.md).
 
 ## Funktionen und Grenzen
 

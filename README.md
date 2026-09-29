@@ -9,6 +9,12 @@ erforderlich. Die Installation erfolgt über HACS als benutzerdefiniertes Reposi
 Die geprüfte P2-Hardware ist unten aufgeführt; andere Anlagen der P-Serie sind
 nicht automatisch kompatibel.
 
+Für die angefragte P-Serie-Generation bestätigt Zimmermann: kein Modbus-Anschluss
+und keine Nachrüstmöglichkeit. Externe HESP-Auswertung wird nicht unterstützt.
+Die Integration nutzt unabhängig davon den vorhandenen HESP-Verkehr mit
+angeschlossenem BDE. [Herstellerangaben und eigene Beobachtungen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/MANUFACTURER_INFORMATION.md)
+erläutern den Geltungsbereich und die Grenzen.
+
 ## Voraussetzungen
 
 - Home Assistant ab **2026.9**.
@@ -41,7 +47,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabil: 0.11.0. Beta: 0.12.0b7.** Für weitere Beta-Updates in HACS die
+**Stabil: 0.11.0. Beta: 0.12.0b8.** Für weitere Beta-Updates in HACS die
 Vorabversionen für dieses Repository aktivieren. Eine einmalig manuell installierte
 Beta aktiviert diese Einstellung nicht zwingend.
 

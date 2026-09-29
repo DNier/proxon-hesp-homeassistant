@@ -1,7 +1,10 @@
 # Gerätezeit abgleichen
 
-Nach einem Stromausfall kehren manche geprüften Steuerungen zu einem anfänglichen
-Kalenderdatum zurück. Das kann die Auswahl des Zeitprogramms beeinflussen.
+Zimmermann bestätigt für die angefragte P-Serie-Generation, dass Datum und Uhrzeit
+nach vollständiger Spannungsunterbrechung zurückgesetzt werden. Sie sollen danach
+kontrolliert und gegebenenfalls neu eingestellt werden. Das passt zu den
+Beobachtungen an der Referenzanlage; eine falsche Uhrzeit kann die Auswahl des
+Zeitprogramms beeinflussen. [Herstellerangaben und Geltungsbereich](MANUFACTURER_INFORMATION.md).
 Die optionale Schaltfläche **Gerätezeit abgleichen** korrigiert den Kalender
 anhand der in Home Assistant eingestellten Zeitzone.
 
@@ -39,7 +42,8 @@ Bestehende numerische Kalenderwerte und Entitätsidentitäten bleiben erhalten.
 
 Die Funktion wurde an einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort über den
 ursprünglichen PTC-zur-Steuerung-Abgriff am Display bestätigt. Andere Revisionen
-und die Beibehaltung nach Stromausfall sind nicht bestätigt. Es gibt weder
+sind nicht bestätigt. Die Korrektur verhindert keinen erneuten Zeitverlust nach
+einer vollständigen Spannungsunterbrechung. Es gibt weder
 Startautomatik noch periodisches Schreiben oder einen Dienst für beliebige Telegramme.
 
 Empfang, Verbindungstest, Aufnahmen und Wiederverbindung bleiben passiv.

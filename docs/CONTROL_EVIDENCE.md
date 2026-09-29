@@ -14,7 +14,7 @@ controlled calendar and fan-level experiments.
 
 | Identity / DP / payload bytes | Observed interpretation | Evidence | External control status |
 | --- | --- | --- | --- |
-| 118000 / 032E / 4 | Packed local calendar | BDE edits, controller readback and a successful external correction | Confirmed on one installation: BDE display and 65 seconds of continued telemetry; power-loss persistence not established |
+| 118000 / 032E / 4 | Packed local calendar | BDE edits, controller readback and a successful external correction | Confirmed on one installation: BDE display and 65 seconds of continued telemetry; calendar resets after full power interruption on the reference generation |
 | 118000 / 00E1 / 2 | Requested fan level | 954 SETs; levels 1–4 | At the original tap in Auto, a one-shot level-2 request briefly changed the controller status and fan rpm before level 1 returned; no persistent control. Earlier BDE-tap attempt had no observable effect |
 | 118000 / 0227 / 4 | Target room temperature, float32 | 942 SETs; observed values 18, 21, 21.5, 24, 26 and 30 °C | Earlier 22→22.5 °C test received an ACK, then 22 °C again after about 1.3 s; BDE remained at 22 °C |
 | 118000 / 020A / 2 | Operating mode | 939 SETs; Eco Summer, Comfort and Stove values observed | No demonstrated persistent external control; not a first automated test |
@@ -106,3 +106,21 @@ Classify results as no observable effect, ACK only, temporary adoption, sustaine
 telemetry adoption, or display-confirmed adoption. Record recovery separately.
 Only promote a control into the integration after both adoption and recovery are
 validated. This document does not authorize or execute those future experiments.
+
+## Passive disconnection experiment and manufacturer scope
+
+On 23 September 2026, the reference installation was observed with the BDE
+removed after power isolation and a restart. The gateway TCP connection remained
+open, but no bytes were received during an approximately 82-second recording
+that also includes time before power-on. The operator reported running fans and
+red blinking, whose meaning was not established. The experiment was stopped;
+no query or control frame was transmitted. Traffic returned after reconnecting
+the BDE and restarting, and the operator confirmed Auto and disappearance of the
+blinking. HA was re-enabled; the operator corrected the reset clock.
+
+This supports, but does not prove, a role for the BDE in initiating traffic.
+It establishes neither control without the BDE nor a safe replacement strategy.
+Keep the BDE connected for supported operation. Manufacturer correspondence
+shared on 29 September confirms no HESP support or protocol disclosure and normal
+clock reset after full power loss for the queried P-series generation. See the
+[scoped source summary and completed observation report](MANUFACTURER_INFORMATION.md).

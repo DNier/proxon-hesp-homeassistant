@@ -16,12 +16,28 @@ gateway in transparent TCP mode at **19200 baud, 8N1**. This specific model is
 not required; alternative gateways must support the same transparent serial
 transport without Modbus conversion.
 
+## Manufacturer information
+
+In correspondence shared with the project on 29 September 2026, Zimmermann
+states that the queried P-series generation has no Modbus interface or retrofit
+option; the historical module was intended only for FWT 1.0. External HESP
+analysis is not supported, and internal protocol details will not be provided.
+The T300-to-FWT connection is not evidence of third-party T300 support here.
+
+The manufacturer describes date/time loss after complete power interruption as
+normal for this generation: check and correct the clock after an interruption.
+The integration's time alignment remains manual. Keep the BDE connected: a
+supervised disconnection experiment yielded no received bytes and reported red
+blinking; telemetry returned after reconnection. No control command was sent,
+so control without the BDE remains untested. See the scoped
+[manufacturer information and observation report (German)](docs/MANUFACTURER_INFORMATION.md).
+
 ## Install
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
 Home Assistant **2026.9 or later** is required for stable **0.11.0** and beta
-**0.12.0b7**. Add this repository to HACS as a custom repository, category
+**0.12.0b8**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -44,10 +60,10 @@ The optional device-time button is the only HESP write action: one explicit
 calendar correction, no automatic synchronization or retries. Corrected time can
 change which existing time-program period is active. Setup and capture stay passive.
 
-Back up HA before upgrading to 0.12.0b7: its configuration format cannot be loaded
+Back up HA before upgrading to 0.12.0b8: its configuration format cannot be loaded
 by older versions. Downgrading requires the previous backup. Keep the existing
 entry to preserve identities and preferences. Download recordings before restarting;
-they exist only in memory. Beta 0.12.0b7 groups technical telemetry under Diagnostics and makes detailed
+they exist only in memory. Beta 0.12.0b8 groups technical telemetry under Diagnostics and makes detailed
 readings optional on new installations. Existing activation preferences remain unchanged.
 
 ## Community discussion
