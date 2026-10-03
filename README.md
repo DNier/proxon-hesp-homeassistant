@@ -1,4 +1,4 @@
-# PROXON P2 mit Home Assistant – HESP-Integration ohne Modbus-Modul
+# PROXON mit Home Assistant – HESP-Integration ohne Modbus-Modul
 
 Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
 
@@ -6,8 +6,9 @@ Die Custom Integration **PROXON HESP** verbindet eine **PROXON P2-Lüftungsheizu
 mit **Home Assistant** über den vorhandenen HESP-Bus und ein transparentes
 RS485-zu-TCP-Gateway. Ein Modbus-Modul, MQTT oder eine Cloud sind dafür nicht
 erforderlich. Die Installation erfolgt über HACS als benutzerdefiniertes Repository.
-Die geprüfte P2-Hardware ist unten aufgeführt; andere Anlagen der P-Serie sind
-nicht automatisch kompatibel.
+Neben der P2-Referenz ist die **FWT 2-L mit LT-ZIM V1.3** für den dokumentierten
+lesenden Umfang Community-getestet. Andere Ausführungen sind nicht automatisch
+kompatibel.
 
 Für die angefragte P-Serie-Generation bestätigt Zimmermann: kein Modbus-Anschluss
 und keine Nachrüstmöglichkeit. Externe HESP-Auswertung wird nicht unterstützt.
@@ -18,7 +19,9 @@ erläutern den Geltungsbereich und die Grenzen.
 ## Voraussetzungen
 
 - Home Assistant ab **2026.9**.
-- Geprüfte Referenz: **LT-ZIM V1.6, PTC 4× V1.2, BDE Comfort**.
+- Geprüfte P2-Referenz: **LT-ZIM V1.6, PTC 4× V1.2, BDE Comfort**.
+- Community-getestet: **FWT 2-L, LT-ZIM V1.3, BDE Comfort V03.7.9B00**.
+  [Geprüfter Umfang und Grenzen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md#community-getestet-fwt-2-l).
 - Gateway im transparenten TCP-Modus mit **19200 Baud, 8N1**.
 - In der Referenzanlage eingesetzt: **Waveshare RS232/485/422 TO POE ETH (B)**
   als RS485-zu-TCP-Gateway. Dieses Modell ist keine Voraussetzung; andere Gateways
@@ -48,7 +51,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.12.0.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.12.1.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an

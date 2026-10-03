@@ -1,4 +1,4 @@
-# PROXON P2 with Home Assistant – HESP integration without a Modbus module
+# PROXON with Home Assistant – HESP integration without a Modbus module
 
 Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
 
@@ -8,8 +8,13 @@ Independent community project for PROXON systems. Not an official integration of
 ventilation and heating system, using its existing HESP bus and a transparent
 RS485-to-TCP gateway. No Modbus module, MQTT broker, cloud service or separate
 application is required. It can be installed through HACS as a custom repository.
-The supported reference configuration is **LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort**;
-other revisions are unverified. Model and firmware are not automatically detected.
+The P2 reference configuration is **LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort**.
+A **FWT 2-L with LT-ZIM V1.3 and BDE Comfort V03.7.9B00** is also community-tested
+with unmodified version 0.12.0 and profile `lt_zim_16_observed`. Display comparisons
+cover temperatures, Eco Summer/Comfort modes, fan level and speeds, bypass, counters
+and filter time. Active heat-pump operation, valve mappings and clock writes remain
+unverified on that configuration. See [compatibility and evidence](docs/COMPATIBILITY.md#community-getestet-fwt-2-l).
+Other revisions are not automatically supported. Model and firmware are not automatically detected.
 
 The reference installation uses a **Waveshare RS232/485/422 TO POE ETH (B)**
 gateway in transparent TCP mode at **19200 baud, 8N1**. This specific model is
@@ -36,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.12.0**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.12.1**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.

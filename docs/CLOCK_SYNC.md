@@ -12,6 +12,20 @@ Sie ändert weder direkt die Betriebsart noch sendet sie einen Luftstufenbefehl.
 Die korrigierte Uhrzeit kann jedoch dazu führen, dass das bestehende Zeitprogramm
 eine andere Luftstufe auswählt.
 
+## Datum und Uhrzeit anzeigen
+
+Auf der Geräteseite lassen sich die Diagnoseentitäten **Gerätedatum** und
+**Geräteuhrzeit** getrennt aktivieren. Das Datum verwendet die bestätigte
+Kalenderantwort `032E` und den HA-Gerätetyp Datum. Die Uhrzeit aus `0330`
+zeigt `HH:MM:SS` als lokale Gerätezeit ohne Zeitzonenumrechnung. Ihre bisherige
+Entitätsidentität bleibt erhalten; der Zusatz „experimentell“ entfällt.
+
+Die kombinierte Entität **Gerätedatum und -uhrzeit (lokal)** bleibt für bestehende
+Dashboards und Automationen unverändert. Wer nur die getrennte Anzeige benötigt,
+kann sie deaktivieren. Neue Datumssensoren sind zunächst deaktiviert.
+Fehlende, veraltete Daten und Verbindungsabbrüche ergeben „Nicht verfügbar“.
+Die Anzeige bestätigt die Gerätewerte, nicht die Richtigkeit der eingestellten Uhr.
+
 ## Verwendung
 
 1. Datum, Uhrzeit und Zeitzone von Home Assistant prüfen.

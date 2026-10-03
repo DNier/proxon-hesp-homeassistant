@@ -92,8 +92,13 @@ leere Nutzdaten und unterschiedlich lange Listen werden zurückgewiesen.
 
 Die Ausgabe enthält positionsweise Datenpunkt, Typcode und Maskencode. Sie
 bestätigt weder deren Bedeutung noch Schreibrechte oder einen vollständigen
-Gerätekatalog. Das bislang ungeklärte Längenformat mit `00` wird nicht als lange
-Metadatenantwort geraten. Dafür werden vollständige Originaltelegramme benötigt.
+Gerätekatalog. Für Antworten mit Identität `224000` und Datenpunkt `0033`, `0034` oder `0038`
+wird das belegte Längenfeld `00` als 128 Byte Nutzdaten erkannt: insgesamt
+138 Byte einschließlich Header und Prüfsumme. Diese Ausnahme gilt ausschließlich
+für diese drei Antworten. Insbesondere bleiben leere Bestätigungen leer.
+Die Herkunft und Grenzen der Belege beschreibt [METADATA_EVIDENCE.md](METADATA_EVIDENCE.md).
+Die Prüfung vollständiger Frames bestätigt nicht, dass alle Katalogseiten oder
+alle Datenpunkte eines Geräts enthalten sind.
 
 Der getrennte `ReadProbe` ist weiterhin nur für die bereits beobachtete
 Filterabfrage `0x00ED` vorbereitet. Er besitzt keinen Netzwerkzugriff und verlangt
@@ -101,3 +106,16 @@ einen koordinierten Sender. Ein erfolgreicher Offline-Test belegt keine sichere
 Busarbitrierung über TCP. Empfangene passende Antworten können außerdem vom
 regulären Master ausgelöst worden sein; sie beweisen allein keine Reaktion auf
 eine eigene Abfrage. Die passive Integration startet keine solchen Tests.
+
+Die [Gegenprüfung eines Community-Exports](COMMUNITY_EXPORT_ANALYSIS.md) beschreibt
+belegte Gemeinsamkeiten, anlagenspezifische Lüfterwerte und die Grenzen gefilterter
+SQL-Aufzeichnungen. Die Originaldaten wurden nicht als kontinuierlicher Busstrom
+zusammengesetzt.
+
+## Lüfterkennlinien vergleichen
+
+`python -m tools.audit_fan_curves input.json --output result.json` vergleicht
+vollständige Antworten auf `00D2`/`00D3` mit einer Liste von `00D7`-Antworten.
+Die Ausgabe enthält ausschließlich numerische Kandidatenpositionen; sie ist
+keine Erkennung der tatsächlichen Luftstufe. Eingabeformat, Belege und Grenzen
+stehen in [FAN_CURVE_EVIDENCE.md](FAN_CURVE_EVIDENCE.md).

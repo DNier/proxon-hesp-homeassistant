@@ -3,6 +3,24 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.12.1 – Getrennte Gerätezeit und belegte Kompatibilität
+
+- **Gerätedatum separat:** Neuer optionaler Diagnosesensor mit HA-Datumstyp.
+  Die Geräteuhrzeit trägt keinen experimentellen Zusatz mehr. Bestehende
+  Entitätsidentitäten und die kombinierte Anzeige bleiben erhalten. Den neuen
+  Datumssensor bei Bedarf unter den deaktivierten Entitäten aktivieren.
+- **FWT 2-L dokumentiert:** Community-bestätigte lesende Kompatibilität mit
+  LT-ZIM V1.3 und BDE Comfort V03.7.9B00. Die Dokumentation unterscheidet bestätigte
+  Anzeigen von noch ungeprüften Wärmepumpen- und Ventilzuständen.
+- **Auswertung abgesichert:** Minimale P1-/FWT-Telegramme sichern Decodergrenzen
+  und unterschiedliche Lüfterkennlinien ab. Offline-Werkzeuge erkennen die
+  beobachteten langen Metadatenantworten; daraus entstehen keine neuen Sensoren.
+- **Belegstand aktualisiert:** Bedienfolgen, Auto/manuell und offene
+  Schaltzustände sind mit Gegenbeispielen dokumentiert. Keine neuen
+  Anlagenbefehle oder automatische Steuerung.
+
+Update von 0.12.0 ohne neue Konfigurationsmigration. Home Assistant ab 2026.9.
+
 ## 0.12.0 – Heizräume und erweiterte Gerätediagnose
 
 Erste stabile Veröffentlichung der 0.12-Reihe. Gegenüber 0.11.0 enthält sie:

@@ -124,3 +124,30 @@ Keep the BDE connected for supported operation. Manufacturer correspondence
 shared on 29 September confirms no HESP support or protocol disclosure and normal
 clock reset after full power loss for the queried P-series generation. See the
 [scoped source summary and completed observation report](MANUFACTURER_INFORMATION.md).
+
+## Offline review of recorded operating sequences (3 October 2026)
+
+The five latest reference exports contain eight distinct retained capture windows
+with 67,060 checksum-valid frames and no unparsed bytes. Deduplication uses capture
+start plus chunks; overlapping manual/event windows still count repeated traffic.
+The existing inventory and capture comparison tools were reused. Full reports
+remain private; this summary contains only protocol evidence.
+
+The target-temperature sequences at `118000/0227/4` are 21→25, 25→21,
+21→18 and 18→21→22 °C. Requested fan level `118000/00E1/2` and mode
+`118000/020A/2` stay at 3 and Comfort. All eleven SET identities were already
+known. `01F8` bit 11 follows the first target changes, while `03B6` and
+`118007/0191/2` show 0→3→1→0 across the corresponding windows. These are
+correlations, not confirmed direct actuator commands. The documented PTC
+counterexample still contradicts that interpretation.
+
+The FWT sample adds a steady Comfort/fan-3 comparison, not an operating-mode
+transition. Its extra headers must not be merged with similarly numbered P-series
+points. The filtered P1 export cannot establish a full transmission cadence.
+None of these sources resolves persistent external command adoption or provides
+a confirmed Auto/manual field. A future passive Auto→fixed level→Auto capture
+would need a synchronized visible selection and complete traffic including the
+return; the same numeric fan level alone cannot distinguish the two choices.
+
+See [candidate decisions](STATUS_EVIDENCE.md) and
+[installation-specific fan comparisons](FAN_CURVE_EVIDENCE.md).

@@ -33,7 +33,7 @@ def checksum(message: bytes) -> int | None:
     Header identity, payload length and value semantics are checked separately
     by the decoder. A matching checksum does not establish those properties.
     """
-    if not 8 <= len(message) <= 120:
+    if not 8 <= len(message) <= 136:
         return None
     state = 0xFFFF
     for byte in message:

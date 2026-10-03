@@ -1,5 +1,7 @@
 """Read-only panel and controller sensors."""
 
+from datetime import date
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -62,6 +64,14 @@ DESCRIPTIONS = (
             icon="mdi:engine" if key == "compressor_rpm" else "mdi:fan",
         )
         for key in ("fan_supply_rpm", "fan_extract_rpm", "compressor_rpm")
+    ),
+    SensorEntityDescription(
+        key="device_date",
+        translation_key="device_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:calendar",
     ),
     SensorEntityDescription(
         key="device_datetime",
@@ -209,11 +219,19 @@ class ProxonSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
-        return self.runtime.get(self.entity_description.key) is not None
+        return self.runtime.get(self.source_key) is not None
+
+    @property
+    def source_key(self) -> str:
+        if self.entity_description.key == "device_date":
+            return "device_datetime"
+        return self.entity_description.key
 
     @property
     def native_value(self):
-        reading = self.runtime.get(self.entity_description.key)
+        reading = self.runtime.get(self.source_key)
+        if reading and self.entity_description.key == "device_date":
+            return date.fromisoformat(reading.value.split("T", 1)[0])
         return reading.value if reading else None
 
 

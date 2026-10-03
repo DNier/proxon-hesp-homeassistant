@@ -144,7 +144,7 @@
         "name": "DP 0x051D (Hex)"
       },
       "device_clock": {
-        "name": "Geräteuhrzeit (experimentell)"
+        "name": "Geräteuhrzeit"
       },
       "temperature_supply": {
         "name": "Zulufttemperatur (T1)"
@@ -255,6 +255,9 @@
       },
       "room_power": {
         "name": "Leistung der Heizelemente"
+      },
+      "device_date": {
+        "name": "Gerätedatum"
       }
     },
     "button": {

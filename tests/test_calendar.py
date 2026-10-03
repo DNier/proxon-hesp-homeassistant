@@ -116,14 +116,25 @@ async def test_enabled_calendar_local_text_freshness_and_disconnect(hass):
         config_entry=entry,
         disabled_by=None,
     )
+    date_entity = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "calendar-unit_device_date",
+        config_entry=entry,
+        disabled_by=None,
+    )
     with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert hass.states.get(saved.entity_id).state == "unavailable"
+        assert hass.states.get(date_entity.entity_id).state == "unavailable"
         reader.feed_data(VALID)
         await hass.async_block_till_done()
         state = hass.states.get(saved.entity_id)
         assert state.state == "2026-09-23T12:50"
+        date_state = hass.states.get(date_entity.entity_id)
+        assert date_state.state == "2026-09-23"
+        assert date_state.attributes["device_class"] == "date"
         for key in ("device_class", "unit_of_measurement", "state_class"):
             assert key not in state.attributes
         runtime = entry.runtime_data
@@ -136,6 +147,7 @@ async def test_enabled_calendar_local_text_freshness_and_disconnect(hass):
         runtime.values["device_datetime"] = (reading, timestamp - 31)
         runtime._notify()
         assert hass.states.get(saved.entity_id).state == "unavailable"
+        assert hass.states.get(date_entity.entity_id).state == "unavailable"
         assert runtime.get("uptime") is not None
         reader.feed_data(VALID)
         await hass.async_block_till_done()
@@ -143,4 +155,5 @@ async def test_enabled_calendar_local_text_freshness_and_disconnect(hass):
         reader.feed_eof()
         await hass.async_block_till_done()
         assert hass.states.get(saved.entity_id).state == "unavailable"
+        assert hass.states.get(date_entity.entity_id).state == "unavailable"
         assert await hass.config_entries.async_unload(entry.entry_id)

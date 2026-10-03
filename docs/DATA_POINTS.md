@@ -37,7 +37,8 @@ little-endian order unless stated otherwise.
 | Operating-hour counters | 02D0–02D5, 02D7, 02D9 / C / 4 | uint32 / h | Display mappings confirmed; reset behaviour unresolved, no statistics class |
 | Device calendar (raw) | 032E / C / 4 | uint32 / no unit | Packed calendar value; internal key `uptime`, numeric state and existing preferences retained |
 | Device date and time (local) | 032E / C / 4 | Local ISO text, minute resolution | Display-matched calendar edits; validated date and weekday; disabled by default |
-| Device clock | 0330 / C / 4 | Packed HH:MM:SS | Experimental; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
+| Device date | 032E / C / 4 | HA date | Date portion of the validated device calendar; shares its freshness; disabled by default |
+| Device clock | 0330 / C / 4 | Packed HH:MM:SS | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
 | Raw diagnostics | Listed below / C | Hexadecimal bytes | Structural and checksum evidence only; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13

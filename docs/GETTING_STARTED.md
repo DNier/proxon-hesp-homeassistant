@@ -6,7 +6,8 @@
 
 [English overview](../README.en.md) · [Installation](#installation-mit-hacs) · [Dokumentation](#dokumentation)
 
-Lokale Integration für PROXON-Anlagen der P-Serie mit einem transparenten
+Lokale Integration für die PROXON-P2-Referenz und die Community-getestete FWT 2-L
+mit einem transparenten
 RS485-zu-TCP-Gateway am HESP-Bus. MQTT, Cloud oder eine zusätzliche Anwendung
 sind nicht erforderlich. Die vorhandene Anlagensteuerung bleibt verantwortlich.
 
@@ -17,7 +18,7 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.12.0** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
+**0.12.1** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
 Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
 sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
 Optionale Diagnoseentitäten zeigen drei experimentelle Statusbits und den
@@ -40,7 +41,11 @@ Details stehen in den [Versionshinweisen](../RELEASE_NOTES.md).
 0.12.0 benötigt **Home Assistant ab 2026.9**.
 Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
 Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
-Konfiguration. Andere Revisionen sind damit nicht automatisch unterstützt.
+Konfiguration. Zusätzlich ist die **FWT 2-L mit LT-ZIM V1.3 und BDE Comfort
+V03.7.9B00** für den dokumentierten lesenden Umfang Community-getestet, ebenfalls
+mit dem Profil `lt_zim_16_observed`. Aktiver Wärmepumpenbetrieb, Ventilzuordnungen
+und Zeitabgleich sind dort noch nicht bestätigt. Andere Revisionen sind damit
+nicht automatisch unterstützt.
 Das Profil wird bei der Einrichtung ausgewählt, nicht vom Gateway erkannt.
 
 Bitte vor der Installation die [Kompatibilität](COMPATIBILITY.md) prüfen.
@@ -125,7 +130,7 @@ Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
 Gateway können derzeit nicht als Duplikat erkannt werden.
 
 Beim Update von 0.8.0 bleiben die 54 bisherigen Entitätsidentitäten erhalten.
-0.12.0 registriert insgesamt 66 Entitäten am Hauptgerät, einschließlich
+0.12.1 registriert insgesamt 67 Entitäten am Hauptgerät, einschließlich
 standardmäßig deaktivierter Diagnose- und Zeitfunktionen. Jeder konfigurierte
 Heizraum ergänzt vier Entitäten. Bestehende Aktivierungseinstellungen bleiben
 erhalten. Automatische Ereignisaufnahmen sind ohne vorherige Aktivierung zunächst

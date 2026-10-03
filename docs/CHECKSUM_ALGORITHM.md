@@ -67,9 +67,15 @@ continue to cover stream splitting, corruption recovery, value bounds and nodes.
 The test suite includes these checks; see [contributing](../CONTRIBUTING.md)
 for the current verification commands.
 
+Additional public metadata replies independently validate 128-byte payloads
+(138-byte frames). Their original wire checksums and single-bit corruption tests
+are in `tests/test_metadata_recordings.py`; provenance and framing restrictions
+are documented in [METADATA_EVIDENCE.md](METADATA_EVIDENCE.md).
+These examples were not used to fit the recurrence.
+
 ## Production boundary
 
-The checksum function accepts message sizes 8..120 bytes, spanning the observed
+The checksum function accepts message sizes 8..136 bytes, spanning the observed
 headers and maximum payload. Outside that bound it returns None. Intermediate
 lengths use the same recurrence but were not all observed individually.
 

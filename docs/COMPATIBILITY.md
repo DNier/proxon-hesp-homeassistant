@@ -1,6 +1,6 @@
 # Hardware und Kompatibilität
 
-## Bestätigtes Profil
+## Referenzkonfiguration: P2
 
 Das Profil `lt_zim_16_observed` beruht auf passiven Mitschnitten und
 BDE-Displayvergleichen mit dieser Hardware:
@@ -23,6 +23,51 @@ der Integration. Andere Gateways müssen rohe serielle Daten unverändert über 
 übertragen können. Eine pauschale Kompatibilität aller Waveshare-Modelle ist damit
 nicht bestätigt.
 
+## Community-getestet: FWT 2-L
+
+Die **PROXON FWT 2-L mit LT-ZIM V1.3** ist für den unten beschriebenen lesenden
+Umfang als kompatibel gemeldet. Grundlage sind ein BDE-Vergleich durch einen
+Nutzer und die Offlineprüfung seines Diagnoseexports mit dem unveränderten
+Decoder aus **0.12.0**. Dies ist keine Herstellerfreigabe und keine pauschale
+Bestätigung aller FWT-Modelle oder Funktionen.
+
+| Bestandteil | Gemeldete Ausführung |
+|---|---|
+| Anlage | PROXON FWT 2-L |
+| Steuerplatine | LT-ZIM V1.3 |
+| Bedienteil | BDE Comfort V03.7.9B00 |
+| Gateway | Waveshare RS485 TO POE ETH (B) |
+| Verbindung | Interner RS485-Bus, transparent über TCP, Port 4196 |
+| Serielle Einstellungen | 19200 Baud, 8N1 |
+| Integration und Profil | 0.12.0, unverändert mit `lt_zim_16_observed` |
+
+**Mit dem BDE verglichen:** alle zehn Temperaturen, Raumtemperatur und Sollwert,
+Betriebsarten Eco Sommer und Komfort, Bypass, Lüfterstufe, Zu-/Abluftdrehzahlen,
+Betriebsstundenzähler und Filterrestlaufzeit. Die Bezeichnungen der internen
+Temperaturen passen laut Rückmeldung ebenfalls zur FWT.
+
+Die 120-Sekunden-Aufnahme vom 01.10.2026 enthält 2.400 prüfsummengültige
+Telegramme ohne unaufgelöste Bytes. Der Produktionsdecoder liest daraus 53
+unterschiedliche Leseschlüssel; zusätzliche gültige Telegramme bleiben
+uninterpretiert. Die Aufnahme entstand im **Komfortbetrieb bei stehendem
+Verdichter**, nach einem Wechsel von Eco Sommer. Beide Betriebsarten werden
+laut Nutzer korrekt angezeigt. Im Diagnoseexport sind keine gesendeten
+Anwendungsbytes verzeichnet.
+
+**Noch nicht bestätigt:** Betrieb bei laufender Wärmepumpe, Heiz-/Kühl- und
+Abtauzuordnungen, Ventilindikatoren, aktive Vorheizung sowie der Gerätezeitabgleich.
+Ein Betriebsstundenzähler für eine Funktion ist kein Nachweis ihres aktuellen
+Schaltzustands. Kalenderwerte sind dekodierbar, wurden aber nicht durch einen
+Schreibtest geprüft.
+
+Der Nutzer liest parallel am internen Anschluss der Steuerplatine mit.
+Die Steckerbezeichnung ist unbekannt; der Anschluss wird hier ausdrücklich
+nicht als X6 oder offizieller GLT-Port bezeichnet. Die P2-Belegung ist keine
+Verdrahtungsvorgabe für die FWT. Eine PTC-Platinenrevision wurde nicht angegeben.
+
+Quelle: [Community-Testbericht und Rückmeldungen, Diskussion #2](https://github.com/DNier/proxon-hesp-homeassistant/discussions/2).
+Modell und Versionsangaben stammen vom Nutzer, nicht aus automatischer Erkennung.
+
 ## Herstellerangaben für diese Generation
 
 Laut der dem Projekt am 29.09.2026 mitgeteilten Herstellerantwort besitzt die
@@ -38,7 +83,7 @@ Wiederanschließen kehrte der Verkehr zurück. Ein Steuerungstest fand nicht sta
 
 ## Busabschnitt
 
-In der geprüften Konfiguration ist das BDE mit PTC-X1 verbunden. Der passive
+In der P2-Referenzkonfiguration ist das BDE mit PTC-X1 verbunden. Der passive
 HESP-Abgriff liegt zwischen **PTC-X2 und Hauptplatine-X5**. Dieser Abschnitt ist
 vom direkten BDE-PTC-Anschluss zu unterscheiden. Ergebnisse eines Abschnitts
 belegen nicht automatisch Protokoll und elektrische Eigenschaften eines anderen.
@@ -50,8 +95,9 @@ serielle Daten weiterreichen und darf sie nicht in Modbus umwandeln.
 
 ## Grenzen
 
-- Unterstützt wird die Lüftungs-/Heizungssteuerung der P-Serie, keine T300-
-  Warmwassertelemetrie und keine FWT-/Modbus-Anlage.
+- Die Integration liest HESP auf der P2-Referenzkonfiguration und der oben
+  beschriebenen Community-getesteten FWT 2-L. Sie implementiert weder Modbus
+  noch T300-Warmwassertelemetrie. Andere FWT-Generationen sind nicht bestätigt.
 - Beobachteter Kühlbetrieb belegt keine Kühlfunktion jeder Anlage.
 - Firmware von Steuerung, BDE und weiteren Komponenten ist getrennt zu betrachten.
 - Das Profil wird ausdrücklich ausgewählt. Modell, Seriennummer und Firmware

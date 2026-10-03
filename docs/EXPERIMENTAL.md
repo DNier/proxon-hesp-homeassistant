@@ -42,3 +42,6 @@ bestätigter Luftstufen bleibt unverändert. Dadurch zählen strukturell gültig
 Statuswörter jetzt als akzeptierte Telegramme, auch ohne Luftstufenzuordnung.
 Die Sensoren senden keine Befehle und eignen sich nicht als bestätigte Grundlage
 für automatische Anlagensteuerung. Weitere Ventil-/PTC-Kandidaten bleiben offen.
+
+Der aktuelle [Freigabestand mit Gegenbeispielen](STATUS_EVIDENCE.md) erklärt,
+welche Zuordnungen bestätigt, offen oder widerlegt sind.

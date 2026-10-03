@@ -80,7 +80,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 66
+        assert len(all_entities) == 67
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
@@ -93,6 +93,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "heat_cool_valve",
             "clock_sync",
             "device_datetime",
+            "device_date",
             "capture_status",
             "last_valid_received",
             "connection",
@@ -106,6 +107,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "last_valid_received",
             "connection",
             "device_datetime",
+            "device_date",
             "experimental_0208_bit_8",
             "experimental_0208_bit_9",
             "experimental_0208_bit_28",

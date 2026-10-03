@@ -144,7 +144,7 @@
         "name": "DP 0x051D (Hex)"
       },
       "device_clock": {
-        "name": "Device clock (experimental)"
+        "name": "Device time"
       },
       "temperature_supply": {
         "name": "Supply air temperature (T1)"
@@ -255,6 +255,9 @@
       },
       "room_power": {
         "name": "Heater power"
+      },
+      "device_date": {
+        "name": "Device date"
       }
     },
     "button": {

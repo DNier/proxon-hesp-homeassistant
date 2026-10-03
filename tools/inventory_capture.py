@@ -30,8 +30,9 @@ def inventory(
 ) -> dict:
     """Group by complete three-byte identity, DP and payload size.
 
-    Uses the observed even nibble-length encoding, reserved zero bytes and
-    checksum; no assumptions about unknown header identities or payload types.
+    Uses the observed even nibble-length encoding and the narrowly confirmed
+    128-byte metadata shape, reserved zero bytes and checksum. Unknown payload
+    types remain uninterpreted.
     Times refer to the chunk completing a frame, not its wire transmission.
     """
     if type(start_ms) is not int or start_ms < 0:
@@ -55,12 +56,21 @@ def inventory(
     while pos + 10 <= len(data):
         header = data[pos : pos + 8]
         size = header[7] // 2
+        # Four recorded replies establish this shape only for these identities.
+        # Do not reinterpret zero-length ACKs or unrelated zero-length frames.
+        extended_metadata = (
+            header[:3] == b"\x22\x40\x00"
+            and int.from_bytes(header[3:5], "little") in (0x0033, 0x0034, 0x0038)
+            and header[7] == 0
+        )
+        if extended_metadata:
+            size = 128
         length = 10 + size
         frame = data[pos : pos + length]
         if (
             header[5:7] != b"\0\0"
             or header[7] % 2
-            or size > 112
+            or (size > 112 and not extended_metadata)
             or len(frame) != length
             or checksum(frame[:-2]) != int.from_bytes(frame[-2:], "little")
         ):

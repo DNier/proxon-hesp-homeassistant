@@ -37,7 +37,7 @@ def audit_metadata(replies: dict[str, str]) -> dict:
     if len({len(values) for values in columns.values()}) != 1:
         raise ValueError("Metadata columns have different lengths; cannot align rows")
     return {
-        "framing": "validated_observed_nibble_length",
+        "framing": "validated_observed_frame_shapes",
         "semantics": "unconfirmed_type_and_mask_codes",
         "completeness": "complete_frames_do_not_prove_complete_device_catalog",
         "rows": [
