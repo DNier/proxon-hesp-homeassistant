@@ -156,10 +156,13 @@ See [candidate decisions](STATUS_EVIDENCE.md) and
 
 Operator observation shared on 4 October 2026: manual fan-level selection is
 available only in Eco Summer and Eco Winter. Their Auto selection runs a
-user-defined weekday/time/fan-level schedule. Comfort and Stove instead let the
-controller choose the level and offer timed intensive ventilation. A fan-level
-readback does not distinguish these UI conditions. This clarification does not
-establish controller algorithms, schedule payloads or external control.
+user-defined weekday/time/fan-level schedule. Eco modes have no separate
+intensive-ventilation option; level 4 can be selected manually. Comfort and Stove
+instead let the controller choose the level and offer intensive ventilation as a
+timed switch to level 4. Off is the fifth available operating mode; its output
+behaviour was not separately checked. A fan-level readback does not distinguish
+these UI conditions. This clarification does not establish controller algorithms,
+schedule payloads or external control.
 Future Auto→fixed level→Auto comparisons require a separately agreed Eco
 baseline without a scheduled transition during the comparison. Do not apply
 that sequence to Comfort or Stove. See [reference tests](REFERENCE_TESTS.md).

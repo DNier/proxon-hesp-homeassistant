@@ -162,6 +162,12 @@ Quellen: [Community-Vergleich und Antwort](https://github.com/DNier/proxon-hesp-
 
 Laut aktueller Beobachtung an der Referenzanlage ist manuelle Stufenwahl nur in
 Eco Sommer/Winter möglich. Auto folgt dort dem Nutzerzeitplan; Komfort/Ofen
-bestimmen die Stufe durch die Steuerung. Die historischen Messwerte oben bleiben
-unverändert. Daraus wird keine damals nicht festgehaltene Betriebsart rekonstruiert.
+bestimmen die Stufe durch die Steuerung. Intensivlüftung bedeutet zeitlich
+begrenzte Stufe 4 in Komfort/Ofen. In Eco gibt es diese Option nicht; dort wird
+Stufe 4 manuell gewählt.
+
+Die historischen Messwerte oben bleiben unverändert. Die damalige Betriebsart
+wurde nicht festgehalten; aus der Reihenfolge der Beobachtungen wird weder eine
+gemeinsame Betriebsart noch ein damaliger Betriebsartwechsel rekonstruiert. Der
+Vergleich gleicher Stellwerte bei unterschiedlichem Intensivstatus bleibt gültig.
 Für künftige Vergleiche gelten die [betriebsspezifischen Bedingungen](REFERENCE_TESTS.md).

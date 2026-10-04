@@ -73,6 +73,13 @@ verfügbar; bei Verbindungsabbruch sofort. Fehlende Daten bedeuten nicht null,
 „aus“ oder „störungsfrei“. Die angeforderte Luftstufe kann von der Reglerstufe
 abweichen. Ein gemeldeter Schaltzustand ist keine Messung der mechanischen Position.
 
+An der Referenzanlage sind **Eco Sommer, Eco Winter, Komfort, Ofenbetrieb und Aus**
+vorhanden. In Eco ist eine feste Luftstufe 1–4 oder Auto nach Nutzerzeitplan
+wählbar. In Komfort und Ofenbetrieb bestimmt die Steuerung die Stufe;
+Intensivlüftung schaltet dort für die eingestellte Dauer auf Stufe 4. Eco bietet
+keine separate Intensivlüftung. Diese Bedienerbeobachtung gilt zunächst für die
+Referenzanlage; [Details und Vergleichsbedingungen](REFERENCE_TESTS.md).
+
 Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keinen bestätigten
 Heizen/Kühlen/Abtauen-Sensor, keinen Fehlertextsensor, keinen Countdown für
 Intensivlüftung und keine Warmwasserintegration. Die technische

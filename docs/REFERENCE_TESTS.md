@@ -11,9 +11,17 @@ Bedienerbeobachtung vom **4. Oktober 2026** an der Referenzanlage:
 
 | Betriebsart | Luftstufenwahl am BDE | Intensivlüftung |
 | --- | --- | --- |
-| Komfort | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Für eine voreingestellte Dauer möglich |
-| Ofenbetrieb | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Für eine voreingestellte Dauer möglich |
-| Eco Sommer / Eco Winter | Feste Stufe oder Auto wählbar | Separater Zustand; nicht aus Stufe 4 allein ableiten |
+| Eco Sommer | Feste Stufe 1–4 oder Auto wählbar | Nicht verfügbar; Stufe 4 wird manuell gewählt |
+| Eco Winter | Feste Stufe 1–4 oder Auto wählbar | Nicht verfügbar; Stufe 4 wird manuell gewählt |
+| Komfort | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Stufe 4 für eine voreingestellte Dauer |
+| Ofenbetrieb | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Stufe 4 für eine voreingestellte Dauer |
+| Aus | Bedienverhalten noch nicht separat abgeglichen | Noch nicht separat abgeglichen |
+
+Diese fünf Betriebsarten sind am BDE der Referenzanlage vorhanden. **Intensivlüftung
+ist zeitlich begrenzte Lüftung auf Stufe 4 in Komfort oder Ofenbetrieb.** Eine
+manuell gewählte Stufe 4 in Eco ist keine Intensivlüftung. Die numerische Stufe
+allein unterscheidet diese Fälle nicht; der vorhandene Intensivstatus bleibt eine
+separate Anzeige.
 
 **Auto in Eco** bedeutet Betrieb nach einem vom Nutzer eingestellten
 Wochenzeitplan mit Wochentag, Uhrzeit und Luftstufe. Es bezeichnet keine belegte
@@ -88,8 +96,8 @@ BDE-Referenz nicht.
    von der letzten Auto-Auswahl abweicht; eine Wiederherstellung nach Aufnahmeende
    separat nennen.
 
-Währenddessen Betriebsart, Solltemperatur und Intensivlüftung nicht zusätzlich
-ändern. Ziel ist die Unterscheidung der Auswahl bei möglichst gleicher
+Währenddessen Betriebsart, Solltemperatur und Zeitplan nicht zusätzlich ändern.
+Ziel ist die Unterscheidung der Auswahl bei möglichst gleicher
 numerischer Stufe. Wenn ein Zeitplanwechsel die Stufe ändert oder ein anderes
 Anlagenereignis auftritt, Zeitpunkt und Anzeige festhalten. Diese Abschnitte
 werden nicht als isolierter Auto/manuell-Beleg gewertet.

@@ -119,15 +119,20 @@ separate. Do not infer heating or cooling from a fan-level change.
 ### Fan selection depends on operating mode
 
 An operator observation on the reference installation, shared on 4 October 2026,
-establishes these UI conditions: Comfort and Stove let the controller determine
-the fan level; manual level selection is unavailable. Timed intensive ventilation
-can still be started. Eco Summer and Eco Winter offer a fixed level or Auto.
-In those Eco modes, Auto follows a user-configured weekly time/level schedule;
-it is not evidence of demand-based automatic ventilation.
+identifies five available modes: Off, Eco Summer, Eco Winter, Comfort and Stove.
+Comfort and Stove let the controller determine the fan level; manual level
+selection is unavailable. Intensive ventilation is a timed switch to level 4
+available in those two modes. Eco Summer and Eco Winter offer a fixed level
+1–4 or Auto, without a separate intensive-ventilation option. Manually selecting
+level 4 in Eco is not intensive ventilation. In those Eco modes, Auto follows a
+user-configured weekly time/level schedule; it is not evidence of demand-based
+automatic ventilation. Off-mode output behaviour was not separately checked.
 
 The integration's numeric requested/controller fan levels do not identify that
-selection or expose the schedule. No additional HESP mapping follows from this
-UI observation. Other hardware/firmware variants require their own confirmation.
+selection or expose the schedule. Level 4 alone also does not identify intensive
+ventilation; its existing status flag remains separate. No additional HESP
+mapping follows from this UI observation. Other hardware/firmware variants
+require their own confirmation.
 See [mode-specific reference tests](REFERENCE_TESTS.md).
 
 ## Missing and invalid values
