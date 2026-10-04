@@ -42,6 +42,47 @@ und HA-Neustart entfernen sie. Ein gestoppter Mitschnitt bleibt ansonsten im
 Arbeitsspeicher und in späteren Diagnoseexporten enthalten. Vor einem Update
 oder Neustart benötigte Aufnahmen herunterladen.
 
+## Beobachtungen während einer Aufnahme markieren
+
+Ab **0.13.0** speichert die Aktion **PROXON HESP: Diagnosebeobachtung markieren**
+(`proxon_hesp.mark_observation`) eine abgelesene BDE-Anzeige in der **laufenden
+manuellen Aufnahme**. Aufrufen unter **Entwicklerwerkzeuge → Aktionen**:
+
+1. Den PROXON-Integrationseintrag auswählen.
+2. **Beobachtete Anzeige** eingeben, z. B. `BDE Luftstufenauswahl`.
+3. **Beobachteter Zustand** eingeben, z. B. `auto` oder `manual_3`.
+4. Die Anzeige jetzt ablesen und die Aktion ausführen.
+
+Für dieselbe Anzeige und denselben Zustand immer die gleichen Texte verwenden.
+Die Markierung verwendet die monotone Aufnahmeuhr, genau wie die Empfangsblöcke.
+Sie ist der Zeitpunkt der Meldung in HA, nicht der exakte Bedien- oder elektrische
+Schaltzeitpunkt. Beobachtungen werden als Angaben des Nutzers gespeichert und
+nicht vom Decoder bestätigt. Ein paralleles Video der entscheidenden Anzeige
+hilft, Bedienverzögerung und Referenzfehler zu erkennen.
+
+Die Aktion sendet keine Anlagenbefehle und startet keine Aufnahme. Ohne laufende
+manuelle Aufnahme oder nach dem Zeit-/Speicherlimit meldet sie einen Fehler.
+Abgeschlossene Aufnahmen können nicht nachträglich markiert werden. Automatische
+Ereignisaufnahmen bleiben unabhängig. Die bestehenden Start-/Stopp-Schaltflächen
+werden weiterhin verwendet.
+
+Pro Aufnahme sind höchstens 128 Markierungen erlaubt; die Bezeichnung ist auf
+64, der Zustand auf 160 Zeichen begrenzt. Leertexte, Steuerzeichen und
+Zeilenumbrüche werden zurückgewiesen. Keine persönlichen Daten eingeben:
+Bezeichnungen und Zustände stehen im heruntergeladenen Diagnoseexport. In
+Entitätsattributen stehen nur Anzahl und Grenze. Starten, Löschen, Neuladen und
+Neustart verwerfen die bisherigen Markierungen zusammen mit der Aufnahme.
+
+Bei Abfrage einer Aktionsantwort liefert die Aktion die gespeicherte Markierung
+mit `elapsed_ms`, `label` und `observation`. Im Export stehen dieselben Felder
+unter `capture.observations`; ohne Markierungen ist die Liste leer. Die Aktion
+bleibt auch bei einem entladenen Eintrag registriert und zeigt dann einen
+verständlichen Fehler. Sie erfordert immer einen expliziten Integrationseintrag.
+
+Ein vollständiger [erster Vergleich Auto/manuell](REFERENCE_TESTS.md) beschreibt
+Vorbereitung, Wiederholungen und Rückkehr. Die [Offline-Auswertung](OFFLINE_ANALYSIS.md)
+arbeitet anschließend mit diesen Angaben, ohne Gerätezugriff.
+
 ## Automatische Ereignisaufnahmen
 
 Seit **0.12.0b7** lösen zusätzlich beide Zustandswechsel des experimentellen
@@ -129,7 +170,9 @@ die genaue Stoppzeit. Die tatsächliche Dauer verwendet eine monotone Uhr und
 ist unabhängig von Empfang und Systemzeitkorrekturen. Ein Export mit `recording`
 ist ein Zwischenstand.
 
-Aktuelle Exporte nutzen **Formatversion 2** mit unverändertem `chunks`-Format.
+Ab 0.13.0 nutzen Exporte **Formatversion 3** mit unverändertem `chunks`-Format
+und der zusätzlichen Liste `observations`. Formatversion 2 enthält keine
+Nutzermarkierungen; vorhandene Auswertungswerkzeuge lesen weiterhin beide.
 Ältere Exporte nutzen `size_limit` für beide Speichergrenzen und enthalten keine
 genaue Stoppzeit oder tatsächliche Dauer. Werkzeuge erfinden diese fehlenden Werte nicht.
 Auch unbekannte und verworfene Bytes werden aufgezeichnet. Rohdaten liegen nur

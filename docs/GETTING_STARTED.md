@@ -18,7 +18,7 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.12.1** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
+**0.13.0** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
 Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
 sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
 Optionale Diagnoseentitäten zeigen drei experimentelle Statusbits und den
@@ -130,7 +130,7 @@ Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
 Gateway können derzeit nicht als Duplikat erkannt werden.
 
 Beim Update von 0.8.0 bleiben die 54 bisherigen Entitätsidentitäten erhalten.
-0.12.1 registriert insgesamt 67 Entitäten am Hauptgerät, einschließlich
+0.13.0 registriert insgesamt 67 Entitäten am Hauptgerät, einschließlich
 standardmäßig deaktivierter Diagnose- und Zeitfunktionen. Jeder konfigurierte
 Heizraum ergänzt vier Entitäten. Bestehende Aktivierungseinstellungen bleiben
 erhalten. Automatische Ereignisaufnahmen sind ohne vorherige Aktivierung zunächst
@@ -161,6 +161,7 @@ Diagnosedateien vor dem Teilen auf private Angaben prüfen.
 - [Heizräume](ROOMS.md)
 - [Gerätezeit abgleichen](CLOCK_SYNC.md)
 - [Diagnose und Aufnahmen](DIAGNOSTICS.md)
+- [Gezielte BDE-Vergleiche und Beobachtungsmarkierungen](REFERENCE_TESTS.md)
 - [Entitäten am Hauptgerät](ENTITY_ORGANIZATION.md)
 - [Versions- und Upgradehinweise](../RELEASE_NOTES.md)
 

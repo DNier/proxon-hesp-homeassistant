@@ -1,0 +1,17 @@
+mark_observation:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: proxon_hesp
+    label:
+      required: true
+      example: "BDE Luftstufenauswahl"
+      selector:
+        text:
+    observation:
+      required: true
+      example: "auto"
+      selector:
+        text:

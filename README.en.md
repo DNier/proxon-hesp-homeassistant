@@ -41,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.12.1**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.13.0**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -95,6 +95,12 @@ and English. Development references remain in English:
 - [Offline capture analysis](docs/OFFLINE_ANALYSIS.md)
 - [Control evidence](docs/CONTROL_EVIDENCE.md)
 - [Checksum derivation](docs/CHECKSUM_ALGORITHM.md)
+
+Version 0.13.0 adds passive user observation markers to running manual captures.
+Use the **Mark diagnostic observation** action in HA's Developer Tools to record
+an indicator and its observed state. Markers are unverified user references,
+not decoded device values. See [capture diagnostics](docs/DIAGNOSTICS.md) and
+[repeatable BDE comparisons](docs/REFERENCE_TESTS.md).
 
 For installation, room configuration, diagnostics and upgrades, see the
 [German documentation index](README.md#dokumentation) and [release notes](RELEASE_NOTES.md).

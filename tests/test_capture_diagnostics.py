@@ -140,7 +140,7 @@ async def test_options_preserve_active_capture_and_export_compatibility(
     assert export["capture"]["profile"] == PROFILE
     assert "private.test" not in str(export)
     assert "diagnostic-unit" not in str(export)
-    assert export["capture"]["format_version"] == 2
+    assert export["capture"]["format_version"] == 3
     assert inventory(export["capture"]["chunks"])["frames"] == 1
     raw = b"".join(bytes.fromhex(c["hex"]) for c in chunks)
     assert replay(raw)["readings"]["fan_level"]["last"] == 3

@@ -388,5 +388,42 @@
         "reconfigure_successful": "Room settings updated."
       }
     }
+  },
+  "services": {
+    "mark_observation": {
+      "name": "Mark diagnostic observation",
+      "description": "Record a user-observed state in the running manual capture. Sends no device commands. The observation is not automatically verified and is included in the diagnostic export.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Integration entry",
+          "description": "Select the PROXON entry with the running manual capture."
+        },
+        "label": {
+          "name": "Observed indicator",
+          "description": "Use the same label for all states, e.g. BDE fan selection. Up to 64 characters."
+        },
+        "observation": {
+          "name": "Observed state",
+          "description": "Read the state now, e.g. auto or manual_3. Use the same text for identical states. Up to 160 characters; do not enter personal data."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "The PROXON integration entry was not found."
+    },
+    "entry_not_loaded": {
+      "message": "The PROXON integration entry is not loaded."
+    },
+    "capture_not_recording": {
+      "message": "Start a manual capture first. Completed captures cannot be annotated afterwards."
+    },
+    "observation_limit": {
+      "message": "This capture already contains 128 observations. Stop it and download diagnostics."
+    },
+    "invalid_observation": {
+      "message": "Indicator and state must be nonempty text: at most 64 and 160 characters respectively, without line breaks or control characters."
+    }
   }
 }

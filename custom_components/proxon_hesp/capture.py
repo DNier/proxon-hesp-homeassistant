@@ -2,6 +2,7 @@
 
 import asyncio
 import time
+import unicodedata
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -10,6 +11,9 @@ MAX_CHUNKS = 16384
 DURATION = 120
 MIN_DURATION = 30
 MAX_DURATION = 600
+MAX_OBSERVATIONS = 128
+MAX_LABEL_LENGTH = 64
+MAX_OBSERVATION_LENGTH = 160
 STATUSES = (
     "idle",
     "recording",
@@ -26,6 +30,18 @@ def validate_duration(value: int) -> int:
     if type(value) is not int or not MIN_DURATION <= value <= MAX_DURATION:
         raise ValueError("Capture duration must be an integer from 30 to 600 seconds")
     return value
+
+
+def validate_observation_text(value: str, limit: int) -> str:
+    """Bound user annotations; they are references, never decoded device values."""
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or len(value) > limit
+        or any(unicodedata.category(char) in {"Cc", "Cf", "Zl", "Zp"} for char in value)
+    ):
+        raise ValueError("invalid_observation")
+    return value.strip()
 
 
 class Capture:
@@ -47,6 +63,7 @@ class Capture:
         self.actual_duration = 0.0
         self.recording_duration = self.duration
         self.chunks = []
+        self.observations = []
         self.size = 0
         self.reason = "idle"
 
@@ -99,6 +116,29 @@ class Capture:
         elif len(self.chunks) >= MAX_CHUNKS:
             self.stop("chunk_limit")
 
+    def mark_observation(self, label: str, observation: str) -> dict:
+        """Mark a user-observed state on a running manual recording's clock."""
+        label = validate_observation_text(label, MAX_LABEL_LENGTH)
+        observation = validate_observation_text(observation, MAX_OBSERVATION_LENGTH)
+        now = time.monotonic()
+        if (
+            self.reason == "recording"
+            and now - self.monotonic_start >= self.recording_duration
+        ):
+            self.stop("duration_limit")
+        if self.reason != "recording":
+            raise ValueError("capture_not_recording")
+        if len(self.observations) >= MAX_OBSERVATIONS:
+            raise ValueError("observation_limit")
+        marker = {
+            "elapsed_ms": round(max(0.0, now - self.monotonic_start) * 1000),
+            "label": label,
+            "observation": observation,
+        }
+        self.observations.append(marker)
+        self._notify()
+        return dict(marker)
+
     def summary(self):
         """Small status snapshot; never copy or expose raw payloads in entities."""
         elapsed = (
@@ -117,11 +157,14 @@ class Capture:
             "max_chunks": MAX_CHUNKS,
             "duration_seconds": self.recording_duration,
             "configured_duration_seconds": self.duration,
+            "observation_count": len(self.observations),
+            "max_observations": MAX_OBSERVATIONS,
         }
 
     def export(self):
         return {
-            "format_version": 2,
+            "format_version": 3,
             **self.summary(),
             "chunks": [dict(chunk) for chunk in self.chunks],
+            "observations": [dict(marker) for marker in self.observations],
         }

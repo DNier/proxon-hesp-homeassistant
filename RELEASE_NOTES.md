@@ -3,6 +3,28 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.13.0 – Zeitmarkierte Diagnosebeobachtungen
+
+- **BDE-Beobachtungen markieren:** Neue Aktion **Diagnosebeobachtung markieren**
+  unter Entwicklerwerkzeuge → Aktionen. Sie speichert Anzeige, Zustand und
+  Aufnahmezeitpunkt in der laufenden manuellen Aufnahme. Die Angaben stammen
+  vom Nutzer und werden nicht automatisch als Gerätewerte bestätigt.
+- **Passive Diagnose:** Die Aktion sendet keine Anlagenbefehle, öffnet keine
+  zusätzliche Verbindung und verändert keine Betriebsart. Pro Aufnahme sind
+  maximal 128 Markierungen möglich; abgeschlossene Aufnahmen bleiben unverändert.
+- **Gezielte Vergleiche:** Dokumentierter Ablauf für Auto → feste gleiche
+  Luftstufe → Auto. Die Offline-Auswertung vergleicht wiederholte beobachtete
+  Zustände mit vollständigen Telegrammidentitäten und möglichen Bitmustern.
+  Lücken, veraltete Daten und Widersprüche bleiben sichtbar; Ergebnisse sind
+  Kandidaten, keine automatische Sensorfreigabe.
+- **Kompatibler Export:** Formatversion 3 ergänzt `observations`; Rohdatenformat,
+  Entitätsidentitäten und Konfiguration bleiben erhalten. Alte Exporte können
+  weiterhin inventarisiert und verglichen werden.
+
+Update von 0.12.1 ohne Konfigurationsmigration. Home Assistant ab 2026.9.
+Für Markierungen zuerst eine manuelle Aufnahme starten. Anleitung:
+[gezielte BDE-Vergleiche](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/REFERENCE_TESTS.md).
+
 ## 0.12.1 – Getrennte Gerätezeit und belegte Kompatibilität
 
 - **Gerätedatum separat:** Neuer optionaler Diagnosesensor mit HA-Datumstyp.

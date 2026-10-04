@@ -80,6 +80,62 @@ wrappers and bare capture objects. Timestamps must be nonnegative monotonic
 integers. Missing metadata remains `null`. Comparison output paths must differ
 from the inputs and from each other.
 
+### Aligning recorded user observations
+
+Manual captures can contain an `observations` list. Each entry has `elapsed_ms`,
+`label` and `observation`, for example a label `BDE air selection` with text
+`Auto` or `Manual level 3`. These are unverified user statements, not decoded
+equipment values. Use the same label and exact state text for every repetition;
+the tool does not guess that differently spelled texts mean the same state.
+
+```sh
+uv run python -m tools.audit_observations diagnostics.json \
+  --settle-ms 10000 --max-gap-ms 30000 \
+  --output tmp/observations.json --report tmp/observations.md
+```
+
+The tool reuses the inventory parser and includes all supported complete
+identities, not just production sensor data points. It opens no connection and
+sends no queries. Outputs contain raw values and user text and belong in a
+private location. Older captures without annotations produce no inferred
+reference states.
+
+Each label has an independent timeline. A state is assumed to hold from its
+mark until the next mark with that label, or the end of the recording. Mark
+every relevant change; an unmarked BDE change invalidates that reference
+assumption. The initial `--settle-ms` (default 10 seconds) is excluded from each
+interval to allow for observation and equipment update delays. This is a
+configurable analysis parameter, not a measured reaction time. A first frame is
+always a baseline, never a confirmed edge at the mark's timestamp.
+
+Candidate comparison needs at least two different states, each recorded in
+at least two reference intervals. Supporting intervals need at least two
+valid frames of the identity and one frame in every bin of half the configured
+`--max-gap-ms`. This conservatively bounds gaps between samples. The default
+30 seconds is a configurable analysis limit, not a guaranteed protocol cadence.
+Empty bins mean insufficient coverage; they do not distinguish silence from
+missing traffic. The final, possibly shorter bin also needs a sample; this is
+deliberately conservative and can mark an interval uncertain close to its end.
+Unrelated traffic cannot make a missing identity fresh. A mark at the exact
+recording end is retained with an empty remaining interval, without inventing
+later frames.
+
+The report ranks complete payloads and individual LSB-first bits that remain
+constant within each supporting interval, repeat for the same reported state
+and differ between all reported states. Bits can qualify when other parts of
+their payload vary. A single valid contradictory sample rejects a proposed
+mapping, including a sample in an otherwise sparsely covered interval. Missing
+or insufficiently covered intervals remain listed as uncertain: a candidate
+with enough other repetitions is marked `partial`, not fully repeatable.
+Labels with insufficient repeated references produce no candidates.
+
+`repeatable` means only a repeated correlation in this recording. It confirms
+neither meaning nor causation and cannot identify Auto, heating, a valve or a
+new sensor on its own. Review counterexamples in other captures and independent
+BDE references before assigning semantics. Timestamps still refer to the TCP
+chunk completing the frame. The tool cannot recover electrical bus timing or
+compensate for delayed marking.
+
 
 ## Metadatenantworten prüfen
 

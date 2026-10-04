@@ -388,5 +388,42 @@
         "reconfigure_successful": "Raumeinstellungen aktualisiert."
       }
     }
+  },
+  "services": {
+    "mark_observation": {
+      "name": "Diagnosebeobachtung markieren",
+      "description": "Speichert einen beobachteten Zustand in der laufenden manuellen Aufnahme. Sendet keine Anlagenbefehle. Die Beobachtung wird nicht automatisch bestätigt und ist im Diagnoseexport enthalten.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Integrationseintrag",
+          "description": "Den PROXON-Eintrag mit der laufenden manuellen Aufnahme auswählen."
+        },
+        "label": {
+          "name": "Beobachtete Anzeige",
+          "description": "Gleiche Bezeichnung für alle Zustände verwenden, z. B. BDE Luftstufenauswahl. Maximal 64 Zeichen."
+        },
+        "observation": {
+          "name": "Beobachteter Zustand",
+          "description": "Zustand jetzt ablesen, z. B. auto oder manual_3. Gleiche Zustände immer gleich benennen. Maximal 160 Zeichen; keine persönlichen Daten eingeben."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "Der PROXON-Integrationseintrag wurde nicht gefunden."
+    },
+    "entry_not_loaded": {
+      "message": "Der PROXON-Integrationseintrag ist nicht geladen."
+    },
+    "capture_not_recording": {
+      "message": "Zuerst eine manuelle Aufnahme starten. Abgeschlossene Aufnahmen können nicht nachträglich markiert werden."
+    },
+    "observation_limit": {
+      "message": "Die Aufnahme enthält bereits 128 Beobachtungen. Aufnahme stoppen und Diagnosedaten herunterladen."
+    },
+    "invalid_observation": {
+      "message": "Anzeige und Zustand müssen nichtleere Texte sein: höchstens 64 bzw. 160 Zeichen, ohne Zeilenumbrüche oder Steuerzeichen."
+    }
   }
 }

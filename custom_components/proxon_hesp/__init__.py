@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from .capture import DURATION, validate_duration
@@ -18,9 +19,16 @@ from .const import (
 )
 from .coordinator import ProxonRuntime
 from .rooms import CONF_ROOMS, ROOM_SUBENTRY, configured_rooms, sync_room_devices
+from .services import async_register_services
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Keep diagnostic actions discoverable even while entries are unloaded."""
+    async_register_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bool:
