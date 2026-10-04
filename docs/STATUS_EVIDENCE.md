@@ -18,7 +18,7 @@ und Payloadlänge bleiben Teil jeder Zuordnung.
 | PTC-Wohnen: `01F8` Bit 11 / `03B6` / `118007/0191` | Korrelation bei Sollwertänderungen, aber ein BDE-Foto zeigt PTC ein bei jeweils null in diesen Feldern. | Diese allgemeine Zuordnung ist widerlegt. |
 | MV-Vorwärme | Kein unabhängiger positiver BDE-Beleg. | Unbekannt. |
 | Aktives Heizen/Kühlen: `224000/0208/4` | Bit 8 tritt bei Heizen und Kühlen auf; Bits 9/10 fallen teilweise vor Verdichterstopp. Bit 28 fehlt bei bestätigter Kühlung. | Keine belastbare Betriebszustandsanzeige aus diesen Einzelbits. |
-| Luftstufe Auto/manuell | Gleiche numerische Stufe kann beide Auswahlen darstellen. Die vollständige synchronisierte Umschaltfolge fehlt. | Nicht aus Rohstellwert oder Stufe ableiten. |
+| Eco-Luftstufe Zeitplan/fest | Auto in Eco Sommer/Winter folgt einem nutzerdefinierten Wochenzeitplan. Gleiche numerische Stufe kann Zeitplan- und feste Auswahl darstellen. In Komfort/Ofen bestimmt die Steuerung die Stufe ohne diese Auswahl. | Auswahl und Zeitplan nicht aus Rohstellwert oder Stufe ableiten. |
 
 Für eine spätere Freigabe sind positive und negative BDE-Referenzen einschließlich
 Übergang, unverdeckter Anzeige und zeitgleicher vollständiger Rohaufnahme nötig.
@@ -32,3 +32,7 @@ als Rohbits bezeichnet. Es wurden für diese Prüfung keine Anlagenbefehle gesen
 
 Siehe [Bedienfolgen](CONTROL_EVIDENCE.md), [Community-Auswertung](COMMUNITY_EXPORT_ANALYSIS.md)
 und [FWT-Kompatibilitätsgrenzen](COMPATIBILITY.md).
+
+Bedienhinweis ergänzt am 4. Oktober 2026 auf Grundlage der Beobachtung an der
+Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
+[Bedienverhalten und passende Versuchsbedingungen](REFERENCE_TESTS.md).

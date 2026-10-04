@@ -84,7 +84,9 @@ from the inputs and from each other.
 
 Manual captures can contain an `observations` list. Each entry has `elapsed_ms`,
 `label` and `observation`, for example a label `BDE air selection` with text
-`Auto` or `Manual level 3`. These are unverified user statements, not decoded
+`Auto` or `Manual level 3` in a suitable Eco mode. On the reference installation,
+Comfort/Stove do not offer that choice; Eco Auto follows a weekly schedule.
+These are unverified user statements, not decoded
 equipment values. Use the same label and exact state text for every repetition;
 the tool does not guess that differently spelled texts mean the same state.
 

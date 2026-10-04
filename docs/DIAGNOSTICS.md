@@ -49,8 +49,8 @@ Ab **0.13.0** speichert die Aktion **PROXON HESP: Diagnosebeobachtung markieren*
 manuellen Aufnahme**. Aufrufen unter **Entwicklerwerkzeuge → Aktionen**:
 
 1. Den PROXON-Integrationseintrag auswählen.
-2. **Beobachtete Anzeige** eingeben, z. B. `BDE Luftstufenauswahl`.
-3. **Beobachteter Zustand** eingeben, z. B. `auto` oder `manual_3`.
+2. **Beobachtete Anzeige** eingeben, z. B. `BDE PTC-Wohnen`.
+3. **Beobachteter Zustand** eingeben, z. B. `ein` oder `aus`.
 4. Die Anzeige jetzt ablesen und die Aktion ausführen.
 
 Für dieselbe Anzeige und denselben Zustand immer die gleichen Texte verwenden.
@@ -79,8 +79,8 @@ unter `capture.observations`; ohne Markierungen ist die Liste leer. Die Aktion
 bleibt auch bei einem entladenen Eintrag registriert und zeigt dann einen
 verständlichen Fehler. Sie erfordert immer einen expliziten Integrationseintrag.
 
-Ein vollständiger [erster Vergleich Auto/manuell](REFERENCE_TESTS.md) beschreibt
-Vorbereitung, Wiederholungen und Rückkehr. Die [Offline-Auswertung](OFFLINE_ANALYSIS.md)
+Die [gezielten BDE-Vergleiche](REFERENCE_TESTS.md) beschreiben PTC-Wohnen als
+aktuellen Einstieg und den optionalen Zeitplanvergleich ausschließlich in Eco. Die [Offline-Auswertung](OFFLINE_ANALYSIS.md)
 arbeitet anschließend mit diesen Angaben, ohne Gerätezugriff.
 
 ## Automatische Ereignisaufnahmen

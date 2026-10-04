@@ -116,6 +116,20 @@ controller-status poll, approximately five seconds later in reviewed captures.
 Keep requested level, reported level, raw control values and measured rpm
 separate. Do not infer heating or cooling from a fan-level change.
 
+### Fan selection depends on operating mode
+
+An operator observation on the reference installation, shared on 4 October 2026,
+establishes these UI conditions: Comfort and Stove let the controller determine
+the fan level; manual level selection is unavailable. Timed intensive ventilation
+can still be started. Eco Summer and Eco Winter offer a fixed level or Auto.
+In those Eco modes, Auto follows a user-configured weekly time/level schedule;
+it is not evidence of demand-based automatic ventilation.
+
+The integration's numeric requested/controller fan levels do not identify that
+selection or expose the schedule. No additional HESP mapping follows from this
+UI observation. Other hardware/firmware variants require their own confirmation.
+See [mode-specific reference tests](REFERENCE_TESTS.md).
+
 ## Missing and invalid values
 
 Each interpreted value has its own validation and freshness check. Invalid

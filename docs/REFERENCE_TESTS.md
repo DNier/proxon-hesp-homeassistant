@@ -5,12 +5,61 @@ Anzeige mit unabhängig abgelesenem Zustand. Der derzeitige
 [Freigabestand](STATUS_EVIDENCE.md) einschließlich Gegenbeispielen bleibt Grundlage.
 Die Softwareentwicklung selbst erfordert keine Bedienhandlung an der Anlage.
 
-## Erster Vergleich: Luftstufenauswahl Auto/manuell
+## Bedienverhalten der Referenzanlage
 
-Die Betriebsart, beispielsweise **Komfort**, ist eine andere Einstellung als
-**Luftstufe Auto/manuell**. Aus einer gemeldeten Stufe 3 allein folgt keine
-Auto-Auswahl. Vor Beginn beide Auswahlen am BDE ablesen und den Ausgangszustand
-festhalten. Vorhandene funktionierende Verkabelung und BDE-Verbindung verwenden.
+Bedienerbeobachtung vom **4. Oktober 2026** an der Referenzanlage:
+
+| Betriebsart | Luftstufenwahl am BDE | Intensivlüftung |
+| --- | --- | --- |
+| Komfort | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Für eine voreingestellte Dauer möglich |
+| Ofenbetrieb | Steuerung bestimmt die Stufe; keine manuelle Auswahl und keine Eco-Auto-Auswahl | Für eine voreingestellte Dauer möglich |
+| Eco Sommer / Eco Winter | Feste Stufe oder Auto wählbar | Separater Zustand; nicht aus Stufe 4 allein ableiten |
+
+**Auto in Eco** bedeutet Betrieb nach einem vom Nutzer eingestellten
+Wochenzeitplan mit Wochentag, Uhrzeit und Luftstufe. Es bezeichnet keine belegte
+bedarfsgeführte Vollautomatik. Die Stufenwahl durch die Steuerung in Komfort/Ofen
+ist davon zu unterscheiden; ihre Regelkriterien werden hier nicht festgelegt.
+Diese Beobachtung wird nicht pauschal auf andere Firmware- oder Gerätevarianten
+übertragen. Die Übertragung des Zeitplans beziehungsweise der Auswahl auf dem
+beobachteten Bus ist weiterhin nicht zugeordnet.
+
+## Aktueller Einstieg: PTC-Wohnen
+
+Für den nächsten Schaltzustandsvergleich die aktuelle Betriebsart beibehalten.
+Auf der BDE-Seite **Schaltzustände** den Zustand **PTC-Wohnen** ablesen. In der
+laufenden manuellen Aufnahme folgende Angaben markieren:
+
+- **Beobachtete Anzeige:** immer `BDE PTC-Wohnen`.
+- **Beobachteter Zustand:** `ein` oder `aus`, genau wie gerade am BDE angezeigt.
+
+Die entscheidenden Anzeigen und Übergänge parallel filmen. Die Markierung
+bezeichnet ausschließlich diese Anzeige, nicht pauschal alle Raumheizelemente.
+Für elektrische Leistung werden zusätzlich vorhandene, frische Schalter- und
+Leistungsmessungen der tatsächlich zugehörigen Heizelemente ausgewertet.
+Erreichbarkeit allein bestätigt keine zentrale Freigabe; ein eingeschalteter
+Schalter allein bestätigt keinen Stromfluss. Fehlende oder veraltete
+Leistungsmessungen bleiben unbekannt.
+
+Ein gezielter Ablauf mit geänderter Raumanforderung wird erst nach Prüfung der
+verknüpften Messquellen und des aktuellen BDE-Zustands festgelegt. Eine einzelne
+Ein-/Aus-Beobachtung ist eine Ausgangsreferenz; für eine Freigabe fehlen dann
+noch wiederholte Übergänge und Gegenproben. Die vorhandenen Gegenbeispiele zu
+`01F8`, `03B6` und `0191` bleiben gültig.
+
+## Optionaler Vergleich in Eco: Zeitplan oder feste Luftstufe
+
+Dieser Vergleich ist ausschließlich für **Eco Sommer oder Eco Winter** mit
+zugänglicher Auto-Auswahl vorgesehen. In **Komfort und Ofenbetrieb ist er nicht
+durchführbar**. Ein Wechsel aus Komfort allein für diesen Nebenvergleich gehört
+nicht zum aktuellen PTC-Versuch. Erst bei einer separat vereinbarten passenden
+Eco-Ausgangslage durchführen.
+
+Aus einer gemeldeten Stufe 3 allein folgt keine Auto-Auswahl. Vor Beginn
+Betriebsart, Auswahl **Auto (Zeitplan)** oder feste Stufe und die momentan
+vorgegebene Stufe am BDE ablesen. Der Vergleich muss innerhalb eines unveränderten
+Zeitplanabschnitts liegen; einen geplanten Stufenwechsel vermeiden. Der Zeitplan
+bleibt unverändert. Vorhandene funktionierende Verkabelung und BDE-Verbindung
+verwenden.
 
 Benötigt: Integration ab **0.13.0**, Zugang zur PROXON-Geräteseite und zu
 **Entwicklerwerkzeuge → Aktionen** in HA, BDE und ein Video der Luftstufenauswahl.
@@ -41,7 +90,7 @@ BDE-Referenz nicht.
 
 Währenddessen Betriebsart, Solltemperatur und Intensivlüftung nicht zusätzlich
 ändern. Ziel ist die Unterscheidung der Auswahl bei möglichst gleicher
-numerischer Stufe. Wenn Auto selbst die Stufe ändert oder ein anderes
+numerischer Stufe. Wenn ein Zeitplanwechsel die Stufe ändert oder ein anderes
 Anlagenereignis auftritt, Zeitpunkt und Anzeige festhalten. Diese Abschnitte
 werden nicht als isolierter Auto/manuell-Beleg gewertet.
 

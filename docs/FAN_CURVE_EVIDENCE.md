@@ -157,3 +157,11 @@ Sonderzustände, Intensivlüftung und Auto/manuell getrennte Fragestellungen.
 
 Quellen: [Community-Vergleich und Antwort](https://github.com/DNier/proxon-hesp-homeassistant/discussions/1#discussioncomment-18727498),
 [FWT-Kompatibilität und Grenzen](COMPATIBILITY.md).
+
+## Bedienhinweis vom 4. Oktober 2026
+
+Laut aktueller Beobachtung an der Referenzanlage ist manuelle Stufenwahl nur in
+Eco Sommer/Winter möglich. Auto folgt dort dem Nutzerzeitplan; Komfort/Ofen
+bestimmen die Stufe durch die Steuerung. Die historischen Messwerte oben bleiben
+unverändert. Daraus wird keine damals nicht festgehaltene Betriebsart rekonstruiert.
+Für künftige Vergleiche gelten die [betriebsspezifischen Bedingungen](REFERENCE_TESTS.md).
