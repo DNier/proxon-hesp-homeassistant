@@ -5,7 +5,7 @@ from collections import deque
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
-from .capture import Capture
+from .capture import MAX_LABEL_LENGTH, Capture, validate_observation_text
 from .const import STALE_SECONDS
 
 PRE_SECONDS = 180
@@ -123,8 +123,40 @@ class EventCapture:
             return
         self._record_event(now, "status_0208_bit_28_changed", active=active, raw=raw)
 
+    def trigger_diagnostic(self, label):
+        """Explicit local trigger; the label is not a decoded BDE observation."""
+        try:
+            label = validate_observation_text(label, MAX_LABEL_LENGTH)
+        except ValueError as err:
+            raise ValueError("invalid_event_label") from err
+        if not self.enabled:
+            raise ValueError("event_capture_disabled")
+        now = time.monotonic()
+        if not self.ring or now - self.ring[-1][0] >= STALE_SECONDS:
+            raise ValueError("event_capture_no_recent_data")
+        self._finish_due_capture(now)
+        joined = self.capture.reason == "recording"
+        if joined and len(self.events) >= MAX_EVENTS:
+            raise ValueError("event_capture_event_limit")
+        self._record_event(now, "diagnostic_trigger", label=label)
+        return {
+            "started_utc": self.capture.started,
+            "elapsed_ms": self.events[-1]["elapsed_ms"],
+            "label": label,
+            "joined_existing_capture": joined,
+        }
+
+    def _finish_due_capture(self, now):
+        # A service can run before an overdue timer, without an incoming chunk.
+        if (
+            self.capture.reason == "recording"
+            and now - self.capture.monotonic_start >= self.capture.recording_duration
+        ):
+            self.capture.stop("duration_limit")
+
     def _record_event(self, now, event_type, **details):
         """Share bounded recording windows across independent trigger sources."""
+        self._finish_due_capture(now)
         if self.capture.reason != "recording":
             if self.capture.reason != "idle":
                 self.previous_captures.append(self._export_current())

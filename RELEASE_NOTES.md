@@ -3,6 +3,26 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.13.2 – Gezielt ausgelöste Ereignisaufnahmen
+
+- Neue passive Aktion **Diagnose-Ereignisaufnahme auslösen**: Sichert den
+  vorhandenen Vorlaufpuffer und bis zu 180 Sekunden Nachlauf. Damit können auch
+  Automationen Rohdaten rund um einen gezielt gewählten Wechsel erfassen.
+- Die Ereignisaufnahme muss vorher aktiviert sein. Ohne frische gültige
+  Messwerte und aktuellen Empfangspuffer wird der Aufruf zurückgewiesen.
+  Ein weiterer Auslöser markiert eine laufende Aufnahme, ohne sie zu verlängern.
+- Die Auslöserbezeichnung ist keine bestätigte BDE-Beobachtung. Manuelle
+  Aufnahmen, Speichergrenzen, Entitätsidentitäten und Einstellungen bleiben
+  erhalten. Die Aktion sendet keine Anlagenbefehle.
+- Öffentliche Steuerquellen und vorhandene Auto-/Intensivlüftungsbelege sind
+  mit ihren Aussagegrenzen dokumentiert; daraus entstehen keine neuen Sensoren
+  oder Schreibbefehle.
+
+Update von 0.13.1 ohne Konfigurationsmigration. Home Assistant ab 2026.9.
+Nach der Installation Home Assistant neu starten und die Ereignisaufnahme bei
+Bedarf unter **Konfigurieren** aktivieren. Anleitung im
+[Diagnosehandbuch](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md#ereignisaufnahme-gezielt-auslösen).
+
 ## 0.13.1 – MV-Abtau und vollständige Rohdiagnose
 
 - **BDE-Schaltzustand MV-Abtau:** Neue optionale Diagnoseentität am Hauptgerät.

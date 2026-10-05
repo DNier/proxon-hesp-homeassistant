@@ -422,6 +422,20 @@
           "description": "Read the state now, e.g. auto or manual_3. Use the same text for identical states. Up to 160 characters; do not enter personal data."
         }
       }
+    },
+    "start_event_capture": {
+      "name": "Trigger diagnostic event capture",
+      "description": "Save the existing receive buffer and a fixed post-event window. Requires enabled event capture and fresh telemetry. Joins an active event capture without extending it. Sends no device commands; the label does not confirm a BDE state.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Integration entry",
+          "description": "Select the PROXON entry with event capture enabled."
+        },
+        "label": {
+          "name": "Trigger label",
+          "description": "Describe the local diagnostic trigger. Up to 64 characters; no personal data, line breaks or control characters."
+        }
+      }
     }
   },
   "exceptions": {
@@ -439,6 +453,18 @@
     },
     "invalid_observation": {
       "message": "Indicator and state must be nonempty text: at most 64 and 160 characters respectively, without line breaks or control characters."
+    },
+    "invalid_event_label": {
+      "message": "Use nonempty trigger text up to 64 characters, without line breaks or control characters."
+    },
+    "event_capture_disabled": {
+      "message": "Enable event capture in the integration options first."
+    },
+    "event_capture_no_recent_data": {
+      "message": "Fresh validated telemetry and a recent receive buffer are required."
+    },
+    "event_capture_event_limit": {
+      "message": "The current capture already contains 32 events. Save it and wait for completion before triggering another capture."
     }
   }
 }

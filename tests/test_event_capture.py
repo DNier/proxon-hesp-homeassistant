@@ -142,7 +142,8 @@ async def test_post_capture_resource_limit(limit, reason):
     "tool", ["inventory_capture", "replay_diagnosis", "compare_captures"]
 )
 @pytest.mark.parametrize("archived", [False, True])
-def test_existing_cli_selects_event_export(tool, tmp_path, archived):
+@pytest.mark.parametrize("format_version", [2, 3])
+def test_existing_cli_selects_event_export(tool, tmp_path, archived, format_version):
     import importlib
     import json
 
@@ -155,8 +156,19 @@ def test_existing_cli_selects_event_export(tool, tmp_path, archived):
                 "data": {
                     "capture": {"chunks": []},
                     "event_capture": {
-                        "format_version": 2,
+                        "format_version": format_version,
                         "chunks": [{"elapsed_ms": 0, "hex": HEATING.hex()}],
+                        "events": (
+                            [
+                                {
+                                    "elapsed_ms": 0,
+                                    "type": "diagnostic_trigger",
+                                    "label": "candidate change",
+                                }
+                            ]
+                            if format_version == 3
+                            else []
+                        ),
                     },
                 }
             }
@@ -165,7 +177,13 @@ def test_existing_cli_selects_event_export(tool, tmp_path, archived):
     if archived:
         data = json.loads(source.read_text())
         current = data["data"]["event_capture"]
-        current["previous_captures"] = [{"chunks": current["chunks"]}]
+        current["previous_captures"] = [
+            {
+                "format_version": format_version,
+                "chunks": current["chunks"],
+                "events": current["events"],
+            }
+        ]
         current["chunks"] = []
         source.write_text(json.dumps(data))
     output = tmp_path / "result.json"

@@ -44,6 +44,19 @@ It does not prove the cause of a particular unsuccessful experiment. Do not use
 continuous competing writes to force a desired value. The successful calendar
 correction does not establish equivalent ownership for other settings.
 
+The upstream [data-point reference at commit `0c51513`](https://github.com/markusmauch/proxon-hesp/blob/0c5151342299084db0f57836f5bbd140822e7e33/docs/dp-referenz.md#L105)
+reports effective repeated writes at about 1.5-second intervals on its reference
+installation. This is an author-reported observation, without a published
+matched TX/RX trace, panel-selection reference and recovery after repetition
+ends. It does not establish a generic command-ownership mechanism or justify
+adding recurring writes to this integration.
+
+The [ESP32 sender at commit `eed1173`](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/eed1173fae88a4bbdd43c1bc7adbcb78f695d3a3/ESP32_Proxon_P1_RS485_Sniffer.ino#L535)
+arms transmission after received traffic and sends from a received-message
+window. This implementation is not evidence of initialization or bus ownership
+on a silent bus without the BDE. Its repeat-time setting bounds the injection
+window; it is not a demonstrated protocol for replacing the panel.
+
 ## What can be checked without video
 
 Use a timestamped TX record separate from RX and compare:
@@ -166,3 +179,37 @@ schedule payloads or external control.
 Future Auto→fixed level→Auto comparisons require a separately agreed Eco
 baseline without a scheduled transition during the comparison. Do not apply
 that sequence to Comfort or Stove. See [reference tests](REFERENCE_TESTS.md).
+
+## Targeted offline review: Eco Auto and intensive-ventilation timing
+
+Six historical reference captures were rechecked with the existing inventory
+and production replay: 13,319 valid frames and no unparsed bytes. In the short
+Eco Summer comparison of fixed level 1 and Auto at effective level 1, both
+windows contain 98 complete identities. Of these, 93 have the same constant
+payload in both windows; the five differences are independently decoded room
+temperature, fan rpm, calendar, clock and temperature-block values. Query
+arguments remain constant. One complete query round per phase contains the same
+39 query identities in the same order. This supplies no identified selection
+field or repeatable timing code.
+
+The selection reference is an earlier written video evaluation; the original
+video was unavailable for renewed inspection. The fixed-level interval is short
+and a different manually selected level lies between it and Auto. Later traffic
+has no additional display reference. These limitations prevent treating this
+comparison as proof that Auto is never transmitted. A useful new comparison
+requires a retained, synchronized independent reference of repeated Auto/fixed
+changes at the same numeric level across multiple full cycles.
+
+Different selected intensive-ventilation durations and start/end references
+likewise supply no identified duration or remaining-time field. A calendar
+change near one stop also occurs after intensive ventilation has already ended;
+production replay identifies it as device time. Several independently visible
+countdown values would be needed to distinguish a timer payload from ordinary
+time and temperature changes. Unlabelled steady-state captures do not resolve
+these gaps.
+
+The separate [P1 sequence report](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/eed1173fae88a4bbdd43c1bc7adbcb78f695d3a3/DP-Sequenz.md#L55)
+describes 48 points repeating in approximately 4.8 seconds after restart, based
+on two unfiltered recordings. It provides no complete telegram identities or
+raw initialization trace, and establishes neither an Auto selector nor a startup
+handshake. This report must not be conflated with the earlier filtered P1 export.

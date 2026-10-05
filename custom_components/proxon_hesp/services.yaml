@@ -15,3 +15,15 @@ mark_observation:
       example: "auto"
       selector:
         text:
+start_event_capture:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: proxon_hesp
+    label:
+      required: true
+      example: "Diagnostic candidate changed"
+      selector:
+        text:

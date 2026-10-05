@@ -144,6 +144,56 @@ nicht einem genauen elektrischen Schaltzeitpunkt. Pufferränder können Telegram
 teilen; der vorhandene Parser synchronisiert sich erneut. Für unbekannte Bits
 kann weiterhin eine unabhängige Displaybeobachtung erforderlich sein.
 
+## Ereignisaufnahme gezielt auslösen
+
+Ab **0.13.2** ergänzt **PROXON HESP: Diagnose-Ereignisaufnahme auslösen**
+(`proxon_hesp.start_event_capture`) die bisherigen automatischen Auslöser.
+Die Aktion sichert den vorhandenen Puffer und startet bis zu **180 Sekunden
+Nachlauf**. So kann auch eine eigene Automation eine Aufnahme auslösen, wenn
+ein interessanter Rohwert wechselt, ohne zuerst auf einen Verdichterwechsel
+zu warten.
+
+Zuerst unter **Konfigurieren** die Ereignisaufnahme aktivieren. Dann unter
+**Entwicklerwerkzeuge → Aktionen** den PROXON-Integrationseintrag auswählen,
+eine kurze **Auslöserbezeichnung** eingeben und die Aktion ausführen. Beispiel
+für den Aktionsschritt einer Automation:
+
+```yaml
+action: proxon_hesp.start_event_capture
+data:
+  config_entry_id: "ID_DES_PROXON_INTEGRATIONSEINTRAGS"
+  label: "Kandidatenwert gewechselt"
+```
+
+Die Bezeichnung beschreibt den lokalen Auslöser; sie bestätigt weder eine
+BDE-Anzeige noch die Bedeutung eines Bits. Eine unabhängig abgelesene Anzeige
+weiterhin mit [Diagnosebeobachtung markieren](#beobachtungen-während-einer-aufnahme-markieren)
+in einer laufenden **manuellen** Aufnahme speichern oder als kurze externe
+Referenz festhalten. Die neue Aktion startet oder verändert keine manuelle
+Aufnahme und sendet keine Telegramme an die Anlage.
+
+Voraussetzung sind eine aktive Verbindung, mindestens ein frischer gültiger
+Decoderwert und Empfang im Vorlaufpuffer innerhalb der letzten 30 Sekunden.
+Das bestätigt nicht die Aktualität oder Bedeutung des gewählten Kandidaten.
+Nach einem Neustart kann die Vorgeschichte kürzer als 180 Sekunden sein.
+Weitere Auslöser innerhalb eines laufenden Fensters werden markiert, ohne den
+festen Nachlauf zu verlängern. Die vorhandenen vier Speicherplätze und
+Rohdatenlimits gelten unverändert.
+
+Die gesamte Eingabe darf höchstens 64 Zeichen enthalten, keine Steuerzeichen
+oder Zeilenumbrüche. Äußere Leerzeichen werden vor dem Speichern entfernt;
+die Bezeichnung muss danach noch Text enthalten. Keine persönlichen Daten
+eingeben: Im Export steht sie als `label` eines Ereignisses vom Typ
+`diagnostic_trigger`. Bei ausgeschalteter Ereignisaufnahme, fehlenden frischen
+Daten oder bereits 32 Ereignissen im laufenden Fenster wird der Aufruf mit
+einer verständlichen Fehlermeldung zurückgewiesen.
+
+Eine angeforderte Aktionsantwort enthält `started_utc`, `elapsed_ms`, `label`
+und `joined_existing_capture`. Letzteres ist wahr, wenn nur ein Ereignis zu
+einem laufenden Fenster hinzugefügt wurde. Anschließend den gewöhnlichen
+Diagnoseexport herunterladen; die vorhandenen Offline-Werkzeuge lesen die
+Aufnahme mit `--event`, auch aus den früheren gespeicherten Fenstern.
+
 ## Status und Exportfelder
 
 **Aufnahmestatus** ist standardmäßig aktiv. Attribute enthalten Start/Stopp,

@@ -41,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.13.1**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.13.2**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -53,7 +53,9 @@ There is no universal wiring guide: connector pinouts vary by board revision.
 
 The integration reads temperatures, fan/compressor speeds, requested mode and
 fan level, bypass/intensive ventilation, filter time and operating hours.
-It supports passive manual and compressor-event recordings. Missing telemetry
+It supports passive manual and compressor-event recordings. Version 0.13.2 adds
+an explicit passive action to save the pre-buffer and post-event traffic for
+locally chosen triggers, including automations. Missing telemetry
 is unavailable, never assumed zero or off. Compressor rotation does not identify
 heating, cooling, defrost or PTC activity. General climate/fan control is unsupported.
 

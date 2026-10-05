@@ -422,6 +422,20 @@
           "description": "Zustand jetzt ablesen, z. B. auto oder manual_3. Gleiche Zustände immer gleich benennen. Maximal 160 Zeichen; keine persönlichen Daten eingeben."
         }
       }
+    },
+    "start_event_capture": {
+      "name": "Diagnose-Ereignisaufnahme auslösen",
+      "description": "Sichert den vorhandenen Empfangspuffer mit festem Nachlauf. Erfordert aktivierte Ereignisaufnahme und frische Daten. Ergänzt eine laufende Ereignisaufnahme ohne Verlängerung. Sendet keine Anlagenbefehle; die Bezeichnung bestätigt keinen BDE-Zustand.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Integrationseintrag",
+          "description": "Den PROXON-Eintrag mit aktivierter Ereignisaufnahme auswählen."
+        },
+        "label": {
+          "name": "Auslöser",
+          "description": "Lokalen Diagnoseauslöser beschreiben. Maximal 64 Zeichen; keine persönlichen Daten, Zeilenumbrüche oder Steuerzeichen."
+        }
+      }
     }
   },
   "exceptions": {
@@ -439,6 +453,18 @@
     },
     "invalid_observation": {
       "message": "Anzeige und Zustand müssen nichtleere Texte sein: höchstens 64 bzw. 160 Zeichen, ohne Zeilenumbrüche oder Steuerzeichen."
+    },
+    "invalid_event_label": {
+      "message": "Der Auslöser muss nichtleerer Text mit höchstens 64 Zeichen sein, ohne Zeilenumbrüche oder Steuerzeichen."
+    },
+    "event_capture_disabled": {
+      "message": "Zuerst die Ereignisaufnahme in den Integrationseinstellungen aktivieren."
+    },
+    "event_capture_no_recent_data": {
+      "message": "Frische gültige Telegramme und ein aktueller Empfangspuffer sind erforderlich."
+    },
+    "event_capture_event_limit": {
+      "message": "Die laufende Aufnahme enthält bereits 32 Ereignisse. Aufnahme sichern und vor der nächsten Auslösung das Ende abwarten."
     }
   }
 }
