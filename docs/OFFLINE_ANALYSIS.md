@@ -139,6 +139,55 @@ chunk completing the frame. The tool cannot recover electrical bus timing or
 compensate for delayed marking.
 
 
+## Recorded QUERY and reply shapes
+
+Use the existing QUERY audit to compare checksum-valid queries with reply forms
+in one selected recording:
+
+```sh
+uv run python -m tools.audit_recorded_queries diagnostics.json \
+  --output tmp/query-shapes.json
+uv run python -m tools.audit_recorded_queries diagnostics.json --capture event \
+  --event-index 0 --output tmp/event-query-shapes.json
+```
+
+`--capture manual` is the default; `--capture event` selects the latest retained
+event unless an index is supplied. `--event-index` requires event selection.
+The output must differ from the input. Full HA exports, capture wrappers and
+bare manual captures use the same loader and framing/checksum rules as the
+inventory tool. The command opens no connection and has no sender.
+
+The report includes exported-byte coverage, query arguments and counts, exact
+expected reply identities, observed counts/first/last times, and other groups
+with the same DP but different headers or lengths. Its lookup table describes
+38 previously recorded query/reply forms, not a universal protocol specification.
+Unsupported query forms remain listed without inventing a reply length.
+`not_observed` means the expected form was absent from this selected capture;
+it is not proof that the device rejected an individual request.
+
+| Recorded QUERY DP | Argument | Recorded controller reply payload bytes |
+| --- | --- | --- |
+| `0160` | 1 | 1 |
+| `051C` | 1 | 4 |
+| `0330` | 0 | 4 |
+| `0178` | 6 | 12 |
+| `02D6` | 20 | 40 |
+| `02DF` | 28 | 112 |
+
+These examples demonstrate why an argument cannot simply be converted to a byte
+count. An exact reply shape occurring in the same recording is **co-occurrence**,
+not a paired transaction, control readback or proof of the request's sender.
+Replies can precede requests or occur several times. The tool does not assign
+meaning, units, freshness, access rights or permission to transmit. In particular,
+the counter blocks have [recorded counterexamples to alias mappings](DATA_POINTS.md#unmapped-reply-blocks).
+Keep these raw reports private.
+
+For a non-JSON binary file, the CLI retains its earlier candidate-list output
+without inventing timestamps; event selection is unavailable for that input.
+The Python `inventory(bytes)` helper also retains that candidate-scan API,
+including checksum status. Unlike the new capture audit, this byte scan does
+not establish frame boundaries for embedded patterns.
+
 ## Metadatenantworten prüfen
 
 `python -m tools.audit_metadata input.json --output result.json` prüft vollständige

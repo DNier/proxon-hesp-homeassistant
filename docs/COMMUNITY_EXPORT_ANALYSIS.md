@@ -110,7 +110,7 @@ ersten zehn Kanälen Rohwerte innerhalb der bisherigen positiven Empfangsgrenzen
 Der elfte Wert ist durchgehend null. Damit liefert dieser Export weder eine
 bestätigte Negativtemperaturkodierung noch eine Bedeutung für den elften Kanal.
 
-## Sammelantwort `02DF`: bekannte Werte in einer anderen Verpackung
+## Sammelantwort `02DF`: Gleichheit im untersuchten Export
 
 Sieben vollständige Antworten auf `02DF` besitzen 112 Byte Nutzdaten, interpretierbar
 als 28 Little-Endian-32-Bit-Zahlen. Die ersten acht Positionen stimmen in allen
@@ -135,9 +135,17 @@ So entspricht die Folge 21, 1 in `02D6` den beiden getrennten Zahlen 21, 1 in
 `02DF`; sie darf nicht als einzelne 32-Bit-Zahl 65557 interpretiert werden.
 Die fachliche Bedeutung dieser 20 Positionen bleibt offen.
 
-Dies stützt den Aufbau der Sammelantwort, liefert aber keine zusätzlich bestätigte
-Messgröße. Der Produktionsdecoder übernimmt die Sammelantwort vorerst nicht als
-zweite Aktualisierungsquelle für die vorhandenen Zähler.
+Diese Gleichheit gilt ausschließlich für diesen Export. Gegenprüfungen mit den
+lokalen P-Serie-Aufnahmen und einem separaten FWT2L-Diagnoseexport widersprechen
+einer allgemeinen Alias-Regel: Dort enthalten `02DF` und die Einzelantworten
+unterschiedliche Zählerstände. Auch die letzten 20 Positionen stimmen dort nicht
+mit `02D6` überein. Die Gegenbeispiele und Grenzen stehen in
+[Data points: unmapped reply blocks](DATA_POINTS.md#unmapped-reply-blocks).
+
+Dies stützt die numerische Form der Sammelantwort, liefert aber keine zusätzlich
+bestätigte Messgröße oder gemeinsame Zählerbasis. Der Produktionsdecoder
+übernimmt die Sammelantwort nicht als zweite Aktualisierungsquelle für die
+vorhandenen Zähler.
 
 ## Umsetzung und nächste Belege
 

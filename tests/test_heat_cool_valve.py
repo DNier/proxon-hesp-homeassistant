@@ -1,4 +1,4 @@
-"""BDE valve indication remains independent of compressor and cooling activity."""
+"""BDE valve indications remain independent of compressor and thermal activity."""
 
 import asyncio
 from contextlib import asynccontextmanager
@@ -20,6 +20,9 @@ FRAMES = [
     ("2240006c00000008250200003033", "on"),
     ("2240006c00000008270200005839", "on"),
     ("2240006c00000008a70200007aa2", "on"),
+    # Display-backed startup words; only MV-Abtau has confirmed references.
+    ("2240006c00000008e7000000d675", "unavailable"),
+    ("2240006c00000008c700000056d3", "unavailable"),
 ]
 
 
@@ -36,7 +39,26 @@ def test_recorded_valve_frames_preserve_raw_at_every_split(raw, state):
         assert {r.key: r.value for r in readings} == {"raw_006c": raw[16:24]}
 
 
-async def test_valve_lifecycle_and_independence(hass, frames):
+@pytest.mark.parametrize(
+    "key,bit,states,held_frame",
+    (
+        (
+            "heat_cool_valve",
+            9,
+            ("off", "off", "off", "on", "on", "on", "unavailable", "unavailable"),
+            3,
+        ),
+        (
+            "defrost_valve",
+            7,
+            ("off", "off", "on", "off", "off", "on", "on", "on"),
+            2,
+        ),
+    ),
+)
+async def test_valve_lifecycle_and_independence(
+    hass, frames, key, bit, states, held_frame
+):
     reader = asyncio.StreamReader()
     reader.feed_data(frames["0xe1"])
 
@@ -56,23 +78,32 @@ async def test_valve_lifecycle_and_independence(hass, frames):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         entity_id = registry.async_get_entity_id(
-            "binary_sensor", DOMAIN, "valve-unit_heat_cool_valve"
+            "binary_sensor", DOMAIN, f"valve-unit_{key}"
         )
         registered = registry.async_get(entity_id)
         assert registered.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert registered.entity_category.value == "diagnostic"
+        fan_id = registry.async_get_entity_id("sensor", DOMAIN, "valve-unit_fan_level")
+        assert registered.device_id == registry.async_get(fan_id).device_id
         # Enable through the registry and reload, as a user would.
         registry.async_update_entity(entity_id, disabled_by=None)
         reader.feed_data(frames["0xe1"])
         assert await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == "unavailable"
-        for raw, state in FRAMES:
+        for (raw, _), state in zip(FRAMES, states, strict=True):
             reader.feed_data(bytes.fromhex(raw))
             await hass.async_block_till_done()
             result = hass.states.get(entity_id)
             assert result.state == state
+            if state == "unavailable":
+                assert entry.runtime_data.get("raw_006c").value == raw[16:24]
+                continue
             assert result.attributes["payload_hex"] == raw[16:24]
             assert result.attributes["interpretation"] == "bde_valve_indication"
+            assert result.attributes["bit"] == bit
+            assert result.attributes["telegram_identity"] == "224000"
+            assert result.attributes["data_point"] == "0x006C"
             assert "device_class" not in result.attributes
         runtime = entry.runtime_data
         previous = runtime.values["raw_006c"]
@@ -86,14 +117,15 @@ async def test_valve_lifecycle_and_independence(hass, frames):
         await hass.async_block_till_done()
         assert runtime.values["raw_006c"] == previous
         # Unknown but checksum-valid words invalidate the interpretation immediately.
-        for payload in ("00000000", "ffffffff", "25020100"):
+        for payload in ("00000000", "ffffffff", "25020100", "e7020000", "c7020000"):
             reader.feed_data(checked(good[:8] + bytes.fromhex(payload)))
             await hass.async_block_till_done()
             assert hass.states.get(entity_id).state == "unavailable"
             assert runtime.get("raw_006c").value == payload
-        # Recorded post-stop hold: RPM zero does not clear the valve indication.
+        # A zero RPM report cannot clear an independently reported valve state.
         reader.feed_data(
-            bytes.fromhex("2240001c0500000800000000ea60") + bytes.fromhex(FRAMES[3][0])
+            bytes.fromhex("2240001c0500000800000000ea60")
+            + bytes.fromhex(FRAMES[held_frame][0])
         )
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == "on"

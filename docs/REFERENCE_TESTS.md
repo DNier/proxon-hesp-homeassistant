@@ -31,7 +31,7 @@ Diese Beobachtung wird nicht pauschal auf andere Firmware- oder Gerätevarianten
 übertragen. Die Übertragung des Zeitplans beziehungsweise der Auswahl auf dem
 beobachteten Bus ist weiterhin nicht zugeordnet.
 
-## Aktueller Einstieg: PTC-Wohnen
+## Referenzen für PTC-Wohnen
 
 Für den nächsten Schaltzustandsvergleich die aktuelle Betriebsart beibehalten.
 Auf der BDE-Seite **Schaltzustände** den Zustand **PTC-Wohnen** ablesen. In der
@@ -48,11 +48,87 @@ Erreichbarkeit allein bestätigt keine zentrale Freigabe; ein eingeschalteter
 Schalter allein bestätigt keinen Stromfluss. Fehlende oder veraltete
 Leistungsmessungen bleiben unbekannt.
 
-Ein gezielter Ablauf mit geänderter Raumanforderung wird erst nach Prüfung der
-verknüpften Messquellen und des aktuellen BDE-Zustands festgelegt. Eine einzelne
-Ein-/Aus-Beobachtung ist eine Ausgangsreferenz; für eine Freigabe fehlen dann
-noch wiederholte Übergänge und Gegenproben. Die vorhandenen Gegenbeispiele zu
-`01F8`, `03B6` und `0191` bleiben gültig.
+Ein- und Ausschaltbelege in Eco Winter passen zu `118000/01F8/4` Bit 11,
+`118000/03B6/4` Bit 1 und `118007/0191/2` Bit 1. Ältere Komfort-Belege stimmen
+ebenfalls überein. Ein Komfort-Foto während des Kühl-Auslaufs zeigt jedoch
+PTC-Wohnen Ein bei allen drei Kandidaten null; ein gefilmter Vergleich bei
+unverändertem Komfort reproduziert diesen Gegenfall. Die Felder werden deshalb noch
+nicht als PTC-Wohnen-Entität angeboten. Eine allgemeine direkte Kopie der
+BDE-Anzeige oder eine Ausnahme nur nach Betriebsart ist nicht belegt.
+
+## Gezielter Kühlvergleich für den PTC-Gegenfall
+
+Der am 4. Oktober 2026 durchgeführte Vergleich untersucht den Gegenfall bei **unveränderter Betriebsart**:
+PTC-Wohnen vor und nach einem höheren Sollwert während einer bestehenden
+Kühlphase. Die Einstellung der Betriebsart gehört zur Vorbereitung der
+Kühlsituation, nicht zum entscheidenden Sollwertvergleich. Der Versuch benötigt
+die Aufnahme- und Markierungsfunktionen aus 0.13.0; die neue MV-Abtau-Entität
+ist dafür keine Voraussetzung.
+
+Vor Ort BDE-Verbindung, unveränderte Verkabelung, normale Bedienbarkeit und
+fehlende Warnanzeigen bestätigen. Vor einem Kühlstart muss ein vorheriger
+Heiz-/Abtauvorgang samt Nachlauf beendet sein. Frische Drehzahlmeldungen,
+BDE-Betriebsanzeige und Schaltzustände gemeinsam prüfen; Drehzahl null allein
+beweist keine ruhige Ausgangslage. Bei Störung oder Telemetrieverlust keine
+weitere Bedienänderung durchführen.
+
+1. Benötigte manuelle und automatische Aufnahmen sichern. Manuelle Dauer
+   **600 Sekunden** und aktivierte Ereignisaufnahme prüfen; ein neuer manueller
+   Start ersetzt die bisherige Aufnahme. Die Ereignisaufnahme hält bis zu
+   180 Sekunden Vor- und Nachlauf in höchstens vier Fenstern.
+2. Eine geeignete Kühlsituation am BDE vorbereiten. An der Referenzanlage wird
+   dafür Komfort mit Soll 18 °C verwendet; der spätere Vergleich erhöht einmalig
+   auf 26 °C. Diese Werte sind keine allgemeine Freigabe für andere Anlagen.
+   Komfort regelt die Lüfter selbst. Kühlsituation mit BDE-Anzeige, Soll/Ist,
+   Ventilzuständen und Drehzahl bestätigen; Soll unter Ist allein genügt nicht.
+3. Sobald die Kühlphase bestätigt ist, Ausgangszustand und geplanten einmaligen
+   Sollwechsel vorab abstimmen. Ein frisches manuelles Aufnahmefenster starten
+   und prüfen, dass der Status aufzeichnend ist, Bytes zunehmen und gültige
+   Telegramme empfangen werden. **Erst danach das kurze Video starten lassen.**
+4. PTC-Wohnen, die Magnetventile, Bypass und LED kurz filmen. Den vorab
+   vereinbarten Sollwechsel durchführen, direkt zur Schaltzuständeseite
+   zurückkehren und den neuen Zustand zeigen. Betriebsart, Lüftereinstellungen,
+   Freigaben und Zeitplan bleiben dabei gleich.
+5. Die Einstellung während des Nachlaufs halten. Die Rohaufnahme läuft weiter;
+   zusätzliche kurze BDE-Referenzen werden nur für noch offene Phasen benötigt.
+   Vor einer Folgeaufnahme zuerst das beendete Fenster sichern. Eine spätere
+   Rückstellung separat abstimmen, ohne schnelle Heiz-/Kühlwechsel.
+
+Verglichen werden die drei vollständigen Kandidatenidentitäten, Soll-/Istwert,
+Betriebsart, Verdichterdrehzahl sowie `224000/006C/4` und `224000/0208/4`.
+Ausgangsreferenz, Menüverdeckung und beobachtete Folgezustände getrennt markieren.
+Eine Referenzpause bedeutet unbekannt und ist kein dritter Gerätezustand.
+Kamera- und Empfangszeiten getrennt erhalten; eine Meldung im Bus ist keine
+sekundengenaue elektrische Schaltzeit.
+
+Entscheidend ist, ob PTC Ein bei Kandidaten null erneut auftritt und wie die
+Felder im folgenden Übergang reagieren. Auch dann ist „Anforderung“ oder
+„Freigabe“ zunächst nur eine Hypothese. Eine passende Temperatur, LED oder
+elektrische Raumleistung ersetzt die beobachtete BDE-Schaltzustandsreferenz nicht.
+
+### Ergebnis und anschließende Prüfung
+
+Der Gegenfall wurde reproduziert: PTC-Wohnen ist im Video Ein, während alle
+drei Kandidaten wiederholt null melden. Erst beim späteren Anlauf steigen
+sie; im anschließend sichtbaren Schaltzustand steht PTC-Wohnen weiterhin Ein.
+Die Menüverdeckung lässt keinen exakten PTC-Flankenzeitpunkt zu.
+
+Externe Raumaktoren werden kurz nach dem Kandidatenanstieg erreichbar. Ihre
+Schalter bleiben aus, ihre dann verfügbaren Leistungsmessungen melden 0 W.
+Vor der Erreichbarkeit ist die Leistung unbekannt. Bei der Rückstellung auf
+den ursprünglichen Sollwert fallen die Kandidaten deutlich vor den späteren
+HA-Nichtverfügbarkeitsmeldungen der Aktoren. Somit müssen eine mögliche
+Anforderung, eine tatsächliche zentrale Stromfreigabe und deren Nachlauf
+getrennt untersucht werden; HA-Erreichbarkeit allein misst keine Netzspannung.
+
+Die vorhandenen Ein- und Ausschaltaufnahmen desselben Tages wurden zusätzlich
+mit der HA-Historie der externen Aktoren verglichen. Auch beim früheren
+Sollwechsel in Eco Winter fallen die Kandidaten deutlich vor den späteren
+Nichtverfügbarkeitsmeldungen. Die nächste semantische Prüfung benötigt daher
+eine unabhängige Unterscheidung von Anforderung und tatsächlicher zentraler
+Freigabe. Eine Wiederholung desselben Kühlvideos ist dafür nicht erforderlich.
+Die obige Bedienfolge dokumentiert den durchgeführten Versuch und ist keine
+Aufforderung zu weiteren Anlagenänderungen.
 
 ## Optionaler Vergleich in Eco: Zeitplan oder feste Luftstufe
 
@@ -118,7 +194,7 @@ da eine geänderte Auto-Auswahl allein keinen Verdichterwechsel auslösen muss.
 | Anzeigegruppe | Fehlender unterscheidender Beleg | Unabhängige Referenz |
 | --- | --- | --- |
 | PTC-Wohnen | Freigabe, Raumforderung und tatsächliche elektrische Leistung getrennt | BDE-Zustand, externe Schalter und Leistungsmessung; nicht erreichbare Sensoren bleiben unbekannt |
-| MV-Abtau | Sichtbare Anzeige über einen vollständigen natürlich auftretenden Übergang | BDE-Schaltzustände und Rohaufnahme, ohne verdeckende Menüwechsel |
+| MV-Abtau | BDE-Anzeige jetzt zugeordnet; tatsächlicher Abtauvorgang und andere Hardware bleiben separat offen | Positive/negative Anzeige und gefilmter Ein→Aus-Wechsel; keine Gleichsetzung mit aktivem Abtauen |
 | MV-Vorwärme | Positiver Ein-Zustand und Aus-Gegenprobe | BDE-Anzeige und Rohaufnahme |
 | Aktives Heizen/Kühlen | Anforderung, Ventil und Verdichterlauf einschließlich Nachlauf getrennt | BDE-Anzeigen, Drehzahl und passende Phasen; Temperatur allein genügt nicht |
 | Fehlermeldung | Natürlich auftretender Fehler mit sichtbarem Text | BDE-Fehleranzeige und unveränderte Rohaufnahme; keine Störung absichtlich auslösen |

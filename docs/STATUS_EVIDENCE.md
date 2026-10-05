@@ -1,12 +1,26 @@
 # Freigabestand der Schaltzustände
 
-Stand: 3. Oktober 2026. Erneute Offline-Inventarisierung von 41 unterschiedlichen
-Aufnahmefenstern der Referenzanlage: 183.780 prüfsummengültige Frames, keine
+Stand: 5. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
+mit 41 unterschiedlichen Aufnahmefenstern der Referenzanlage:
+183.780 prüfsummengültige Frames, keine
 unaufgelösten Bytes. Identische Startzeit/Chunk-Folgen sind dedupliziert;
 überlappende Fenster bleiben enthalten. Die Anzahl ist kein Maß unabhängiger
 Schaltvorgänge. Frühere zeitgleiche Fotovergleiche wurden erneut gegen die
 Rohdaten geprüft. Community-Daten ergänzen den Vergleich, ersetzen aber keine
 BDE-Gegenprobe eines Schaltzustands.
+
+Ergänzend wurden ein gefilmter Heizungsstart und ein Sollwertwechsel bei
+unverändertem Eco Winter gegen die vollständigen Rohaufnahmen geprüft. Die
+oben genannten Korpuszahlen beziehen sich auf die Basisauswertung. MV-Abtau
+hat jetzt einen unverdeckten fallenden Anzeigewechsel; die neue optionale
+Entität ist ab Version 0.13.1 verfügbar.
+
+Ein zusätzlicher gefilmter Sollwertwechsel bei unverändertem Komfort während
+einer bestätigten Kühlphase reproduziert den PTC-Gegenfall: Das BDE zeigt
+PTC-Wohnen Ein, während alle drei Kandidaten wiederholt null melden. Erst im
+späteren Anlauf steigen die Kandidaten; danach ist PTC-Wohnen erneut als Ein
+sichtbar. Die Anzeige ist zwischen diesen Belegen zeitweise verdeckt.
+Die Basiskorpuszahlen oben enthalten diesen zusätzlichen Vergleich nicht.
 
 Bitnummern zählen ab 0 im Little-Endian-Wort. Die vollständige Telegrammidentität
 und Payloadlänge bleiben Teil jeder Zuordnung.
@@ -14,8 +28,8 @@ und Payloadlänge bleiben Teil jeder Zuordnung.
 | Anzeige/Kandidat | Beleg und Grenze | Entscheidung |
 | --- | --- | --- |
 | MV-Heizen/Kühlen: `224000/006C/4`, Bit 9 | BDE-Vergleiche beider Zustände und gefilmte fallende Flanke stimmen überein. Bleibt nach Verdichterstopp noch gesetzt. | Bestehende optionale Anzeige beibehalten; keine Aussage „aktive Kühlung“. |
-| MV-Abtau: gleiche Antwort, Bit 7 | Fotozustände passen; der relevante Übergang war durch Seitenwechsel verdeckt. Kein bestätigter vollständiger Abtauablauf. | Kandidat, keine neue Entität. |
-| PTC-Wohnen: `01F8` Bit 11 / `03B6` / `118007/0191` | Korrelation bei Sollwertänderungen, aber ein BDE-Foto zeigt PTC ein bei jeweils null in diesen Feldern. | Diese allgemeine Zuordnung ist widerlegt. |
+| MV-Abtau: gleiche Antwort, Bit 7 | Positive und negative BDE-Anzeigen sowie ein unverdeckter gefilmter Ein→Aus-Wechsel passen. | Optionale BDE-Ventilanzeige ab 0.13.1; kein Nachweis aktiven Abtauens. |
+| PTC-Wohnen: `118000/01F8/4` Bit 11 / `118000/03B6/4` Bit 1 / `118007/0191/2` Bit 1 | Einschalten und Ausschalten passen in Eco Winter; ältere Komfort-Belege passen ebenfalls. PTC Ein bei allen drei Kandidaten null wurde beim Kühl-Auslauf zusätzlich per Video reproduziert. Beim späteren Kandidatenanstieg werden externe Raumaktoren erreichbar, bleiben jedoch ausgeschaltet und melden dann 0 W; davor ist ihre Leistung unbekannt. Die drei Felder können dieselbe Information spiegeln. | Eine allgemeine direkte Kopie der BDE-Anzeige ist widerlegt. Anforderung/Freigabe bleibt eine Hypothese; keine Zuordnung zur tatsächlichen Raumheizleistung. |
 | MV-Vorwärme | Kein unabhängiger positiver BDE-Beleg. | Unbekannt. |
 | Aktives Heizen/Kühlen: `224000/0208/4` | Bit 8 tritt bei Heizen und Kühlen auf; Bits 9/10 fallen teilweise vor Verdichterstopp. Bit 28 fehlt bei bestätigter Kühlung. | Keine belastbare Betriebszustandsanzeige aus diesen Einzelbits. |
 | Eco-Luftstufe Zeitplan/fest | Auto in Eco Sommer/Winter folgt einem nutzerdefinierten Wochenzeitplan. Gleiche numerische Stufe kann Zeitplan- und feste Auswahl darstellen. In Komfort/Ofen bestimmt die Steuerung die Stufe ohne diese Auswahl. | Auswahl und Zeitplan nicht aus Rohstellwert oder Stufe ableiten. |
@@ -26,9 +40,20 @@ Bekannte Gegenbeispiele müssen weiterhin bestanden werden. Eine passende
 Temperatur oder ein gesetztes Anforderungsbit allein belegt keinen laufenden
 Heiz- oder Kühlprozess. Fehlende oder veraltete Daten bleiben unbekannt.
 
-Die neuen Vergleichsdaten rechtfertigen daher keine zusätzliche benannte
-Schaltzustandsentität. Die vorhandenen experimentellen Bits bleiben ausdrücklich
-als Rohbits bezeichnet. Es wurden für diese Prüfung keine Anlagenbefehle gesendet.
+Die Erreichbarkeit externer Raumaktoren ist eine zusätzliche Referenz der
+betreffenden Installation, keine HESP-Freigabebestätigung. Bei der späteren
+Rückstellung fallen die drei Kandidaten bereits mit dem Sollwert, während HA
+die Aktoren noch mehrere Minuten als erreichbar meldet. Einschaltverzögerung,
+Nachlauf und mögliche Erreichbarkeits-Timeouts bleiben getrennt zu prüfen;
+deren elektrische Schaltzeiten sind nicht gemessen. Eine allgemeine
+Freigabeentität wird daraus nicht abgeleitet.
+
+Die zusätzliche MV-Abtau-Entität beschreibt ausschließlich den angezeigten
+Magnetventilzustand auf der Referenzanlage. Unbekannte vollständige Statuswörter
+und veraltete Daten ergeben nicht verfügbar. PTC-Wohnen, MV-Vorwärme und aktive
+Heiz-/Kühl-/Abtauzustände erhalten keine neue Zuordnung. Die vorhandenen
+experimentellen Bits bleiben ausdrücklich als Rohbits bezeichnet. Die
+Integration sendete für diese Prüfungen keine Anlagenbefehle.
 
 Siehe [Bedienfolgen](CONTROL_EVIDENCE.md), [Community-Auswertung](COMMUNITY_EXPORT_ANALYSIS.md)
 und [FWT-Kompatibilitätsgrenzen](COMPATIBILITY.md).

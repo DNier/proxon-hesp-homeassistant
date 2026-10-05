@@ -41,6 +41,7 @@ async def async_setup_entry(
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),
             *(ProxonExperimentalBit(entry, bit) for bit in (8, 9, 28)),
             ProxonHeatCoolValve(entry),
+            ProxonDefrostValve(entry),
             ProxonCompressorSensor(
                 entry,
                 BinarySensorEntityDescription(
@@ -187,21 +188,21 @@ class ProxonExperimentalBit(ProxonBinarySensor):
         }
 
 
-class ProxonHeatCoolValve(ProxonBinarySensor):
-    """Mirror the observed BDE valve indication, never thermal activity."""
+class ProxonBdeValve(ProxonBinarySensor):
+    """Mirror a display-backed valve indication, never thermal activity."""
 
-    # Complete payloads with display references, including post-stop valve hold.
+    # Each valve retains its own complete payloads with display references.
     # Unknown words remain available as raw diagnostics, not as a guessed state.
-    _observed_payloads = frozenset(
-        ("25000000", "27000000", "a7000000", "25020000", "27020000", "a7020000")
-    )
+    _observed_payloads: frozenset[str]
+    _key: str
+    _bit: int
 
     def __init__(self, entry: ProxonConfigEntry) -> None:
         super().__init__(
             entry,
             BinarySensorEntityDescription(
-                key="heat_cool_valve",
-                translation_key="heat_cool_valve",
+                key=self._key,
+                translation_key=self._key,
                 icon="mdi:valve",
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=False,
@@ -217,7 +218,9 @@ class ProxonHeatCoolValve(ProxonBinarySensor):
         reading = self.runtime.get("raw_006c")
         if reading is None or reading.value not in self._observed_payloads:
             return None
-        return bool(int.from_bytes(bytes.fromhex(reading.value), "little") & (1 << 9))
+        return bool(
+            int.from_bytes(bytes.fromhex(reading.value), "little") & (1 << self._bit)
+        )
 
     @property
     def extra_state_attributes(self):
@@ -225,9 +228,40 @@ class ProxonHeatCoolValve(ProxonBinarySensor):
         return {
             "data_point": "0x006C",
             "telegram_identity": "224000",
-            "bit": 9,
+            "bit": self._bit,
             "bit_numbering": "LSB 0, little-endian uint32",
             "payload_hex": reading.value if reading else None,
             "interpretation": "bde_valve_indication",
             "validation_scope": "observed_installation",
         }
+
+
+class ProxonHeatCoolValve(ProxonBdeValve):
+    """Reported heating/cooling valve, including its post-compressor hold."""
+
+    _key = "heat_cool_valve"
+    _bit = 9
+    _observed_payloads = frozenset(
+        ("25000000", "27000000", "a7000000", "25020000", "27020000", "a7020000")
+    )
+
+
+class ProxonDefrostValve(ProxonBdeValve):
+    """Reported MV-Abtau valve; does not identify an active defrost process."""
+
+    _key = "defrost_valve"
+    _bit = 7
+    # Startup words were independently visible with MV-Abtau Ein.
+    # They do not extend the separately validated heating/cooling valve scope.
+    _observed_payloads = frozenset(
+        (
+            "25000000",
+            "27000000",
+            "a7000000",
+            "25020000",
+            "27020000",
+            "a7020000",
+            "e7000000",
+            "c7000000",
+        )
+    )

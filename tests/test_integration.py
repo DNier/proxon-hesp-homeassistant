@@ -76,13 +76,17 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert registry.async_get(filter_id).entity_category.value == "diagnostic"
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 67
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 72
         for key in (
             "device_datetime",
             "device_date",
             "controller_fan_level",
             "fan_supply_control",
             "fan_extract_control",
+            "raw_118000_01f8",
+            "raw_118000_03b6",
+            "raw_118007_0191",
+            "raw_0208",
         ):
             diagnostic_id = registry.async_get_entity_id(
                 "sensor", DOMAIN, f"stable-unit_{key}"

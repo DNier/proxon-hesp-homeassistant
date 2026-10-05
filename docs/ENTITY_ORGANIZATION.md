@@ -30,3 +30,18 @@ Die Standard-Geräteseite bestimmt ihr Layout selbst; frei gestaltete fachliche
 Abschnitte gehören in ein eigenes Dashboard.
 
 Ab 0.12.0b5 ergänzen drei standardmäßig deaktivierte [experimentelle Statusbits](EXPERIMENTAL.md) die Diagnose.
+
+**MV-Heizen/Kühlen** ist eine optionale Diagnoseanzeige des BDE-Magnetventils.
+Ab Version 0.13.1 ergänzt **MV-Abtau** dieselbe
+Einordnung. Beide Entitäten gehören zum Hauptgerät und sind zunächst deaktiviert.
+Sie lassen sich in dessen Entitätseinstellungen aktivieren. Ihre Zustände
+bezeichnen weder aktive Kühlung noch einen tatsächlichen Abtauvorgang;
+ungeprüfte Statuswörter ergeben „Nicht verfügbar“.
+
+Für gezielte Beobachtungen ergänzen vier optionale Hex-Diagnosesensoren die
+vollständigen Payloads `118000/01F8`, `118000/03B6`, `118007/0191` und
+`224000/0208`. Sie bleiben zunächst deaktiviert und weisen den Bits keine
+PTC- oder Heizbedeutung zu. Zusammen mit `224000/006C` führen sie den Zeitpunkt
+des letzten gültigen Empfangs als Attribut. Auch identische Telegramme erneuern
+diesen Zeitpunkt; für Benachrichtigungen zählt deshalb der Wechsel des
+Hex-Zustands und nicht jede Attributaktualisierung.

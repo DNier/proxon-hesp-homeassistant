@@ -39,7 +39,7 @@ little-endian order unless stated otherwise.
 | Device date and time (local) | 032E / C / 4 | Local ISO text, minute resolution | Display-matched calendar edits; validated date and weekday; disabled by default |
 | Device date | 032E / C / 4 | HA date | Date portion of the validated device calendar; shares its freshness; disabled by default |
 | Device clock | 0330 / C / 4 | Packed HH:MM:SS | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
-| Raw diagnostics | Listed below / C | Hexadecimal bytes | Structural and checksum evidence only; disabled by default |
+| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | Structural and checksum evidence only; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13
 in that order. Its eleventh slot is not published. Raw channel values above 1500
@@ -48,6 +48,35 @@ are rejected individually; valid neighbouring channels remain available.
 Counter mappings are: `02D0–02D3` fan levels 1–4, `02D4` heat pump heating,
 `02D5` heat pump cooling, `02D7` controller, `02D9` preheating.
 The value `FFFFFFFF` is rejected for counters and filter days.
+
+## Unmapped reply blocks
+
+Recorded controller replies include `224000/02DF/112` (28 little-endian uint32
+slots), `224000/02D6/40` (20 uint16 slots) and `224000/0178/12` (six uint16
+slots). These describe numerical forms, not confirmed units or BDE meanings.
+The production decoder does not publish them as additional counters.
+
+The [Community SQL export](COMMUNITY_EXPORT_ANALYSIS.md#sammelantwort-02df-gleichheit-im-untersuchten-export)
+contains equal bulk and individual values. Comparison with original diagnosis
+captures on 5 October 2026 rejects a universal alias mapping:
+
+| Recorded comparison | Individual `02D4` versus fifth `02DF` slot | `02D6` versus last 20 `02DF` slots |
+| --- | --- | --- |
+| P-series, earlier capture | Nonzero individual value, zero bulk value | Different values |
+| P-series, later transition | Both increment by one, with a constant nonzero difference | Different values |
+| Separate FWT2L capture | Different values and a different offset from the P-series examples | Different values |
+
+All three compared captures have checksum-valid frames and no unparsed stored
+bytes. In the P-series transition, both values rise by one but retain the same
+nonzero difference. Shared increments do not establish a shared zero point,
+reset behaviour, or a counter since restart. The FWT2L values also rule out
+reusing the P-series difference for other installations. Neither block may
+refresh or overwrite the confirmed individual operating-hour sensors.
+
+The six `0178` values are 80, 15, 29, 45, 65 and 0 in these captures. Their
+meaning remains open; apparent relationships to fan settings need an independent
+BDE comparison. QUERY arguments and reply lengths are observed separately;
+an argument alone is not a general byte-count or register-type rule.
 
 ## Local device calendar
 
@@ -92,7 +121,7 @@ This allowlist does not establish a general status-bit mapping. The two fan
 control values must each be finite and between 0 and 10000. They have no unit
 or statistics class because their physical meaning has not been validated.
 
-The 18 hexadecimal diagnostic sensors retain payload byte order and leading zeros:
+The existing 18 controller diagnostic sensors retain payload byte order and leading zeros:
 
 | Payload bytes | Data points |
 |---|---|
@@ -102,6 +131,36 @@ The 18 hexadecimal diagnostic sensors retain payload byte order and leading zero
 
 The raw `051C` and `0330` entities coexist with their interpreted sensors.
 Hexadecimal values are not physical measurements or confirmed actuator states.
+
+Four additional optional diagnostics retain complete observed payloads for
+event comparisons. Equal data-point numbers on different telegram identities
+remain separate; no PTC, demand or actuator meaning is assigned:
+
+| Entity key | Telegram identity | Data point | Payload bytes |
+|---|---|---|---|
+| `raw_118000_01f8` | `118000` | `01F8` | 4 |
+| `raw_118000_03b6` | `118000` | `03B6` | 4 |
+| `raw_118007_0191` | `118007` | `0191` | 2 |
+| `raw_0208` | `224000` | `0208` | 4 |
+
+These entities are disabled by default and belong to the main device's
+diagnostics. Values are lowercase hexadecimal payload bytes without a prefix,
+unit, device class or statistics class. All bit patterns, including zero and
+uninterpreted status words, remain raw observations. The existing intensive
+ventilation and experimental status-bit entities keep their identities and
+interpretations. `118007/0191` is accepted only for that exact header, not as a
+controller response or a different panel node. Reserved bytes, expected length
+and checksum validation remain mandatory; no additional queries are sent.
+
+The four new raw sensors and the existing `raw_006c` expose `source_header`,
+`dp_id`, `payload_length` and, while fresh, `last_valid_update` attributes.
+The last attribute is the received sample's UTC observation time, independent
+of device time. Identical valid payloads refresh it; invalid frames do not.
+Disconnect and normal per-point expiry remove it and make the value unavailable.
+An event observer must distinguish a hexadecimal state change from an
+attribute-only freshness update. HA history contains decoded payload samples,
+not a complete bus recording; preserve raw captures when frame order, headers
+or repeated telegrams matter.
 
 ### Fan control values and update timing
 
@@ -163,11 +222,9 @@ unique IDs and user-selected enabled/disabled settings are preserved on upgrade.
 - **PTC state:** reviewed display comparisons show different PTC states with
   identical 006C and 0208 payloads. The 0168 value `02` also occurs with both
   displayed states. These values do not establish a direct PTC-state mapping.
-- **Other valve states:** 006C bit 7 matches reviewed MV-Abtau indications,
-  but a directly observed transition is still missing. This valve indication
-  must not be confused with active defrost. MV-Vorwärme has no positive display
-  example, so no mapping is published. See the confirmed display correspondence
-  and compatibility limits for MV-Heizen/Kühlen below.
+- **Preheating valve:** MV-Vorwärme has no positive display example, so no
+  mapping is published. MV-Abtau now has a directly filmed display transition;
+  its optional indication is described below and does not establish active defrost.
 - **Intensive duration or remaining time:** no validated data point. The
   integration does not substitute an estimated countdown.
 - **Negative temperatures and error sentinels:** require independent evidence
@@ -267,14 +324,42 @@ without fresh accepted source data or on disconnect. Missing data never mean off
 Attributes identify the source, bit, raw payload and observed-installation scope.
 The entity only listens; no query, control command or extra polling is sent.
 
+## BDE defrost solenoid valve indication (0.13.1)
+
+The optional diagnostic binary sensor **MV-Abtau** (English: **Defrost solenoid
+valve**) mirrors bit 7 of the same validated `224000 / 006C / 4` source. It is
+disabled by default, has no thermal device class and belongs to the existing
+main device. This is the BDE switching-state indication, not physical valve
+feedback or a classifier for active defrost.
+
+Earlier on/off display comparisons are now supplemented by an unobscured filmed
+on-to-off transition. PTC-Wohnen stays on while MV-Abtau turns off and the green
+LED illuminates; reported positive compressor RPM follows later. The reference
+therefore concerns the individual valve indication. It does not confirm a
+complete physical defrost cycle or extend the mapping to untested hardware.
+
+Accepted full payloads are `25000000`, `27000000`, `a7000000`, `25020000`,
+`27020000`, `a7020000`, `e7000000` and `c7000000`. The last two are display-backed
+startup words for this valve only; the existing heating/cooling-valve allowlist
+is unchanged. Other structurally valid words immediately make MV-Abtau
+unavailable. Invalid frames do not refresh the source, and its existing
+30-second freshness and immediate disconnect rules apply. Missing data never
+mean off. Attributes identify the bit, complete source identity, raw payload and
+observed-installation scope. No additional bus traffic is generated.
+
+This entity is available from 0.13.1 and is not part of 0.13.0.
+
 PTC-Wohnen is deliberately omitted: a reviewed display-on example has zero in
 all three candidate panel fields (01F8 bit 11, 03B6 bit 1, 118007/0191 bit 1).
-Repeated agreement during other setpoint changes does not remove that
-counterexample. MV-Vorwärme remains omitted until a positive display example and
+Both on and off transitions now agree during Eco Winter tests, and earlier
+Comfort references also agree. The contradictory display-on example occurred
+during cooling rundown after a higher setpoint; operating mode alone does not
+resolve it. Agreement in other phases does not remove that counterexample.
+MV-Vorwärme remains omitted until a positive display example and
 corresponding telegram evidence are available.
 
-0208 bit 10 is not a copy of this valve indication: it can clear while the display
-still reads on. Bit 28 is absent during a display-confirmed cooling run. Neither
+0208 bit 10 is not a copy of the heating/cooling valve indication: it can clear
+while that display still reads on. Bit 28 is absent during a display-confirmed cooling run. Neither
 is a generic cooling indicator. Positive RPM can also be reported only after the
 LED illuminates and supply air starts cooling, on both the BDE and HESP. The
 existing compressor entity reports RPM > 0, not an independently measured

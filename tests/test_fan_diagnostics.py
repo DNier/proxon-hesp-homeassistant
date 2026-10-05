@@ -62,7 +62,9 @@ def test_recorded_diagnostics_at_every_stream_split(raw, expected):
         decoder = Decoder()
         readings = decoder.feed(frame[:split]) + decoder.feed(frame[split:])
         assert {
-            r.key: r.value for r in readings if r.key != "experimental_status_0208"
+            r.key: r.value
+            for r in readings
+            if r.key not in ("experimental_status_0208", "raw_0208")
         } == expected_values
 
 
@@ -98,7 +100,7 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
 def test_unknown_status_is_not_a_guessed_level(status):
     header = bytes.fromhex(LEVELS[0][0])[:8]
     readings = Decoder().feed(checked(header + struct.pack("<I", status)))
-    assert [r.key for r in readings] == ["experimental_status_0208"]
+    assert [r.key for r in readings] == ["experimental_status_0208", "raw_0208"]
 
 
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -1.0, 10001.0])

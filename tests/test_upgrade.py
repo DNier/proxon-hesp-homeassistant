@@ -80,7 +80,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 67
+        assert len(all_entities) == 72
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
@@ -91,6 +91,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "experimental_0208_bit_9",
             "experimental_0208_bit_28",
             "heat_cool_valve",
+            "defrost_valve",
             "clock_sync",
             "device_datetime",
             "device_date",
@@ -100,6 +101,10 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "compressor_running",
             "event_capture_status",
             "event_capture_clear",
+            "raw_118000_01f8",
+            "raw_118000_03b6",
+            "raw_118007_0191",
+            "raw_0208",
         }
         assert new["compressor_running"].disabled_by is None
         assert new["capture_status"].disabled_by is None
@@ -112,7 +117,12 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "experimental_0208_bit_9",
             "experimental_0208_bit_28",
             "heat_cool_valve",
+            "defrost_valve",
             "clock_sync",
+            "raw_118000_01f8",
+            "raw_118000_03b6",
+            "raw_118007_0191",
+            "raw_0208",
         ):
             assert new[key].disabled_by == er.RegistryEntryDisabler.INTEGRATION
         assert await hass.config_entries.async_unload(entry.entry_id)

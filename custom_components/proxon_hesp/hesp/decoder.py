@@ -46,6 +46,24 @@ RAW_POINTS = {
     527: 2,
     1309: 4,
 }
+# Exact panel identities keep equal data-point numbers on different nodes apart.
+# These payloads have no confirmed PTC or actuator interpretation.
+PANEL_RAW_POINTS = {
+    b"\x11\x80\x00": {
+        0x01F8: ("raw_118000_01f8", 4),
+        0x03B6: ("raw_118000_03b6", 4),
+    },
+    b"\x11\x80\x07": {0x0191: ("raw_118007_0191", 2)},
+}
+RAW_OBSERVATION_SOURCES = {
+    "raw_006c": (b"\x22\x40\x00", 0x006C, 4),
+    "raw_0208": (b"\x22\x40\x00", 0x0208, 4),
+    **{
+        key: (identity, dp, size)
+        for identity, points in PANEL_RAW_POINTS.items()
+        for dp, (key, size) in points.items()
+    },
+}
 
 TEMPERATURE_KEYS = (
     "temperature_supply",
@@ -116,14 +134,16 @@ class Decoder:
         while len(self.buffer) >= 8:
             header = self.buffer[:8]
             dp = int.from_bytes(header[3:5], "little")
-            points = RESPONSE_POINTS if header[:3] == b"\x22\x40\x00" else POINTS
-            spec = points.get(dp)
-            if (
-                header[:3] not in (b"\x11\x80\x00", b"\x22\x40\x00")
-                or header[5:7] != b"\x00\x00"
-                or spec is None
-                or header[7] != spec[1] * 2
-            ):
+            identity = bytes(header[:3])
+            points = (
+                RESPONSE_POINTS
+                if identity == b"\x22\x40\x00"
+                else POINTS
+                if identity == b"\x11\x80\x00"
+                else {}
+            )
+            spec = points.get(dp) or PANEL_RAW_POINTS.get(identity, {}).get(dp)
+            if header[5:7] != b"\x00\x00" or spec is None or header[7] != spec[1] * 2:
                 del self.buffer[0]
                 self.stats.discarded_bytes += 1
                 continue
@@ -155,7 +175,10 @@ class Decoder:
     def _readings(cls, key: str, payload: bytes) -> list[Reading]:
         if key == "controller_fan_level":
             # Raw status is evidence, not a validated fan/valve interpretation.
-            readings = [Reading("experimental_status_0208", payload.hex())]
+            readings = [
+                Reading("experimental_status_0208", payload.hex()),
+                Reading("raw_0208", payload.hex()),
+            ]
             level = cls._value(key, payload)
             if level is not None:
                 readings.append(Reading(key, level))
@@ -201,6 +224,8 @@ class Decoder:
         if value is None:
             return []
         readings = [Reading(key, value)]
+        if key == "intensive_ventilation":
+            readings.append(Reading("raw_118000_01f8", payload.hex()))
         if key == "raw_051c":
             # Preserve the existing raw entity, even for invalid numeric data.
             rpm = struct.unpack("<f", payload)[0]

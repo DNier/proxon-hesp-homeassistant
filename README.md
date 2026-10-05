@@ -38,6 +38,9 @@ erläutern den Geltungsbereich und die Grenzen.
   Gerätezeitabgleich und optionale experimentelle Statusbits zum BDE-Vergleich.
 - Optionaler BDE-Schaltzustand **MV-Heizen/Kühlen**; keine Anzeige aktiver Kühlung.
 
+Ab Version 0.13.1 ergänzt **MV-Abtau** die optionalen BDE-Schaltzustände.
+Er zeigt keine tatsächliche Abtauaktivität an.
+
 Die vorhandene Anlagensteuerung und deine Thermostate bleiben verantwortlich.
 Nur der ausdrücklich ausgelöste Gerätezeitabgleich schreibt einen Kalenderwert.
 Allgemeine Heizungs-/Lüftersteuerung und eine bestätigte Unterscheidung von
@@ -52,7 +55,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.13.0.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.13.1.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an

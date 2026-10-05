@@ -3,6 +3,29 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.13.1 – MV-Abtau und vollständige Rohdiagnose
+
+- **BDE-Schaltzustand MV-Abtau:** Neue optionale Diagnoseentität am Hauptgerät.
+  Positive und negative Anzeigen sowie ein gefilmter Ein→Aus-Wechsel stützen
+  die Zuordnung an der Referenzanlage. Die Anzeige beschreibt das Magnetventil,
+  keinen tatsächlichen Abtauvorgang.
+- Die Entität ist zunächst deaktiviert. Ungeprüfte Statuswörter, veraltete Daten
+  und Verbindungsabbrüche ergeben „Nicht verfügbar“. Bestehende Identitäten und
+  Aktivierungseinstellungen bleiben erhalten; es entstehen keine Anlagenbefehle.
+- PTC-Ein-/Aus-Belege und ein gezielter Kühlvergleich sind dokumentiert.
+  PTC-Wohnen bleibt wegen eines widersprechenden Kühl-Auslauf-Belegs ungeklärt.
+- **Erweiterte Rohdiagnose:** Vier zusätzliche, zunächst deaktivierte
+  Rohsensoren erhalten vollständige Payloads und die Zeit des letzten gültigen
+  Empfangs. Sie bestätigen keine PTC- oder Heizanforderung.
+- **Offline-Auswertung:** Aufgezeichnete Leseanfragen lassen sich einschließlich
+  Ereignisfenstern gegen beobachtete Antwortformen prüfen. Gegenbeispiele zu
+  Sammelzählern verhindern eine Übernahme als Quelle vorhandener Betriebsstunden.
+
+Update von 0.13.0 ohne neue Konfigurationsmigration. Home Assistant ab 2026.9.
+MV-Abtau und die neuen Rohsensoren bei Bedarf am Hauptgerät unter den
+deaktivierten Entitäten aktivieren. Die Änderungen bestätigen keine weiteren
+Schaltzustände oder allgemeine Anlagensteuerung.
+
 ## 0.13.0 – Zeitmarkierte Diagnosebeobachtungen
 
 - **BDE-Beobachtungen markieren:** Neue Aktion **Diagnosebeobachtung markieren**

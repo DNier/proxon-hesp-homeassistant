@@ -30,9 +30,11 @@ def test_recorded_flags_across_every_stream_split(frame, expected):
     for split in range(len(frame) + 1):
         decoder = Decoder()
         readings = decoder.feed(frame[:split]) + decoder.feed(frame[split:])
-        assert len(readings) == 1
+        assert len(readings) == 2
         assert readings[0].key == "intensive_ventilation"
         assert readings[0].value is expected
+        assert readings[1].key == "raw_118000_01f8"
+        assert readings[1].value == frame[8:-2].hex()
 
 
 def test_other_bits_do_not_hide_intensive_ventilation():

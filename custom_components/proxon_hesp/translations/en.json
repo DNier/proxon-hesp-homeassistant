@@ -258,6 +258,18 @@
       },
       "device_date": {
         "name": "Device date"
+      },
+      "raw_0208": {
+        "name": "DP 0x0208 (Hex)"
+      },
+      "raw_118000_01f8": {
+        "name": "DP 0x01F8 / 118000 (Hex)"
+      },
+      "raw_118000_03b6": {
+        "name": "DP 0x03B6 / 118000 (Hex)"
+      },
+      "raw_118007_0191": {
+        "name": "DP 0x0191 / 118007 (Hex)"
       }
     },
     "button": {
@@ -310,6 +322,9 @@
       },
       "heat_cool_valve": {
         "name": "Heating/cooling solenoid valve"
+      },
+      "defrost_valve": {
+        "name": "Defrost solenoid valve"
       }
     }
   },

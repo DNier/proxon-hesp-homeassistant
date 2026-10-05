@@ -1,6 +1,7 @@
 """Read-only panel and controller sensors."""
 
-from datetime import date
+import time
+from datetime import UTC, date, datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +18,13 @@ from . import ProxonConfigEntry
 from .capture import STATUSES
 from .const import DOMAIN
 from .event_capture import EVENT_STATUSES
-from .hesp.decoder import MODES, RAW_POINTS, TEMPERATURE_KEYS
+from .hesp.decoder import (
+    MODES,
+    PANEL_RAW_POINTS,
+    RAW_OBSERVATION_SOURCES,
+    RAW_POINTS,
+    TEMPERATURE_KEYS,
+)
 from .rooms import async_setup_rooms
 
 AIR_TEMPERATURE_KEYS = frozenset(TEMPERATURE_KEYS[:4])
@@ -96,6 +103,23 @@ DESCRIPTIONS = (
             icon="mdi:code-braces",
         )
         for dp in RAW_POINTS
+    ),
+    *(
+        SensorEntityDescription(
+            key=key,
+            translation_key=key,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            icon="mdi:code-braces",
+        )
+        for key in (
+            "raw_0208",
+            *(
+                key
+                for points in PANEL_RAW_POINTS.values()
+                for key, _ in points.values()
+            ),
+        )
     ),
     SensorEntityDescription(
         key="room_temperature",
@@ -207,6 +231,8 @@ class ProxonSensor(SensorEntity):
         self.entity_description = description
         self.runtime = entry.runtime_data
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._sample_stamp = None
+        self._received_at = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title,
@@ -215,7 +241,19 @@ class ProxonSensor(SensorEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        self.async_on_remove(self.runtime.listen(self.async_write_ha_state))
+        self.async_on_remove(self.runtime.listen(self._update_sample))
+        self._update_sample()
+
+    def _update_sample(self) -> None:
+        if self.source_key in RAW_OBSERVATION_SOURCES:
+            sample = self.runtime.values.get(self.source_key)
+            if sample is not None and sample[1] != self._sample_stamp:
+                self._sample_stamp = sample[1]
+                self._received_at = (
+                    datetime.now(UTC)
+                    - timedelta(seconds=max(0, time.monotonic() - sample[1]))
+                ).isoformat()
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -233,6 +271,21 @@ class ProxonSensor(SensorEntity):
         if reading and self.entity_description.key == "device_date":
             return date.fromisoformat(reading.value.split("T", 1)[0])
         return reading.value if reading else None
+
+    @property
+    def extra_state_attributes(self):
+        source = RAW_OBSERVATION_SOURCES.get(self.source_key)
+        if source is None:
+            return None
+        identity, dp, size = source
+        attributes = {
+            "source_header": identity.hex(),
+            "dp_id": f"0x{dp:04X}",
+            "payload_length": size,
+        }
+        if self.runtime.get(self.source_key) is not None:
+            attributes["last_valid_update"] = self._received_at
+        return attributes
 
 
 class ProxonDiagnosticSensor(ProxonSensor):
