@@ -56,7 +56,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.13.2.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.14.0.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an

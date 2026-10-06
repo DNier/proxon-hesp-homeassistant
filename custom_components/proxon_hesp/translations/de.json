@@ -59,6 +59,39 @@
           "stove": "Ofen"
         }
       },
+      "cooling_threshold": {
+        "name": "Kühlschwelle"
+      },
+      "max_heating_output": {
+        "name": "Maximale Heizleistung (konfiguriert)"
+      },
+      "max_cooling_output": {
+        "name": "Maximale Kühlleistung (konfiguriert)"
+      },
+      "fan_supply_stage_1": {
+        "name": "Zuluft Stufe 1 (konfiguriert)"
+      },
+      "fan_supply_stage_2": {
+        "name": "Zuluft Stufe 2 (konfiguriert)"
+      },
+      "fan_supply_stage_3": {
+        "name": "Zuluft Stufe 3 (konfiguriert)"
+      },
+      "fan_supply_stage_4": {
+        "name": "Zuluft Stufe 4 (konfiguriert)"
+      },
+      "fan_extract_stage_1": {
+        "name": "Abluft Stufe 1 (konfiguriert)"
+      },
+      "fan_extract_stage_2": {
+        "name": "Abluft Stufe 2 (konfiguriert)"
+      },
+      "fan_extract_stage_3": {
+        "name": "Abluft Stufe 3 (konfiguriert)"
+      },
+      "fan_extract_stage_4": {
+        "name": "Abluft Stufe 4 (konfiguriert)"
+      },
       "filter_days": {
         "name": "Filterrestlaufzeit (Referenz)"
       },

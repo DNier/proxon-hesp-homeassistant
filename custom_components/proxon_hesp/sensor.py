@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,6 +30,35 @@ from .rooms import async_setup_rooms
 AIR_TEMPERATURE_KEYS = frozenset(TEMPERATURE_KEYS[:4])
 
 DESCRIPTIONS = (
+    SensorEntityDescription(
+        key="cooling_threshold",
+        translation_key="cooling_threshold",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        icon="mdi:thermometer",
+    ),
+    *(
+        SensorEntityDescription(
+            key=key,
+            translation_key=key,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            native_unit_of_measurement=PERCENTAGE,
+            suggested_display_precision=0,
+            icon="mdi:tune",
+        )
+        for key in (
+            "max_heating_output",
+            "max_cooling_output",
+            *(
+                f"fan_{direction}_stage_{stage}"
+                for direction in ("supply", "extract")
+                for stage in range(1, 5)
+            ),
+        )
+    ),
     *(
         SensorEntityDescription(
             key=key,

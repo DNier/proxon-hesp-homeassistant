@@ -79,6 +79,8 @@ TEMPERATURE_KEYS = (
 )
 
 RESPONSE_POINTS = {
+    0x00D2: ("fan_supply_curve", 16),
+    0x00D3: ("fan_extract_curve", 16),
     0x0208: ("controller_fan_level", 4),
     0x00D7: ("fan_controls", 8),
     0x0160: ("bypass_status", 1),
@@ -173,6 +175,16 @@ class Decoder:
 
     @classmethod
     def _readings(cls, key: str, payload: bytes) -> list[Reading]:
+        if key in ("fan_supply_curve", "fan_extract_curve"):
+            if len(payload) != 16:
+                return []
+            # Configured stage percentages, not measured airflow or current speed.
+            direction = "supply" if key == "fan_supply_curve" else "extract"
+            return [
+                Reading(f"fan_{direction}_stage_{stage}", value)
+                for stage, value in enumerate(struct.unpack("<4f", payload), 1)
+                if math.isfinite(value) and 0 <= value <= 100
+            ]
         if key == "controller_fan_level":
             # Raw status is evidence, not a validated fan/valve interpretation.
             readings = [
@@ -224,6 +236,21 @@ class Decoder:
         if value is None:
             return []
         readings = [Reading(key, value)]
+        if key == "raw_0110":
+            threshold = struct.unpack("<f", payload)[0]
+            # Receive sanity bound only; not a manufacturer setting range.
+            if math.isfinite(threshold) and 0 <= threshold <= 100:
+                readings.append(Reading("cooling_threshold", threshold))
+        if key == "raw_0116":
+            readings.extend(
+                Reading(name, limit)
+                for name, limit in zip(
+                    ("max_heating_output", "max_cooling_output"),
+                    struct.unpack("<2H", payload),
+                    strict=True,
+                )
+                if limit <= 100
+            )
         if key == "intensive_ventilation":
             readings.append(Reading("raw_118000_01f8", payload.hex()))
         if key == "raw_051c":

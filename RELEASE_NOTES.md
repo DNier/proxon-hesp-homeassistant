@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.14.0 – Lesende Service-Einstellungen
+
+- Elf neue optionale Diagnosesensoren: Kühlschwelle, konfigurierte maximale
+  Heiz-/Kühlleistung sowie vier Zu- und vier Abluftstufen in Prozent.
+- Alle neuen Entitäten sind standardmäßig deaktiviert. Es entstehen keine
+  Anlagenbefehle, Abfragen oder zusätzlichen Verbindungen. Bestehende Rohsensoren,
+  Entitäts-IDs und Benutzereinstellungen bleiben erhalten.
+- Zuordnungen sind gegen Originalmitschnitte und öffentliche Service-App-Belege
+  abgeglichen. Lüfterrichtung wird durch das asymmetrische Community-Beispiel
+  gestützt; keine universelle Variantenfreigabe oder synchronisierte Live-Abnahme.
+- Ungültige Kanäle werden einzeln verworfen; ohne frischen Empfang werden Werte
+  unverfügbar. Keine Langzeitstatistik für diese Einstellungen. Energieregler
+  und `022A` bleiben ungeklärt und werden nicht als Sensoren veröffentlicht.
+- Nach Installation Home Assistant neu starten; keine Migration erforderlich.
+  Mindestversion bleibt Home Assistant 2026.9. Rückweg: vorherige Version 0.13.2.
+
 ## 0.13.2 – Gezielt ausgelöste Ereignisaufnahmen
 
 - Neue passive Aktion **Diagnose-Ereignisaufnahme auslösen**: Sichert den

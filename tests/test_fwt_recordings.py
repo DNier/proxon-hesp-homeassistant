@@ -36,6 +36,14 @@ def test_fwt_known_values_and_asymmetric_curves():
         "fan_level": 3,
         "fan_supply_control": 7000.0,
         "fan_extract_control": 6700.0,
+        **{
+            f"fan_{direction}_stage_{stage}": value
+            for direction, values in (
+                ("supply", (25, 50, 70, 100)),
+                ("extract", (25, 47, 67, 100)),
+            )
+            for stage, value in enumerate(values, 1)
+        },
     }
     result = audit_fan_curves(
         {

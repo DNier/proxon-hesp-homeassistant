@@ -1,7 +1,11 @@
 # Lüfterkennlinien und Rohstellwerte
 
-Stand: 27. September 2026. Offline-Auswertung mit ergänzendem lesendem
-Betriebsabgleich in Home Assistant; keine neuen Sensoren oder Schreibbefehle.
+Aktualisierung 6. Oktober 2026: Die öffentliche Service-App-Abbildung bestätigt
+die asymmetrischen Zu-/Abluft-Listen des Community-Beispiels. Ab Version 0.14.0
+stehen die acht konfigurierten Stufen als optionale Diagnosesensoren bereit.
+Keine Schreibbefehle; Quellen und Aussagegrenzen im
+[technischen Evidenzbericht (Englisch)](SERVICE_SETTINGS_EVIDENCE.md).
+Die folgende Offline-Auswertung stammt vom 27. September 2026.
 
 ## Ergebnis
 
@@ -31,9 +35,10 @@ kommen sechs verschiedene gültige Stellwertpaare auf `00D7` vor:
 | 0 / 0 | Keine Position in diesen Listen |
 
 Die Zuordnung `00D2` zum ersten und `00D3` zum zweiten Stellwert wird insbesondere
-durch das asymmetrische Paar 3100/2500 gestützt. Eine unabhängige Bestätigung der
-Richtungszuordnung am BDE steht noch aus. Das Werkzeug übernimmt sie als explizite
-Hypothese, nicht als automatisch bewiesene Eigenschaft beliebiger Geräte.
+durch das asymmetrische Paar 3100/2500 gestützt. Die später veröffentlichte
+Service-App-Abbildung stützt die Richtung für dieses Community-Beispiel zusätzlich.
+Ein synchronisierter BDE-Änderungsversuch steht weiterhin aus. Das Offline-Werkzeug
+weist numerische Kandidaten aus, keine automatisch bewiesene Eigenschaft beliebiger Geräte.
 
 Die [öffentliche HESP-Referenz](https://github.com/markusmauch/proxon-hesp/blob/main/docs/dp-referenz.md)
 beschreibt `00D2`/`00D3` als Lüfterstufen-Prozentkennlinien für eine P 2H-L.
