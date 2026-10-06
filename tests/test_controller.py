@@ -18,6 +18,14 @@ FRAMES = {
 def test_recorded_controller_values_and_every_split():
     stream = b"".join(FRAMES.values())
     expected = {
+        "cooling_threshold": 3.0,
+        "max_heating_output": 100,
+        "max_cooling_output": 90,
+        **{
+            f"fan_{direction}_stage_{stage}": value
+            for direction in ("supply", "extract")
+            for stage, value in enumerate((25, 40, 52, 100), 1)
+        },
         "controller_fan_level": 3,
         "experimental_status_0208": "1a100080",
         "fan_supply_control": 5200.0,

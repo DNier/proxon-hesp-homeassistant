@@ -80,13 +80,24 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 72
+        assert len(all_entities) == 83
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
             if e.unique_id not in baseline
         }
         assert set(new) == {
+            "cooling_threshold",
+            "max_heating_output",
+            "max_cooling_output",
+            "fan_supply_stage_1",
+            "fan_supply_stage_2",
+            "fan_supply_stage_3",
+            "fan_supply_stage_4",
+            "fan_extract_stage_1",
+            "fan_extract_stage_2",
+            "fan_extract_stage_3",
+            "fan_extract_stage_4",
             "experimental_0208_bit_8",
             "experimental_0208_bit_9",
             "experimental_0208_bit_28",
@@ -109,6 +120,17 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         assert new["compressor_running"].disabled_by is None
         assert new["capture_status"].disabled_by is None
         for key in (
+            "cooling_threshold",
+            "max_heating_output",
+            "max_cooling_output",
+            "fan_supply_stage_1",
+            "fan_supply_stage_2",
+            "fan_supply_stage_3",
+            "fan_supply_stage_4",
+            "fan_extract_stage_1",
+            "fan_extract_stage_2",
+            "fan_extract_stage_3",
+            "fan_extract_stage_4",
             "last_valid_received",
             "connection",
             "device_datetime",

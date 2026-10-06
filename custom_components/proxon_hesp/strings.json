@@ -59,6 +59,39 @@
           "stove": "Stove"
         }
       },
+      "cooling_threshold": {
+        "name": "Cooling threshold"
+      },
+      "max_heating_output": {
+        "name": "Maximum heating output (configured)"
+      },
+      "max_cooling_output": {
+        "name": "Maximum cooling output (configured)"
+      },
+      "fan_supply_stage_1": {
+        "name": "Supply stage 1 (configured)"
+      },
+      "fan_supply_stage_2": {
+        "name": "Supply stage 2 (configured)"
+      },
+      "fan_supply_stage_3": {
+        "name": "Supply stage 3 (configured)"
+      },
+      "fan_supply_stage_4": {
+        "name": "Supply stage 4 (configured)"
+      },
+      "fan_extract_stage_1": {
+        "name": "Extract stage 1 (configured)"
+      },
+      "fan_extract_stage_2": {
+        "name": "Extract stage 2 (configured)"
+      },
+      "fan_extract_stage_3": {
+        "name": "Extract stage 3 (configured)"
+      },
+      "fan_extract_stage_4": {
+        "name": "Extract stage 4 (configured)"
+      },
       "filter_days": {
         "name": "Filter remaining time (reference)"
       },

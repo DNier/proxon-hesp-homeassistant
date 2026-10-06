@@ -17,6 +17,12 @@ Entitätseinstellungen aktivieren.
 
 ## Bestehende Installationen
 
+Ab 0.14.0 ergänzen elf zunächst deaktivierte Diagnosesensoren die Kühlschwelle,
+konfigurierte maximale Heiz-/Kühlleistung und je vier Zu-/Abluftstufen. Diese
+Einstellungen sind keine gemessene Leistung oder aktuelle Luftstufe. Ohne
+frischen Empfang werden sie unverfügbar. Quellen und Grenzen stehen im
+[technischen Evidenzbericht (Englisch)](SERVICE_SETTINGS_EVIDENCE.md).
+
 Entitäts-IDs, eindeutige Identitäten, eigene Namen sowie Aktivierungsentscheidungen
 bleiben beim Update erhalten. Die geänderte Kategorie ordnet bestehende Werte der
 Diagnose zu. Neue Aktivierungsstandards deaktivieren keine bisher aktiven Entitäten.

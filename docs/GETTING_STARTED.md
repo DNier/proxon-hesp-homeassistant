@@ -18,7 +18,10 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.13.0** ist die stabile Version. Sie ergänzt gegenüber 0.11.0 optionale
+**0.14.0** ist die stabile Version. Neu sind elf deaktivierte Diagnosesensoren
+für lesende Service-Einstellungen: Kühlschwelle, maximale Heiz-/Kühlleistung
+und konfigurierte Zu-/Abluftstufen. Keine neuen Schreibfunktionen.
+Sie ergänzt gegenüber 0.11.0 außerdem optionale
 Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
 sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
 Optionale Diagnoseentitäten zeigen drei experimentelle Statusbits und den

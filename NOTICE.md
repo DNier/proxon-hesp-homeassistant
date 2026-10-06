@@ -23,6 +23,13 @@ Original project code is licensed under the MIT License; see LICENSE.
 The adapted source material identified above remains subject to CC BY 4.0.
 The MIT License does not replace those attribution and license obligations.
 
+Service-setting meanings are corroborated with Mannheim68199's public
+PROXON HESP ESP32 data-point table and service-app photograph at commit
+`2ef75eb99d663f1aabb6bdd121e46cb2b5ee94a5`:
+https://github.com/Mannheim68199/proxon-hesp-esp32/tree/2ef75eb99d663f1aabb6bdd121e46cb2b5ee94a5
+The photograph is referenced, not redistributed. No license or manufacturer
+endorsement of that source is inferred. See docs/SERVICE_SETTINGS_EVIDENCE.md.
+
 ## Logo
 
 The supplied PROXON logo in `custom_components/proxon_hesp/brand/` is used

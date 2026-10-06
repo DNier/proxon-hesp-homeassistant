@@ -33,6 +33,9 @@ little-endian order unless stated otherwise.
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
 | Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Ten observed words; other bits and words are not interpreted; disabled by default |
 | Raw fan control values | 00D7 / C / 8 | Two float32 / no unit | No validated voltage or target-rpm interpretation; disabled by default |
+| Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
+| Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw entity retained |
+| Maximum heating/cooling output | 0116 / C / 4 | Two uint16 / % | Configured limits, not measured power; each 0–100; raw entity retained |
 | Filter remaining time | 00ED / C / 4 | uint32 / days | Display comparison and decrement observed; reset behaviour unresolved |
 | Operating-hour counters | 02D0–02D5, 02D7, 02D9 / C / 4 | uint32 / h | Display mappings confirmed; reset behaviour unresolved, no statistics class |
 | Device calendar (raw) | 032E / C / 4 | uint32 / no unit | Packed calendar value; internal key `uptime`, numeric state and existing preferences retained |
@@ -50,6 +53,9 @@ Counter mappings are: `02D0–02D3` fan levels 1–4, `02D4` heat pump heating,
 The value `FFFFFFFF` is rejected for counters and filter days.
 
 ## Unmapped reply blocks
+
+See [service-setting evidence](SERVICE_SETTINGS_EVIDENCE.md) for version 0.14.0
+settings, source limits, freshness and invalid-data behaviour.
 
 Recorded controller replies include `224000/02DF/112` (28 little-endian uint32
 slots), `224000/02D6/40` (20 uint16 slots) and `224000/0178/12` (six uint16
