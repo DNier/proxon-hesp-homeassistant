@@ -41,13 +41,17 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.14.0**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.15.0**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
 Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
+
+Version 0.15.0 replaces seven confirmed raw sensor entities with readable values,
+including current fan control percentages. Update references to retired entities
+in dashboards and automations; see the [migration mapping](docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
 
 ## Features and boundaries
 

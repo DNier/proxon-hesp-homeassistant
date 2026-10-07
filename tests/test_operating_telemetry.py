@@ -70,7 +70,7 @@ def test_unknown_bypass_enum_is_not_off(value):
     assert decoder.stats.value_rejected == 1
 
 
-async def test_ha_defaults_raw_identity_expiry_recovery_and_disconnect(hass, frames):
+async def test_ha_defaults_retired_raw_expiry_recovery_and_disconnect(hass, frames):
     reader = asyncio.StreamReader()
     reader.feed_data(frames["0xe1"])
 
@@ -115,12 +115,14 @@ async def test_ha_defaults_raw_identity_expiry_recovery_and_disconnect(hass, fra
         running_id = registry.async_get_entity_id(
             "binary_sensor", DOMAIN, "stable-unit_compressor_running"
         )
+        assert registry.async_get(raw.entity_id) is None
+        assert hass.states.get(raw.entity_id) is None
+        device_id = registry.async_get(rpm_id).device_id
         for entity_id in (rpm_id, bypass_id, running_id):
             registered = registry.async_get(entity_id)
             assert registered.disabled_by is None
             assert hass.states.get(entity_id).state == "unavailable"
-            assert registered.device_id == registry.async_get(raw.entity_id).device_id
-        assert registry.async_get(raw.entity_id).disabled_by is None
+            assert registered.device_id == device_id
         rpm = hass.states.get(rpm_id)
         assert rpm.attributes["unit_of_measurement"] == "rpm"
         assert rpm.attributes["state_class"] == "measurement"
@@ -131,7 +133,7 @@ async def test_ha_defaults_raw_identity_expiry_recovery_and_disconnect(hass, fra
             await hass.async_block_till_done()
             assert hass.states.get(bypass_id).state == expected
             assert float(hass.states.get(rpm_id).state) == pytest.approx(4847.17627)
-            assert hass.states.get(raw.entity_id).state == "69799745"
+            assert hass.states.get(raw.entity_id) is None
 
         # Both heating and cooling turn the derived running state on.
         for frame in (COOLING, HEATING):
@@ -151,7 +153,7 @@ async def test_ha_defaults_raw_identity_expiry_recovery_and_disconnect(hass, fra
         assert hass.states.get(running_id).state == "unavailable"
         assert hass.states.get(rpm_id).state == "unavailable"
         assert hass.states.get(bypass_id).state == "unavailable"
-        assert hass.states.get(raw.entity_id).state == "0000c07f"
+        assert hass.states.get(raw.entity_id) is None
         reader.feed_data(STOPPED + BYPASS_OFF)
         await hass.async_block_till_done()
         assert hass.states.get(running_id).state == "off"

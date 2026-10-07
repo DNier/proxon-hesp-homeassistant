@@ -3,6 +3,32 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.0 – Verständliche Werte statt bestätigter Rohduplikate
+
+- Aktuelle Zu- und Abluft-Ansteuerung in Prozent: zum Beispiel 52 % statt 5200.
+  Die Anzeige setzt eine frische, passende Kennlinienstufe derselben Richtung
+  voraus. Ungeprüfte Zwischenwerte und fehlende Kennlinien bleiben unverfügbar.
+- Sieben alte Rohwert-Entitäten entfallen: Lüfterstellwerte, Kühlschwelle,
+  maximale Heiz-/Kühlleistung, Verdichterdrehzahl, Geräteuhrzeit und gepacktes
+  Gerätekalenderformat. Die verständlichen Ersatzsensoren bleiben verfügbar;
+  neue Prozentwerte erhalten eigene IDs, um alte Rohwert-Historien nicht zu
+  vermischen.
+- Das Upgrade entfernt die alten Registrierungen automatisch. War ein alter
+  Rohsensor aktiviert, werden seine bisher nur standardmäßig deaktivierten
+  Ersatzsensoren aktiviert. Explizite Benutzereinstellungen bestehender
+  Ersatzsensoren und alle übrigen Entitätsidentitäten bleiben erhalten.
+- **Anpassung erforderlich:** Verweise auf entfernte Rohsensoren in Dashboards,
+  Automationen und Vorlagen auf die [Ersatzsensoren](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
+  umstellen. Alte Recorder-Daten werden nicht in Prozentwerte umgerechnet.
+- Teilweise entschlüsselte Statuswörter bleiben optionale Diagnoseentitäten.
+  Interne Rohlesungen und Diagnoseaufnahmen bleiben für die Auswertung erhalten.
+  Es entstehen keine Anlagenbefehle oder zusätzlichen Verbindungen.
+
+Home Assistant ab 2026.9. Nach Installation neu starten. Werden bisher
+deaktivierte Ersatzsensoren aktiviert, lädt HA die Integration einmal erneut.
+Rückweg: Version 0.14.0 wieder installieren; entfernte Rohsensor-Einstellungen
+müssen dann bei Bedarf neu gesetzt werden.
+
 ## 0.14.0 – Lesende Service-Einstellungen
 
 - Elf neue optionale Diagnosesensoren: Kühlschwelle, konfigurierte maximale

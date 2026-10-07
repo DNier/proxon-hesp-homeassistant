@@ -43,11 +43,25 @@ CONTROLS = [
 ]
 CONTROL_KEYS = ("fan_supply_control", "fan_extract_control")
 KEYS = ("controller_fan_level", *CONTROL_KEYS)
+PERCENT_KEYS = tuple(f"{key}_percent" for key in CONTROL_KEYS)
+ENTITY_KEYS = ("controller_fan_level", *PERCENT_KEYS)
 
 
 def checked(body):
     """Synthetic invalid data gets a valid CRC to exercise value validation."""
     return body + checksum(body).to_bytes(2, "little")
+
+
+def curve(dp, values):
+    return checked(
+        b"\x22\x40\x00"
+        + dp.to_bytes(2, "little")
+        + b"\0\0\x20"
+        + struct.pack("<4f", *values)
+    )
+
+
+CURVES = curve(0xD2, (25, 40, 52, 100)) + curve(0xD3, (25, 52, 70, 100))
 
 
 @pytest.mark.parametrize("raw,expected", LEVELS + CONTROLS)
@@ -138,23 +152,33 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             suggested_object_id=f"my_{key}",
             disabled_by=None,
         ).entity_id
-        for key in KEYS
+        for key in ENTITY_KEYS
     }
     with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        for entity_id in ids.values():
+        for key, entity_id in ids.items():
             state = hass.states.get(entity_id)
             assert state.state == "unavailable"
             assert registry.async_get(entity_id).disabled_by is None
-            assert "unit_of_measurement" not in state.attributes
+            assert state.attributes.get("unit_of_measurement") == (
+                "%" if key in PERCENT_KEYS else None
+            )
             assert "state_class" not in state.attributes
             assert "device_class" not in state.attributes
 
         valid = bytes.fromhex(LEVELS[3][0] + CONTROLS[-1][0])
         reader.feed_data(valid)
         await hass.async_block_till_done()
-        assert [float(hass.states.get(ids[k]).state) for k in KEYS] == [4, 10000, 7000]
+        assert hass.states.get(ids["controller_fan_level"]).state == "4"
+        assert all(hass.states.get(ids[k]).state == "unavailable" for k in PERCENT_KEYS)
+        reader.feed_data(CURVES)
+        await hass.async_block_till_done()
+        assert [float(hass.states.get(ids[k]).state) for k in ENTITY_KEYS] == [
+            4,
+            100,
+            70,
+        ]
         for raw, expected in LEVELS[-2:]:
             reader.feed_data(bytes.fromhex(raw))
             await hass.async_block_till_done()
@@ -171,7 +195,7 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             assert runtime.values["controller_fan_level"] == old_level
             assert hass.states.get(ids["controller_fan_level"]).state == "unavailable"
             assert all(
-                float(hass.states.get(ids[key]).state) == 5200 for key in CONTROL_KEYS
+                float(hass.states.get(ids[key]).state) == 52 for key in PERCENT_KEYS
             )
         reader.feed_data(bytes.fromhex(LEVELS[0][0]))
         await hass.async_block_till_done()
@@ -189,13 +213,71 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
         assert all(hass.states.get(i).state == "unavailable" for i in ids.values())
         reader.feed_data(valid)
         await hass.async_block_till_done()
-        assert [float(hass.states.get(ids[k]).state) for k in KEYS] == [4, 10000, 7000]
+        assert [float(hass.states.get(ids[k]).state) for k in ENTITY_KEYS] == [
+            4,
+            100,
+            70,
+        ]
+        # An extract curve expiring cannot hide the independent supply channel.
+        for stage in range(1, 5):
+            key = f"fan_extract_stage_{stage}"
+            reading, timestamp = runtime.values[key]
+            runtime.values[key] = (reading, timestamp - 31)
+        runtime._notify()
+        assert hass.states.get(ids[PERCENT_KEYS[0]]).state == "100.0"
+        assert hass.states.get(ids[PERCENT_KEYS[1]]).state == "unavailable"
+        reader.feed_data(CURVES)
+        await hass.async_block_till_done()
+        assert hass.states.get(ids[PERCENT_KEYS[1]]).state == "70.0"
+        # Valid but uncorroborated values must not become a guessed percentage.
+        header = bytes.fromhex(CONTROLS[0][0])[:8]
+        reader.feed_data(checked(header + struct.pack("<2f", 6000, 0)))
+        await hass.async_block_till_done()
+        assert all(hass.states.get(ids[k]).state == "unavailable" for k in PERCENT_KEYS)
+        reader.feed_data(curve(0xD3, (0, 52, 70, 100)))
+        await hass.async_block_till_done()
+        assert hass.states.get(ids[PERCENT_KEYS[0]]).state == "unavailable"
+        assert hass.states.get(ids[PERCENT_KEYS[1]]).state == "0.0"
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         reader.feed_eof()
         await hass.async_block_till_done()
         assert all(hass.states.get(i).state == "unavailable" for i in ids.values())
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert not runtime.listeners
+
+
+@pytest.mark.parametrize(
+    "supply,extract,controls,expected",
+    [
+        ((25, 40, 52, 100), (25, 40, 52, 100), (5200, 5200), (52, 52)),
+        ((31, 50, 70, 100), (25, 50, 70, 100), (3100, 2500), (31, 25)),
+        ((25, 50, 70, 100), (25, 47, 67, 100), (7000, 6700), (70, 67)),
+        ((25, 40, 52, 100), (25, 40, 52, 100), (10000, 7000), (100, None)),
+        ((25, 40, 52, 100), (25, 40, 52, 100), (5200.005, 5200.25), (52, None)),
+        ((float("nan"), 40, 52, 100), (25, 40, 52, 100), (2500, 2500), (None, 25)),
+    ],
+)
+async def test_percent_matches_independent_received_curves(
+    hass, supply, extract, controls, expected
+):
+    import time
+
+    from custom_components.proxon_hesp.coordinator import ProxonRuntime
+    from custom_components.proxon_hesp.sensor import DESCRIPTIONS, ProxonSensor
+
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="percent-unit")
+    runtime = entry.runtime_data = ProxonRuntime(hass, "gateway.test", 4196)
+    runtime.connected = True
+    stream = curve(0xD2, supply) + curve(0xD3, extract)
+    stream += checked(bytes.fromhex(CONTROLS[0][0])[:8] + struct.pack("<2f", *controls))
+    for reading in Decoder().feed(stream):
+        runtime.values[reading.key] = (reading, time.monotonic())
+    sensors = [
+        ProxonSensor(entry, next(d for d in DESCRIPTIONS if d.key == key))
+        for key in PERCENT_KEYS
+    ]
+    assert [sensor.native_value for sensor in sensors] == list(expected)
+    assert [sensor.available for sensor in sensors] == [e is not None for e in expected]
 
 
 @pytest.mark.parametrize("raw", TRANSITION_WORDS)

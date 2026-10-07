@@ -12,6 +12,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
 from custom_components.proxon_hesp.diagnostics import async_get_config_entry_diagnostics
+from custom_components.proxon_hesp.telemetry_migration import RAW_SENSOR_REPLACEMENTS
 
 
 async def test_setup_values_availability_registry_and_unload(hass, frames):
@@ -53,9 +54,11 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         )
         assert hass.states.get(filter_id).state == "114"
         assert hass.states.get(filter_id).attributes["unit_of_measurement"] == "d"
-        raw_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_raw_0116")
-        assert registry.async_get(raw_id).disabled_by is not None
-        assert hass.states.get(raw_id) is None
+        for key in RAW_SENSOR_REPLACEMENTS:
+            assert (
+                registry.async_get_entity_id("sensor", DOMAIN, f"stable-unit_{key}")
+                is None
+            )
         clock_id = registry.async_get_entity_id(
             "sensor", DOMAIN, "stable-unit_device_clock"
         )
@@ -67,22 +70,16 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert hass.states.get(hours_id).state == "26708"
         assert hass.states.get(hours_id).attributes["unit_of_measurement"] == "h"
         assert hass.states.get(hours_id).attributes["device_class"] == "duration"
-        uptime_id = registry.async_get_entity_id("sensor", DOMAIN, "stable-unit_uptime")
-        assert (
-            registry.async_get(uptime_id).disabled_by
-            == er.RegistryEntryDisabler.INTEGRATION
-        )
-        assert hass.states.get(uptime_id) is None
         assert registry.async_get(filter_id).entity_category.value == "diagnostic"
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 83
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 78
         for key in (
             "device_datetime",
             "device_date",
             "controller_fan_level",
-            "fan_supply_control",
-            "fan_extract_control",
+            "fan_supply_control_percent",
+            "fan_extract_control_percent",
             "raw_118000_01f8",
             "raw_118000_03b6",
             "raw_118007_0191",

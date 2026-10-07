@@ -20,6 +20,7 @@ from .const import (
 from .coordinator import ProxonRuntime
 from .rooms import CONF_ROOMS, ROOM_SUBENTRY, configured_rooms, sync_room_devices
 from .services import async_register_services
+from .telemetry_migration import async_retire_raw_sensors
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
@@ -53,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
     runtime.room_config = configured_rooms(entry)
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await async_retire_raw_sensors(hass, entry)
     except BaseException:
         await runtime.stop()
         raise

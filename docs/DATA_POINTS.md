@@ -2,7 +2,12 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the data-point mappings retained from version 0.8.0.
+This table describes the published data-point mappings in version 0.15.0.
+Seven legacy raw/numeric entities are retired in favour of readable values;
+see [entity migration](#readable-telemetry-and-entity-migration-0150).
+The following counts describe earlier releases at the time of their additions,
+not the current entity total.
+
 Version 0.9.0 adds capture status plus optional last-valid-data and connection
 diagnostics: 51 sensors, three binary sensors and three capture buttons,
 for 57 entities in total. Version 0.10.0's compressor-running binary sensor adds
@@ -10,7 +15,7 @@ one entity, derived from the existing speed reading. Automatic event recording
 adds a diagnostic status and a clear/rearm button (60 entities total).
 Beta 0.12.0b1 adds an optional local calendar sensor
 and an optional calendar-alignment button (62 entities total). Existing
-data-point mappings remain unchanged.
+data-point mappings remain in use.
 See [capture diagnostics](DIAGNOSTICS.md). Hardware scope is documented in
 [compatibility](COMPATIBILITY.md).
 
@@ -27,22 +32,21 @@ little-endian order unless stated otherwise.
 | Target temperature | 0227 / P / 4 | float32 / °C | Display comparisons; receive guard 15–30 °C is not a writable range |
 | Ten temperatures | 03B7 / C / 22 | uint16 × 0.1 / °C | Positive encoding and channel mapping compared with display; negative encoding and fault sentinels unresolved |
 | Supply/extract fan speeds | 00C9 / C / 8 | Two float32 / rpm | Display comparisons; finite values from 0 to 10000 |
-| Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw entity retained |
+| Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw decoding retained internally |
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
 | Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Ten observed words; other bits and words are not interpreted; disabled by default |
-| Raw fan control values | 00D7 / C / 8 | Two float32 / no unit | No validated voltage or target-rpm interpretation; disabled by default |
+| Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
-| Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw entity retained |
-| Maximum heating/cooling output | 0116 / C / 4 | Two uint16 / % | Configured limits, not measured power; each 0–100; raw entity retained |
+| Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
+| Maximum heating/cooling output | 0116 / C / 4 | Two uint16 / % | Configured limits, not measured power; each 0–100; raw decoding retained internally |
 | Filter remaining time | 00ED / C / 4 | uint32 / days | Display comparison and decrement observed; reset behaviour unresolved |
 | Operating-hour counters | 02D0–02D5, 02D7, 02D9 / C / 4 | uint32 / h | Display mappings confirmed; reset behaviour unresolved, no statistics class |
-| Device calendar (raw) | 032E / C / 4 | uint32 / no unit | Packed calendar value; internal key `uptime`, numeric state and existing preferences retained |
 | Device date and time (local) | 032E / C / 4 | Local ISO text, minute resolution | Display-matched calendar edits; validated date and weekday; disabled by default |
 | Device date | 032E / C / 4 | HA date | Date portion of the validated device calendar; shares its freshness; disabled by default |
-| Device clock | 0330 / C / 4 | Packed HH:MM:SS | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
-| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | Structural and checksum evidence only; disabled by default |
+| Device clock | 0330 / C / 4 | Local HH:MM:SS text | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
+| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | 18 partly or fully uninterpreted payloads; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13
 in that order. Its eleventh slot is not published. Raw channel values above 1500
@@ -51,6 +55,39 @@ are rejected individually; valid neighbouring channels remain available.
 Counter mappings are: `02D0–02D3` fan levels 1–4, `02D4` heat pump heating,
 `02D5` heat pump cooling, `02D7` controller, `02D9` preheating.
 The value `FFFFFFFF` is rejected for counters and filter days.
+
+## Readable telemetry and entity migration (0.15.0)
+
+These seven legacy sensor keys are no longer published and their entity-registry
+entries are removed when the updated integration entry is set up:
+
+| Retired key | Readable replacement keys |
+| --- | --- |
+| `raw_0110` | `cooling_threshold` |
+| `raw_0116` | `max_heating_output`, `max_cooling_output` |
+| `raw_051c` | `compressor_rpm` |
+| `raw_0330` | `device_clock` |
+| `uptime` | `device_date`, `device_clock` |
+| `fan_supply_control` | `fan_supply_control_percent` |
+| `fan_extract_control` | `fan_extract_control_percent` |
+
+An enabled legacy sensor enables a replacement only when that replacement was
+disabled by the integration. Explicit user-disabled replacements remain disabled.
+Other entity IDs and enabled/disabled preferences are unchanged. The existing
+combined `device_datetime` entity also remains available.
+
+Dashboards and automations referring to retired entity IDs must be updated to
+the replacement entities. The fan percentages use new identities; historical
+control values such as 5200 are not converted to 52 % or mixed into the new
+percentage histories. Raw decoding and diagnostic exports are retained
+internally, including invalid or unmatched control payloads. This removes
+redundant sensor entities without discarding protocol evidence.
+
+`fan_supply_control_percent` and `fan_extract_control_percent` are optional
+diagnostics named **Zuluft-Ansteuerung** and **Abluft-Ansteuerung**. They return
+the fresh received configured stage percentage that matches the current control
+value. Their precise validation and freshness rules are described
+[below](#fan-control-values-and-update-timing).
 
 ## Unmapped reply blocks
 
@@ -95,9 +132,10 @@ and 25–29 the day. Bits 30–31 have no established meaning and must be zero.
 The optional `device_datetime` sensor returns local text such as
 `2026-09-23T12:50`. It has no timestamp device class, timezone, unit or statistics
 class: the protocol does not establish a UTC offset or daylight-saving rule.
-It does not combine separately received date and second fields. The existing
-`device_clock` sensor remains separate and the numeric `uptime` entity retains
-its identity and value format, now labeled as the raw device calendar.
+It does not combine separately received date and second fields. The
+`device_date` and `device_clock` sensors provide separate readable values.
+The numeric `uptime` entity is retired in 0.15.0; its internal reading remains
+available for calendar validation, time alignment and diagnostic exports.
 
 Invalid field ranges, impossible calendar dates and inconsistent weekdays do
 not refresh the interpreted sensor. An observed initial state reported Sunday
@@ -105,7 +143,7 @@ for 1 January 2011, which was a Saturday; this is rejected. A correctly encoded
 2011 date is not rejected merely because of its year. Validation does not prove
 that the device clock matches real time. The optional [time-alignment button](CLOCK_SYNC.md) can explicitly correct
 these fields; no automatic synchronization takes place. Normal 30-second freshness and disconnect rules apply;
-raw diagnostics remain independently available.
+raw calendar evidence remains available internally.
 
 ## Optional diagnostics
 
@@ -123,22 +161,28 @@ level 3 in Stove mode. Their other bits do not establish PTC, valve or heating
 states. These additions extend the version 0.9.0 allowlist without changing
 entity identities or enabled/disabled settings.
 
-This allowlist does not establish a general status-bit mapping. The two fan
-control values must each be finite and between 0 and 10000. They have no unit
-or statistics class because their physical meaning has not been validated.
+This allowlist does not establish a general status-bit mapping. Current fan
+control percentages have separate validation based on fresh same-direction
+configured stages, as described below. Their availability does not depend on
+this controller-level allowlist and they have no statistics class.
 
-The existing 18 controller diagnostic sensors retain payload byte order and leading zeros:
+Fourteen optional controller raw sensors retain payload byte order and leading
+zeros. Together with the four exact-identity observations below, they form the
+18 partly or fully uninterpreted raw entities remaining in 0.15.0:
 
 | Payload bytes | Data points |
 |---|---|
 | 1 | 0168 |
 | 2 | 0120, 0206, 0519, 0123, 020F |
-| 4 | 051E, 006C, 00EE, 01F5, 0110, 0105, 0115, 011C, 0116, 051C, 0330, 051D |
+| 4 | 051E, 006C, 00EE, 01F5, 0105, 0115, 011C, 051D |
 
-The raw `051C` and `0330` entities coexist with their interpreted sensors.
-Hexadecimal values are not physical measurements or confirmed actuator states.
+The raw entities for `0110`, `0116`, `051C` and `0330` are retired; their raw
+decoding and diagnostic exports remain internal. The retained hexadecimal
+states are complete payloads, not physical measurements or complete actuator
+interpretations. For example, selected `006C` valve bits are mapped below,
+while other bits and unreviewed complete words remain uninterpreted.
 
-Four additional optional diagnostics retain complete observed payloads for
+Four further optional diagnostics retain complete observed payloads for
 event comparisons. Equal data-point numbers on different telegram identities
 remain separate; no PTC, demand or actuator meaning is assigned:
 
@@ -158,7 +202,7 @@ interpretations. `118007/0191` is accepted only for that exact header, not as a
 controller response or a different panel node. Reserved bytes, expected length
 and checksum validation remain mandatory; no additional queries are sent.
 
-The four new raw sensors and the existing `raw_006c` expose `source_header`,
+These four raw sensors and `raw_006c` expose `source_header`,
 `dp_id`, `payload_length` and, while fresh, `last_valid_update` attributes.
 The last attribute is the received sample's UTC observation time, independent
 of device time. Identical valid payloads refresh it; invalid frames do not.
@@ -170,15 +214,39 @@ or repeated telegrams matter.
 
 ### Fan control values and update timing
 
-On the reviewed installation, common supply/extract pairs are 2500/2500 for
+The historical recordings include supply/extract control pairs 2500/2500 for
 level 1, 4000/4000 for level 2, 5200/5200 for level 3 and 10000/10000 for level 4.
-Level 2 has limited evidence. Level 4 also occurs with 10000/7000 while both
-the requested and reported levels remain 4. These are installation-specific
-observations, not a universal conversion or a validated physical unit.
+The completed local stage 1–4 comparison supports the factor-100 relationship
+to configured stages 25/40/52/100; asymmetric community/FWT comparisons and
+service-app percentage labels extend that evidence. Level 4 also occurs with
+10000/7000 while both requested and reported levels remain 4. These examples
+do not establish a fixed global mapping from a raw value to a fan-level number.
+See [fan-curve evidence](FAN_CURVE_EVIDENCE.md) for the unchanged historical tables.
+
+In 0.15.0, each finite `00D7` control value in 0–10000 is divided by 100 and
+compared only with fresh valid configured stages of its own direction:
+`00D2` for supply, `00D3` for extract. Comparison uses absolute tolerance
+`0.0001` and relative tolerance `0`. On a match, the sensor returns the received
+configured stage percentage. It does not publish an unrestricted conversion of
+arbitrary unmatched values. Each direction is evaluated independently, and
+duplicate matching stage values do not require a stage-number choice.
+
+Both the control sample and a matching stage must be fresh under the normal
+30-second rule. Without fresh valid matching data, that channel is unavailable,
+as it is on disconnect. Invalid samples do not refresh the last valid reading.
+Zero is accepted only when a fresh matching
+stage is configured as 0 %. There is no closest-stage rounding, persisted-curve
+fallback or assumed zero. A controller fan-level reading is not required:
+an unknown controller status word does not suppress a valid percentage match.
+
+The percentage describes fan control according to the matched received curve
+stage, not measured voltage, airflow, fan speed, operating mode or Auto/manual
+selection. Configured stages, current control percentages and measured speeds
+remain separate readings.
 
 During transitions, the request and control values can change before the next
 controller-status poll, approximately five seconds later in reviewed captures.
-Keep requested level, reported level, raw control values and measured rpm
+Keep requested level, reported level, current control percentages and measured rpm
 separate. Do not infer heating or cooling from a fan-level change.
 
 ### Fan selection depends on operating mode
@@ -205,12 +273,13 @@ See [mode-specific reference tests](REFERENCE_TESTS.md).
 Each interpreted value has its own validation and freshness check. Invalid
 updates do not refresh a value; after 30 seconds without a valid update it
 becomes unavailable. Disconnect invalidates values immediately. Valid zero
-speeds and off states remain valid readings. Raw diagnostics can remain available
-when the corresponding numeric interpretation is invalid.
+speeds and off states remain valid readings. Retained raw entities and internal
+diagnostic evidence can remain available when an interpretation is invalid.
 
 Temperatures and measured speeds use measurement statistics where configured.
-Counters do not claim a reset model or total-increasing statistics. Existing
-unique IDs and user-selected enabled/disabled settings are preserved on upgrade.
+Counters do not claim a reset model or total-increasing statistics. The seven
+retired identities follow the migration described above; all other unique IDs
+and user-selected enabled/disabled settings are preserved on upgrade.
 
 ## Unimplemented interpretations
 

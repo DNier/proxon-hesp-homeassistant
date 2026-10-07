@@ -198,8 +198,8 @@ class Decoder:
         if key == "fan_controls":
             if len(payload) != 8:
                 return []
-            # Raw control values, not rpm or measured voltage. Historical SD
-            # metadata suggests mV, but no simultaneous mapping is verified.
+            # Keep raw controls internally. Sensor presentation validates their
+            # factor-100 match against fresh same-direction percent curves.
             return [
                 Reading(k, v)
                 for k, v in zip(
@@ -254,7 +254,7 @@ class Decoder:
         if key == "intensive_ventilation":
             readings.append(Reading("raw_118000_01f8", payload.hex()))
         if key == "raw_051c":
-            # Preserve the existing raw entity, even for invalid numeric data.
+            # Preserve internal raw evidence, even for invalid numeric data.
             rpm = struct.unpack("<f", payload)[0]
             # Receive sanity bound, not a manufacturer operating limit.
             if math.isfinite(rpm) and 0 <= rpm <= 10000:

@@ -31,6 +31,8 @@ erläutern den Geltungsbereich und die Grenzen.
 ## Was die Integration bietet
 
 - Temperaturen, Luftstufen, Drehzahlen, Betriebsstunden und Filterrestlaufzeit.
+- Lesende Service-Einstellungen und aktuelle Zu-/Abluft-Ansteuerung in Prozent,
+  wenn sie zu einer frisch empfangenen Kennlinienstufe passt.
 - Verdichterrotation, Bypass-Schaltzustand und Intensivlüftung.
 - Passive Diagnoseaufnahmen bei Bedarf oder bei Verdichterstarts und -stopps.
 - Zeitmarkierte BDE-Beobachtungen für gezielte Vergleiche, ab 0.13.0.
@@ -56,7 +58,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.14.0.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.15.0.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
@@ -67,6 +69,24 @@ separate Schritte; eine Handy-Pushnachricht wird dadurch nicht automatisch einge
 Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
+
+**Update auf 0.15.0:** Sieben bisherige Rohanzeigen werden durch verständliche
+Werte ersetzt: Kühlschwelle, konfigurierte maximale Heiz-/Kühlleistung,
+Verdichterdrehzahl, Geräteuhrzeit, Gerätedatum sowie Zu-/Abluft-Ansteuerung.
+Die alten Entitäten werden bei der Einrichtung des aktualisierten Eintrags aus
+der Entitätsregistrierung entfernt. War ein alter Sensor aktiviert, wird ein
+Ersatz aktiviert, der bisher nur durch die Integration deaktiviert war.
+Eine ausdrücklich vom Nutzer deaktivierte Ersatzentität bleibt deaktiviert.
+Alle anderen Entitäts-IDs und Aktivierungseinstellungen bleiben erhalten.
+
+Eigene Dashboards und Automationen mit den entfernten Entitäts-IDs müssen auf
+die Ersatzsensoren umgestellt werden. Die Prozentanzeigen erhalten neue IDs;
+historische Rohwerte wie 5200 werden nicht nachträglich in 52 % umgerechnet.
+Die Zu-/Abluft-Ansteuerung zeigt die passende empfangene Kennlinienstufe, keine
+gemessene Spannung oder Luftmenge. Ohne frischen passenden Wert bleibt sie
+„Nicht verfügbar“. 18 noch teilweise oder vollständig ungeklärte Rohanzeigen
+bleiben als optionale Diagnose erhalten. Zuordnungen und genaue Bedingungen:
+[Entitätswechsel und Prozentanzeige](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
 
 ## Austausch und Mithilfe
 

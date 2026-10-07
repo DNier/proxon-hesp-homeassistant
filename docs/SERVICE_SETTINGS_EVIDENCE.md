@@ -1,9 +1,12 @@
 # Service-setting telemetry evidence
 
-Version 0.14.0 adds eleven optional, disabled-by-default diagnostic sensors.
+Version 0.14.0 introduced eleven optional, disabled-by-default diagnostic sensors.
 These are configured settings, not measured power, airflow or current fan speed.
-No queries, writes or extra connections are introduced. Existing `raw_0110`
-and `raw_0116` entities and their IDs remain unchanged.
+Version 0.15.0 removes the redundant `raw_0110` and `raw_0116` sensor entities;
+`cooling_threshold`, `max_heating_output` and `max_cooling_output` are their
+readable replacements. Raw decoding and diagnostic exports remain available
+internally. No queries, writes or extra connections are introduced.
+See [entity migration](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
 
 ## Sources and scope
 
@@ -36,11 +39,38 @@ Exact node, reserved bytes, payload size and checksum are mandatory. Percentages
 must be finite and within 0–100. The cooling threshold must be finite within
 0–100 °C; this is only a receive sanity guard, not a manufacturer setting range.
 Invalid channels are skipped independently. Raw observations remain available
-even when derived threshold/output values are rejected. Values share the existing
+internally even when interpreted threshold/output values are rejected. Values
+share the existing
 30-second freshness rule and become unavailable without fresh reception or on
 disconnect; no persisted setting or missing-data default is inferred.
 No statistics class is assigned. The threshold has no absolute-temperature
 device class because its delta/reference semantics are not further established.
+
+## Current fan control percentages (0.15.0)
+
+The optional `fan_supply_control_percent` and `fan_extract_control_percent`
+entities use validated `224000/00D7/8` control values together with the configured
+stages above. Each finite control value in 0–10000 is divided by 100 and compared
+with fresh valid stages of the same direction. Comparison uses absolute tolerance
+`0.0001` and relative tolerance `0`. On a match, the entity returns the received
+configured stage percentage, not an unrestricted conversion of arbitrary values.
+
+The control sample and the matching stage must both satisfy the normal
+30-second freshness rule. Without fresh valid matching data, and on disconnect,
+that channel is unavailable. Invalid samples do not refresh the last valid
+reading. Channels are evaluated independently;
+no controller fan level is required. Zero is accepted only when a fresh matching
+stage is configured as 0 %. Duplicate stage percentages need no stage selection.
+No closest-stage rounding, persisted-curve fallback or zero default is used.
+
+The factor-100 relationship is supported by the completed local stage 1–4
+comparison and asymmetric community/FWT examples documented in
+[fan-curve evidence](FAN_CURVE_EVIDENCE.md). The service-app labels establish
+percentages for the configured curves. Together these support the matching
+display; they do not certify physical millivolts, airflow, measured fan speed,
+operating mode or all possible intermediate control values. The new percentage
+entities have new identities and no statistics class. Older control entities
+are retired; their historical numeric values are not converted to percentages.
 
 ## Not implemented
 

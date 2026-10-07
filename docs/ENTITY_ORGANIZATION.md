@@ -1,13 +1,14 @@
 # Entitäten am Hauptgerät
 
-Diese Einteilung gilt ab **0.12.0b4**. Die Integration verwendet die vorgesehenen HA-Entitätskategorien.
+Diese Einteilung verwendet seit **0.12.0b4** die vorgesehenen HA-Entitätskategorien.
+Die folgende Tabelle beschreibt den Stand **0.15.0**.
 Zusätzliche Geräte allein zur Sortierung von Messwerten werden nicht angelegt.
 
 | Einordnung | Entitäten | Bei Neueinrichtung |
 |---|---|---|
 | Normale Sensoren und Zustände | Betriebsart, angeforderte Luftstufe, Raum-/Solltemperatur, Zu-/Ab-/Fort-/Frischlufttemperatur, Verdichter läuft, Bypass und Intensivlüftung | Aktiviert |
 | Diagnose | Filterrestlaufzeit, Betriebsstunden, Aufnahmestatus und Aufnahmeaktionen | Aktiviert |
-| Optionale Diagnose | Sechs interne Temperaturen, drei Drehzahlen, roher Kalender, lokale Gerätezeit, Regler-Luftstufe, rohe Stellwerte, Hex-Datenpunkte, Verbindung und letzter gültiger Empfang | Deaktiviert |
+| Optionale Diagnose | Sechs interne Temperaturen, drei Drehzahlen, getrenntes Gerätedatum und Geräteuhrzeit, kombinierte lokale Gerätezeit, Regler-Luftstufe, aktuelle Lüfteransteuerung in Prozent, konfigurierte Lüfterstufen und Leistungsgrenzen, Kühlschwelle, ungeklärte Hex-Datenpunkte, Verbindung und letzter gültiger Empfang | Deaktiviert |
 | Konfiguration | Manueller Gerätezeitabgleich | Deaktiviert |
 
 Die Kategorie Diagnose beschreibt den Verwendungszweck, nicht die Genauigkeit.
@@ -23,8 +24,14 @@ Einstellungen sind keine gemessene Leistung oder aktuelle Luftstufe. Ohne
 frischen Empfang werden sie unverfügbar. Quellen und Grenzen stehen im
 [technischen Evidenzbericht (Englisch)](SERVICE_SETTINGS_EVIDENCE.md).
 
-Entitäts-IDs, eindeutige Identitäten, eigene Namen sowie Aktivierungsentscheidungen
-bleiben beim Update erhalten. Die geänderte Kategorie ordnet bestehende Werte der
+Ab 0.15.0 entfallen sieben bestätigte Rohduplikate. Die alten Registrierungen
+werden automatisch entfernt; aktivierte Rohsensoren aktivieren bisher nur
+standardmäßig deaktivierte Ersatzsensoren. Eigene Verweise müssen auf die
+[Ersatzsensoren](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
+umgestellt werden. Die neuen Lüfter-Prozentwerte erhalten eigene IDs.
+
+Alle übrigen Entitäts-IDs, eindeutigen Identitäten, eigenen Namen sowie
+Aktivierungsentscheidungen bleiben beim Update erhalten. Die geänderte Kategorie ordnet bestehende Werte der
 Diagnose zu. Neue Aktivierungsstandards deaktivieren keine bisher aktiven Entitäten.
 Die deutschen Drehzahlnamen lauten einheitlich Zuluftdrehzahl, Abluftdrehzahl und
 Verdichterdrehzahl. Eigene Namen haben weiterhin Vorrang.

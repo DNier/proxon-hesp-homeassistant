@@ -1,11 +1,45 @@
-# Lüfterkennlinien und Rohstellwerte
+# Lüfterkennlinien und aktuelle Ansteuerung
 
 Aktualisierung 6. Oktober 2026: Die öffentliche Service-App-Abbildung bestätigt
 die asymmetrischen Zu-/Abluft-Listen des Community-Beispiels. Ab Version 0.14.0
 stehen die acht konfigurierten Stufen als optionale Diagnosesensoren bereit.
 Keine Schreibbefehle; Quellen und Aussagegrenzen im
 [technischen Evidenzbericht (Englisch)](SERVICE_SETTINGS_EVIDENCE.md).
-Die folgende Offline-Auswertung stammt vom 27. September 2026.
+Ab Version 0.15.0 ersetzen **Zuluft-Ansteuerung** und **Abluft-Ansteuerung** die
+bisherigen Rohstellwert-Entitäten. Die historischen Tabellen dieser Seite bleiben
+unverändert; die ursprüngliche Offline-Auswertung stammt vom 27. September 2026.
+
+## Aktuelle Prozentanzeige ab 0.15.0
+
+Jeder Kanal von `224000/00D7/8` wird getrennt mit der frisch empfangenen Kennlinie
+derselben Richtung verglichen: erster Kanal mit Zuluft `00D2`, zweiter Kanal mit
+Abluft `00D3`. Ein gültiger endlicher Rohwert von 0 bis 10000 wird durch 100
+geteilt. Nur wenn das Ergebnis einer frischen gültigen Kennlinienstufe entspricht,
+zeigt die Entität deren empfangenen Prozentwert. Die Vergleichstoleranz beträgt
+absolut `0,0001`, relativ `0`; sie gleicht nur Float32-Darstellung aus.
+
+Beispiel: 5200 und eine frisch empfangene Abluftstufe mit 52 % ergeben eine
+Abluft-Ansteuerung von 52 %. Das Paar 10000/7000 kann unabhängig 100 % Zuluft
+und 70 % Abluft ergeben, wenn die jeweilige Kennlinie diese Werte enthält.
+Eine gemeinsame Stufennummer ist keine Voraussetzung. Die Regler-Luftstufe wird
+für diese Anzeige nicht benötigt; unbekannte Statuswörter sperren einen sonst
+gültigen Kennlinientreffer nicht.
+
+Rohwert und passende Kennlinienstufe müssen jeweils innerhalb der normalen
+30-Sekunden-Frist frisch sein. Fehlen frische gültige und passende Daten, oder
+bricht die Verbindung ab, ist der betroffene Kanal
+„Nicht verfügbar“. Null wird nur mit einer frischen, tatsächlich auf 0 %
+konfigurierten Stufe angenommen. Doppelte Prozentwerte in der Kennlinie erfordern
+keine Auswahl einer Stufennummer. Es gibt keine Rundung auf die nächstgelegene
+Stufe und keinen Ersatz durch gespeicherte Kennlinien oder angenommene Nullwerte.
+Ungültige Telegramme erneuern den letzten gültigen Messwert nicht.
+
+Die Prozentanzeige bezeichnet die Ansteuerung gemäß passender empfangener
+Kennlinienstufe. Sie misst keine Spannung, Luftmenge oder Drehzahl und bestimmt
+keine Betriebsart, Intensivlüftung oder Auto-Auswahl. Die Werte früherer
+Rohstellwert-Entitäten werden nicht nachträglich umgerechnet. Neue Prozent-IDs
+und die nötige Anpassung eigener Dashboards oder Automationen sind unter
+[Entitätswechsel](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150) beschrieben.
 
 ## Ergebnis
 
@@ -131,15 +165,21 @@ beobachtet. Erst nach der erneuten BDE-Bestätigung stimmte der Vergleich übere
 Die Ursache ist ungeklärt; daraus wird weder ein Decoderfehler noch eine bestimmte
 Übernahmeverzögerung abgeleitet. Die abweichende Probe bleibt im Ergebnis erhalten.
 
-## Getrennt davon offene fachliche Freigaben
+## Grenzen des historischen Betriebsabgleichs
 
 HA liest dieselben HESP-Daten wie die Integration und liefert keine zweite
 unabhängige Messung der Stellwerte oder Drehzahlen. Die unabhängige Referenz für
-die Auswahl ist die Bedienerbeobachtung am BDE. Der Stufenvergleich bestätigt
+die Auswahl ist die Bedienerbeobachtung am BDE. Der Stufenvergleich allein bestätigt
 keine Einheit wie Prozent oder Volt. Weil beide Tabellen an der Referenzanlage
 identisch sind, bestätigt er auch keine Richtungszuordnung von `00D2` gegenüber
 `00D3`. Die Zuordnung darf nicht als feste Wertetabelle auf andere Anlagen
 übertragen werden.
+
+Die spätere Service-App-Abbildung ergänzt Prozentangaben und eine asymmetrische
+Richtungsreferenz für die Kennlinien. Zusammen mit den hier erhaltenen
+Zahlenvergleichen trägt sie die begrenzte Prozentanzeige ab 0.15.0. Eine
+gemessene physische Spannung oder die freie Umrechnung beliebiger Zwischenwerte
+ist damit weiterhin nicht bestätigt.
 
 ## Aktualisierter Community-Vergleich (3. Oktober 2026)
 

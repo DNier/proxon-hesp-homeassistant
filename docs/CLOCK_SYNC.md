@@ -52,7 +52,11 @@ Wiederverbinden wird nichts erneut gesendet.
 Korrigiert werden Jahr, Monat, Tag, Wochentag, Stunde und Minute, nicht die Sekunden.
 Das ist kein sekundengenauer Zeitabgleich. HESP enthält hier keine Zeitzone;
 die Aktion verwendet die lokale HA-Zeitzone einschließlich aktueller Sommerzeit.
-Bestehende numerische Kalenderwerte und Entitätsidentitäten bleiben erhalten.
+Ab 0.15.0 entfallen die numerische Rohkalender-Entität und das rohe Uhrzeit-Duplikat.
+Gerätedatum und Geräteuhrzeit bleiben als getrennte verständliche Sensoren
+verfügbar; der optionale kombinierte lokale Zeitwert bleibt ebenfalls erhalten.
+Interne Kalenderdaten und die Identität der Abgleichaktion ändern sich nicht.
+[Ersatzsensoren und Aktivierung beim Update](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
 
 Die Funktion wurde an einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort über den
 ursprünglichen PTC-zur-Steuerung-Abgriff am Display bestätigt. Andere Revisionen

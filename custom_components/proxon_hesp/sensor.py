@@ -2,6 +2,7 @@
 
 import time
 from datetime import UTC, date, datetime, timedelta
+from math import isclose
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,6 +27,7 @@ from .hesp.decoder import (
     TEMPERATURE_KEYS,
 )
 from .rooms import async_setup_rooms
+from .telemetry_migration import RAW_SENSOR_REPLACEMENTS
 
 AIR_TEMPERATURE_KEYS = frozenset(TEMPERATURE_KEYS[:4])
 
@@ -59,18 +61,26 @@ DESCRIPTIONS = (
             ),
         )
     ),
+    SensorEntityDescription(
+        key="controller_fan_level",
+        translation_key="controller_fan_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:fan",
+    ),
     *(
         SensorEntityDescription(
             key=key,
             translation_key=key,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
+            native_unit_of_measurement=PERCENTAGE,
+            suggested_display_precision=1,
             icon="mdi:fan",
         )
         for key in (
-            "controller_fan_level",
-            "fan_supply_control",
-            "fan_extract_control",
+            "fan_supply_control_percent",
+            "fan_extract_control_percent",
         )
     ),
     *(
@@ -132,6 +142,7 @@ DESCRIPTIONS = (
             icon="mdi:code-braces",
         )
         for dp in RAW_POINTS
+        if f"raw_{dp:04x}" not in RAW_SENSOR_REPLACEMENTS
     ),
     *(
         SensorEntityDescription(
@@ -184,13 +195,6 @@ DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTime.DAYS,
         suggested_display_precision=0,
         icon="mdi:air-filter",
-    ),
-    SensorEntityDescription(
-        key="uptime",
-        translation_key="uptime",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=0,
     ),
     *(
         SensorEntityDescription(
@@ -286,20 +290,40 @@ class ProxonSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
+        if self.entity_description.key.endswith("_control_percent"):
+            return self._fan_control_percent() is not None
         return self.runtime.get(self.source_key) is not None
 
     @property
     def source_key(self) -> str:
         if self.entity_description.key == "device_date":
             return "device_datetime"
+        if self.entity_description.key.endswith("_control_percent"):
+            return self.entity_description.key.removesuffix("_percent")
         return self.entity_description.key
 
     @property
     def native_value(self):
+        if self.entity_description.key.endswith("_control_percent"):
+            return self._fan_control_percent()
         reading = self.runtime.get(self.source_key)
         if reading and self.entity_description.key == "device_date":
             return date.fromisoformat(reading.value.split("T", 1)[0])
         return reading.value if reading else None
+
+    def _fan_control_percent(self) -> float | None:
+        """Only interpret controls corroborated by a fresh matching curve stage."""
+        control = self.runtime.get(self.source_key)
+        if control is None:
+            return None
+        direction = self.source_key.removeprefix("fan_").removesuffix("_control")
+        for stage in range(1, 5):
+            configured = self.runtime.get(f"fan_{direction}_stage_{stage}")
+            if configured is not None and isclose(
+                control.value / 100, configured.value, rel_tol=0, abs_tol=0.0001
+            ):
+                return configured.value
+        return None
 
     @property
     def extra_state_attributes(self):

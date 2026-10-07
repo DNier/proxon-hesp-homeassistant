@@ -95,9 +95,6 @@
       "filter_days": {
         "name": "Filter remaining time (reference)"
       },
-      "uptime": {
-        "name": "Device calendar (raw)"
-      },
       "counter_02d0": {
         "name": "Operating hours fan level 1"
       },
@@ -140,9 +137,6 @@
       "raw_01f5": {
         "name": "DP 0x01F5 (Hex)"
       },
-      "raw_0110": {
-        "name": "DP 0x0110 (Hex)"
-      },
       "raw_0105": {
         "name": "DP 0x0105 (Hex)"
       },
@@ -152,20 +146,11 @@
       "raw_011c": {
         "name": "DP 0x011C (Hex)"
       },
-      "raw_0116": {
-        "name": "DP 0x0116 (Hex)"
-      },
       "raw_0206": {
         "name": "DP 0x0206 (Hex)"
       },
       "raw_0519": {
         "name": "DP 0x0519 (Hex)"
-      },
-      "raw_051c": {
-        "name": "DP 0x051C (Hex)"
-      },
-      "raw_0330": {
-        "name": "DP 0x0330 (Hex)"
       },
       "raw_0123": {
         "name": "DP 0x0123 (Hex)"
@@ -220,12 +205,6 @@
       },
       "controller_fan_level": {
         "name": "Controller fan level"
-      },
-      "fan_supply_control": {
-        "name": "Supply fan control (raw)"
-      },
-      "fan_extract_control": {
-        "name": "Extract fan control (raw)"
       },
       "capture_status": {
         "name": "Capture status",
@@ -303,6 +282,12 @@
       },
       "raw_118007_0191": {
         "name": "DP 0x0191 / 118007 (Hex)"
+      },
+      "fan_supply_control_percent": {
+        "name": "Supply fan control"
+      },
+      "fan_extract_control_percent": {
+        "name": "Extract fan control"
       }
     },
     "button": {

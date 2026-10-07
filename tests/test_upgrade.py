@@ -1,4 +1,4 @@
-"""Upgrade from the 0.8.0 registry contract without changing identities."""
+"""Upgrade from 0.8.0: retire raw duplicates, preserve other identities/settings."""
 
 import asyncio
 import json
@@ -10,6 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.telemetry_migration import RAW_SENSOR_REPLACEMENTS
 
 BASELINE = json.loads(
     (Path(__file__).parent / "fixtures/registry_0_8_0.json").read_text()
@@ -49,6 +50,12 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             registry.async_update_entity(saved.entity_id, name="Custom ventilation")
         baseline[saved.unique_id] = (saved.entity_id, disabled)
     assert len(baseline) == 54
+    enabled_replacements = {
+        key
+        for raw_key, keys in RAW_SENSOR_REPLACEMENTS.items()
+        if baseline[f"existing-unit_{raw_key}"][1] is None
+        for key in keys
+    }
 
     @asynccontextmanager
     async def receiver(*args):
@@ -63,8 +70,18 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         assert not entry.options
         for unique_id, (entity_id, disabled) in baseline.items():
             current = registry.async_get(entity_id)
+            if unique_id.removeprefix("existing-unit_") in RAW_SENSOR_REPLACEMENTS:
+                assert current is None
+                assert hass.states.get(entity_id) is None
+                continue
             assert current.unique_id == unique_id
-            assert current.disabled_by == disabled
+            key = unique_id.removeprefix("existing-unit_")
+            assert current.disabled_by == (
+                None
+                if key in enabled_replacements
+                and disabled == er.RegistryEntryDisabler.INTEGRATION
+                else disabled
+            )
             if unique_id.endswith(
                 ("temperature_compressor", "compressor_rpm", "filter_days")
             ):
@@ -80,7 +97,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 83
+        assert len(all_entities) == 78
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
@@ -88,6 +105,8 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         }
         assert set(new) == {
             "cooling_threshold",
+            "fan_supply_control_percent",
+            "fan_extract_control_percent",
             "max_heating_output",
             "max_cooling_output",
             "fan_supply_stage_1",
@@ -119,10 +138,14 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         }
         assert new["compressor_running"].disabled_by is None
         assert new["capture_status"].disabled_by is None
+        # Enabled raw_0116 carries visibility to both meaningful limit sensors.
+        assert new["max_heating_output"].disabled_by is None
+        assert new["max_cooling_output"].disabled_by is None
+        assert new["device_date"].disabled_by is None
         for key in (
             "cooling_threshold",
-            "max_heating_output",
-            "max_cooling_output",
+            "fan_supply_control_percent",
+            "fan_extract_control_percent",
             "fan_supply_stage_1",
             "fan_supply_stage_2",
             "fan_supply_stage_3",
@@ -134,7 +157,6 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "last_valid_received",
             "connection",
             "device_datetime",
-            "device_date",
             "experimental_0208_bit_8",
             "experimental_0208_bit_9",
             "experimental_0208_bit_28",

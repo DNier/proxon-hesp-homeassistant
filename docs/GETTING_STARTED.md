@@ -18,9 +18,12 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.14.0** ist die stabile Version. Neu sind elf deaktivierte Diagnosesensoren
-für lesende Service-Einstellungen: Kühlschwelle, maximale Heiz-/Kühlleistung
-und konfigurierte Zu-/Abluftstufen. Keine neuen Schreibfunktionen.
+**0.15.0** ist die stabile Version. Sie ersetzt sieben bestätigte Rohanzeigen
+durch verständliche Werte, einschließlich der aktuellen Zu-/Abluft-Ansteuerung
+in Prozent. Eigene Verweise auf entfernte Sensoren müssen angepasst werden;
+Details im [Migrationsabschnitt](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Die seit 0.14.0 verfügbaren lesenden Service-Einstellungen bleiben erhalten.
+Keine neuen Schreibfunktionen.
 Sie ergänzt gegenüber 0.11.0 außerdem optionale
 Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
 sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
@@ -133,14 +136,20 @@ Aufnahmeoptionen bleiben am übergeordneten Integrationseintrag unter **Konfigur
 
 Updates über HACS installieren und HA neu starten. Benötigte Mitschnitte zuvor
 herunterladen: Sie liegen nur im Arbeitsspeicher. Den bestehenden Eintrag behalten,
-damit Entitätsidentitäten, eigene Namen und Einstellungen erhalten bleiben.
+damit die verbleibenden Entitätsidentitäten, eigenen Namen und Einstellungen
+erhalten bleiben. Die sieben Rohduplikate werden ab 0.15.0 durch verständliche
+Sensoren ersetzt; siehe unten.
 
 Gateway-Adresse, Port oder Namen über **Neu konfigurieren** ändern. Löschen und
 Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
 Gateway können derzeit nicht als Duplikat erkannt werden.
 
-Beim Update von 0.8.0 bleiben die 54 bisherigen Entitätsidentitäten erhalten.
-0.13.0 registriert insgesamt 67 Entitäten am Hauptgerät, einschließlich
+Beim Update auf 0.15.0 werden sieben der 54 Entitätsidentitäten aus 0.8.0
+entfernt: Rohkalender, Geräteuhrzeit-, Drehzahl- und Service-Rohduplikate sowie
+die beiden rohen Lüfterstellwerte. Alle anderen bleiben erhalten.
+[Ersatzsensoren und Migrationsregeln](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
+beschreiben die nötige Anpassung eigener Dashboards, Automationen und Vorlagen.
+0.15.0 registriert insgesamt 78 Entitäten am Hauptgerät, einschließlich
 standardmäßig deaktivierter Diagnose- und Zeitfunktionen. Jeder konfigurierte
 Heizraum ergänzt vier Entitäten. Bestehende Aktivierungseinstellungen bleiben
 erhalten. Automatische Ereignisaufnahmen sind ohne vorherige Aktivierung zunächst
