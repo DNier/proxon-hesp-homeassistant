@@ -21,6 +21,8 @@ LEVELS = [
     ("2240000802000008221500806ff9", 4),
     ("22400008020000082211008084cd", 4),
     ("22400008020000081a130080d98b", 3),
+    # 2026-10-09: fixed captured CRC, independently displayed controller level 3.
+    ("22400008020000081a130082a028", 3),
     ("224000080200000822100080d200", 4),
     ("22400008020000081210008012f5", 2),
     ("22400008020000081a92008089d8", 3),
@@ -109,6 +111,12 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x80009322,
         0x8080121A,
         0x8000135A,
+        0x9200131A,
+        0x8200101A,
+        0x8200111A,
+        0x8200121A,
+        0x82001212,
+        0x82001312,
     ],
 )
 def test_unknown_status_is_not_a_guessed_level(status):

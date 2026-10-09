@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.15.0.
+This table describes the published data-point mappings in version 0.15.1.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -30,13 +30,13 @@ little-endian order unless stated otherwise.
 | Operating mode | 020A / P / 2 | Enum | Eco Summer and Stove compared with display; other labels follow the protocol reference and need variant-specific validation |
 | Room temperature | 0226 / P / 4 | float32 / °C | Compatible with rounded BDE display; not a precision calibration |
 | Target temperature | 0227 / P / 4 | float32 / °C | Display comparisons; receive guard 15–30 °C is not a writable range |
-| Ten temperatures | 03B7 / C / 22 | uint16 × 0.1 / °C | Positive encoding and channel mapping compared with display; negative encoding and fault sentinels unresolved |
+| Ten temperatures | 03B7 / C / 22 | int16 × 0.1 / °C | Positive channel mapping and negative T6 display reference; receive guard −50…150 °C; ambiguous FFFF remains unavailable; [evidence](TEMPERATURE_EVIDENCE.md) |
 | Supply/extract fan speeds | 00C9 / C / 8 | Two float32 / rpm | Display comparisons; finite values from 0 to 10000 |
 | Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw decoding retained internally |
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Ten observed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Eleven display-backed words; other bits and words are not interpreted; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -49,8 +49,13 @@ little-endian order unless stated otherwise.
 | Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | 18 partly or fully uninterpreted payloads; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13
-in that order. Its eleventh slot is not published. Raw channel values above 1500
-are rejected individually; valid neighbouring channels remain available.
+in that order. Its eleventh slot is not published. Values use signed little-endian
+deci-degrees with a receive plausibility guard of −500…1500 raw (−50…150 °C),
+not manufacturer operating limits. `FFFF` remains excluded: an isolated −0.1 °C
+interpretation cannot yet be distinguished from a possible error value. Invalid
+channels do not refresh previous readings; valid neighbouring channels continue
+to update. Normal freshness and disconnect rules remain in force. See
+[temperature evidence and limits](TEMPERATURE_EVIDENCE.md).
 
 Counter mappings are: `02D0–02D3` fan levels 1–4, `02D4` heat pump heating,
 `02D5` heat pump cooling, `02D7` controller, `02D9` preheating.
@@ -153,13 +158,20 @@ Controller fan level accepts only these complete status words:
 |---|---|
 | 1 | `8000100A` |
 | 2 | `80001012` |
-| 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A` |
+| 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
 
 The two additional words `8000921A` and `8000931A` were compared with displayed
 level 3 in Stove mode. Their other bits do not establish PTC, valve or heating
 states. These additions extend the version 0.9.0 allowlist without changing
 entity identities or enabled/disabled settings.
+
+Version 0.15.1 adds only `8200131A`: the BDE showed level 3 during natural winter
+heating while the recorded complete word remained stable. Requested level 1
+and fan control percentages are separate observations, not its validation source.
+Bit 25 is not assigned a meaning and is not masked off for other words. The
+transition words `82001212`, `82001312` and bit-28 words `9200131A`/`92001312`
+remain uninterpreted as levels without their own display references.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
@@ -302,8 +314,10 @@ and user-selected enabled/disabled settings are preserved on upgrade.
   its optional indication is described below and does not establish active defrost.
 - **Intensive duration or remaining time:** no validated data point. The
   integration does not substitute an estimated countdown.
-- **Negative temperatures and error sentinels:** require independent evidence
-  before changing the current receive guards.
+- **Temperature error sentinels:** negative-temperature display evidence now
+  supports signed decoding within a receive plausibility bound. The ambiguous
+  `FFFF` remains excluded; this is not a complete fault-code mapping. Other
+  hardware variants require their own comparison. See [temperature evidence](TEMPERATURE_EVIDENCE.md).
 
 ## Compressor transition evidence
 
@@ -327,7 +341,7 @@ freshness expiry. Requested fan level cannot validate their meaning: `8000111A`
 also occurs with requested level 1 while both fan control values remain 5200.
 Repeated values of 5200 do not independently prove the displayed controller level.
 Unknown status words must not refresh a previous level or suppress valid sibling
-readings. The existing complete-word allowlist is unchanged.
+readings. The complete-word allowlist only admits independently display-backed words.
 
 Supply air remains warm after reported RPM reaches zero. Raw points 03B6 and
 0191 can clear roughly a minute after zero RPM in one context, but before zero
@@ -390,6 +404,11 @@ for approximately five minutes after reported RPM reaches zero, then the display
 and bit change in the same approximately one-second interval. This supports the
 BDE indication on the observed installation, not physical valve feedback or a
 universal mapping across untested models/firmware. It is **not cooling activity**.
+On separate pages of one short natural winter-heating reference clip, BDE
+heating operation, positive compressor RPM and warm supply air are visible;
+the switching-state page shows this valve off. These are closely successive
+observations, not simultaneous readings. Together with the existing comparisons,
+they reinforce that this valve alone cannot identify heating or cooling activity.
 
 Only the display-backed payloads `25000000`, `27000000`, `a7000000`,
 `25020000`, `27020000`, and `a7020000` are interpreted. Other checksum-valid

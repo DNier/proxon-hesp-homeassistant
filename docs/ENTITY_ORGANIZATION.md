@@ -1,7 +1,7 @@
 # Entitäten am Hauptgerät
 
 Diese Einteilung verwendet seit **0.12.0b4** die vorgesehenen HA-Entitätskategorien.
-Die folgende Tabelle beschreibt den Stand **0.15.0**.
+Die folgende Tabelle beschreibt den Stand **0.15.1**.
 Zusätzliche Geräte allein zur Sortierung von Messwerten werden nicht angelegt.
 
 | Einordnung | Entitäten | Bei Neueinrichtung |

@@ -168,3 +168,90 @@ async def test_ha_defaults_retired_raw_expiry_recovery_and_disconnect(hass, fram
         assert not runtime.listeners
         assert runtime.task is None
         assert runtime.timer is None
+
+
+async def test_negative_temperatures_in_ha_keep_per_channel_freshness(hass, frames):
+    # Minimal recorded 2026-10-09 frames, without any capture metadata.
+    first = bytes.fromhex(
+        "224000b70300002cd701e700f7ff26006200f3ff32001301c70158030000afeb"
+    )
+    second = bytes.fromhex(
+        "224000b70300002cdb01e700f6ff26006100f2ff32001401cf015b03000021e1"
+    )
+    reader = asyncio.StreamReader()
+    reader.feed_data(frames["0xe1"])
+
+    @asynccontextmanager
+    async def receiver(*args):
+        yield reader
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="PROXON",
+        unique_id="negative-temperature-unit",
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+    )
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    keys = ("temperature_exhaust", "temperature_evaporator", "temperature_supply")
+    ids = {
+        key: registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            f"negative-temperature-unit_{key}",
+            config_entry=entry,
+            suggested_object_id=f"existing_{key}",
+            disabled_by=None,
+        ).entity_id
+        for key in keys
+    }
+    with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        reader.feed_data(first)
+        await hass.async_block_till_done()
+        for key, value in zip(keys, (-0.9, -1.3, 47.1), strict=True):
+            state = hass.states.get(ids[key])
+            assert float(state.state) == value
+            assert state.attributes["unit_of_measurement"] == "°C"
+            assert state.attributes["device_class"] == "temperature"
+            assert registry.async_get(ids[key]).unique_id == (
+                f"negative-temperature-unit_{key}"
+            )
+
+        runtime = entry.runtime_data
+        previous = {key: runtime.values[key] for key in keys[:2]}
+        body = bytearray(second[:-2])
+        body[12:14] = body[18:20] = b"\xff\xff"  # T4/T6 only.
+        sentinel = checked(body)
+        reader.feed_data(sentinel)
+        await hass.async_block_till_done()
+        assert {key: runtime.values[key] for key in keys[:2]} == previous
+        assert float(hass.states.get(ids[keys[2]]).state) == 47.5
+        assert [float(hass.states.get(ids[key]).state) for key in keys[:2]] == [
+            -0.9,
+            -1.3,
+        ]
+
+        for key, age in zip(keys[:2], (31, 90), strict=True):
+            reading, timestamp = runtime.values[key]
+            runtime.values[key] = (reading, timestamp - age)
+        stale = {key: runtime.values[key] for key in keys[:2]}
+        reader.feed_data(sentinel)
+        await hass.async_block_till_done()
+        runtime._notify()
+        assert {key: runtime.values[key] for key in keys[:2]} == stale
+        assert all(hass.states.get(ids[key]).state == "unavailable" for key in keys[:2])
+        assert float(hass.states.get(ids[keys[2]]).state) == 47.5
+
+        reader.feed_data(second)
+        await hass.async_block_till_done()
+        assert [float(hass.states.get(ids[key]).state) for key in keys[:2]] == [
+            -1.0,
+            -1.4,
+        ]
+        assert runtime.diagnostics()["application_bytes_sent"] == 0
+        reader.feed_eof()
+        await hass.async_block_till_done()
+        assert all(hass.states.get(ids[key]).state == "unavailable" for key in keys)
+        assert await hass.config_entries.async_unload(entry.entry_id)

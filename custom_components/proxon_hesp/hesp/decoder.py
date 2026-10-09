@@ -21,6 +21,7 @@ CONTROLLER_FAN_LEVELS = {
     0x80001022: 4,
     0x80001122: 4,
     0x8000131A: 3,
+    0x8200131A: 3,
     0x80001422: 4,
     0x80001522: 4,
     0x8000921A: 3,
@@ -223,14 +224,14 @@ class Decoder:
         if key == "temperatures":
             if len(payload) != 22:
                 return []
-            # Positive deci-degree encoding is verified against the BDE.
-            # Negative encodings and error sentinels are not established yet.
-            # Do not reinterpret high unsigned values as plausible negatives.
-            values = struct.unpack("<11H", payload)[:10]
+            # Signed deci-degrees are supported by negative T6 display evidence.
+            # -50..150 C is receive sanity, not a manufacturer operating range.
+            # Keep 0xFFFF (-1) excluded: sentinel vs -0.1 C is unresolved.
+            values = struct.unpack("<11h", payload)[:10]
             return [
                 Reading(k, v / 10)
                 for k, v in zip(TEMPERATURE_KEYS, values, strict=True)
-                if v <= 1500
+                if v != -1 and -500 <= v <= 1500
             ]
         value = cls._value(key, payload)
         if value is None:
