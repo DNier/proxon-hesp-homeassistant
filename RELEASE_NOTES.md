@@ -3,6 +3,31 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.1 – Negative Temperaturen und ergänzte Luftstufenzuordnung
+
+- Negative Messwerte im bestehenden Temperaturblock werden mit Vorzeichen
+  ausgewertet. Damit bleiben plausible Fortluft- und Verdampferwerte unter
+  0 °C verfügbar. Ungültige Kanäle werden weiterhin einzeln verworfen;
+  positive Nachbarkanäle bleiben erhalten.
+- Die mehrdeutige Temperaturkennung `FFFF` bleibt unverfügbar. Die neue
+  Plausibilitätsgrenze ist keine Hersteller-Betriebsgrenze; eine vollständige
+  Zuordnung aller Fehlerkennungen ist damit nicht bestätigt.
+- **Luftstufe laut Steuerung:** Ein zusätzlicher, am BDE bestätigter
+  vollständiger Statuswert liefert Stufe 3 im beobachteten Winterbetrieb.
+  Andere ungeprüfte Statuswörter werden weiterhin nicht als Stufen interpretiert.
+- Der ergänzte Referenzclip zeigt Heizbetrieb und auf einer separaten BDE-Seite
+  MV-Heizen/Kühlen Aus. Das Ventil erhält keine Zuordnung als allgemeines
+  Heizsignal. PTC-Wohnen und eine allgemeine Heiz-/Kühl-/Abtauerkennung
+  erhalten keine neue Zuordnung.
+- Entitäts-IDs, Einstellungen und Aufnahmeformat bleiben erhalten. Die
+  Korrekturen sind rein lesend und senden keine Anlagenbefehle.
+
+Update von 0.15.0 ohne weitere Konfigurationsmigration. Home Assistant ab
+2026.9; nach Installation neu starten. Bei Updates von älteren Versionen gelten
+weiterhin die [Entitätswechsel ab 0.15.0](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Rückweg: Version 0.15.0 wieder installieren; negative Temperaturen und der neue
+Statuswert werden dann erneut nicht ausgewertet.
+
 ## 0.15.0 – Verständliche Werte statt bestätigter Rohduplikate
 
 - Aktuelle Zu- und Abluft-Ansteuerung in Prozent: zum Beispiel 52 % statt 5200.

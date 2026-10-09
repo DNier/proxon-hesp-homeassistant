@@ -18,7 +18,12 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.15.0** ist die stabile Version. Sie ersetzt sieben bestätigte Rohanzeigen
+**0.15.1** ist die stabile Version. Gegenüber 0.15.0 ergänzt sie negative
+Temperaturen im bestehenden Messblock und einen am BDE bestätigten Statuswert
+für Luftstufe 3. Die mehrdeutige Temperaturkennung `FFFF` bleibt unverfügbar;
+Entitäts-IDs und Einstellungen bleiben erhalten. Nach Installation HA neu starten.
+
+Seit 0.15.0 ersetzt die Integration sieben bestätigte Rohanzeigen
 durch verständliche Werte, einschließlich der aktuellen Zu-/Abluft-Ansteuerung
 in Prozent. Eigene Verweise auf entfernte Sensoren müssen angepasst werden;
 Details im [Migrationsabschnitt](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
