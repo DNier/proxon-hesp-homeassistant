@@ -58,7 +58,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.15.1.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.15.2.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
@@ -70,11 +70,14 @@ Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
 
-**Update von 0.15.0 auf 0.15.1:** Negative Temperaturen werden im bestehenden
-Temperaturblock ausgewertet; ein zusätzlicher, am BDE bestätigter Statuswert
-liefert Luftstufe 3. Die Temperaturkennung `FFFF` bleibt wegen ihrer ungeklärten
-Fehlerbedeutung unverfügbar. Entitäts-IDs und Einstellungen bleiben erhalten;
-Home Assistant nach der Installation neu starten.
+**Update von 0.15.1 auf 0.15.2:** Ein weiterer, am BDE abgeglichener Statuswert
+liefert Luftstufe 3 während des belegten Heiz-Auslaufs. Die bisherige Lücke mit
+„Nicht verfügbar“ wird damit geschlossen. Entitäts-IDs und Einstellungen bleiben
+erhalten; Home Assistant nach der Installation neu starten.
+
+Seit 0.15.1 werden negative Temperaturen im bestehenden Temperaturblock
+ausgewertet. Die Temperaturkennung `FFFF` bleibt wegen ihrer ungeklärten
+Fehlerbedeutung unverfügbar.
 
 **Update von vor 0.15.0:** Sieben bisherige Rohanzeigen werden durch verständliche
 Werte ersetzt: Kühlschwelle, konfigurierte maximale Heiz-/Kühlleistung,

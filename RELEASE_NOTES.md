@@ -3,6 +3,23 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.2 – Luftstufe 3 während des Heiz-Auslaufs
+
+- **Luftstufe laut Steuerung:** Ein weiterer vollständiger, am BDE mit Stufe 3
+  abgeglichener Statuswert wird erkannt. Damit bleibt die Anzeige im belegten
+  Heiz-Auslauf verfügbar, statt nach Ablauf der Aktualitätsfrist auszufallen.
+- Die Ergänzung gilt ausschließlich für dieses Statuswort. Benachbarte
+  ungeprüfte Wörter bleiben unverfügbar; daraus entsteht keine neue
+  Heiz-/Kühl-, PTC- oder LED-Zuordnung.
+- Bestehende Entitäts-IDs, Aktivierungseinstellungen und Aufnahmeformate bleiben
+  erhalten. Die Korrektur ist rein lesend und sendet keine Anlagenbefehle.
+
+Update von 0.15.1 ohne Konfigurationsmigration. Home Assistant ab 2026.9;
+nach Installation neu starten. Bei Updates von vor 0.15.0 gelten weiterhin die
+[Entitätswechsel ab 0.15.0](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Rückweg: Version 0.15.1 wieder installieren; das ergänzte Statuswort liefert dann
+wieder keine Luftstufe.
+
 ## 0.15.1 – Negative Temperaturen und ergänzte Luftstufenzuordnung
 
 - Negative Messwerte im bestehenden Temperaturblock werden mit Vorzeichen

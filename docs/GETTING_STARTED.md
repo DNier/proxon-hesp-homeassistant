@@ -18,10 +18,11 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.15.1** ist die stabile Version. Gegenüber 0.15.0 ergänzt sie negative
-Temperaturen im bestehenden Messblock und einen am BDE bestätigten Statuswert
-für Luftstufe 3. Die mehrdeutige Temperaturkennung `FFFF` bleibt unverfügbar;
-Entitäts-IDs und Einstellungen bleiben erhalten. Nach Installation HA neu starten.
+**0.15.2** ist die stabile Version. Gegenüber 0.15.1 ergänzt sie einen weiteren
+am BDE abgeglichenen Statuswert für Luftstufe 3 während des belegten Heiz-Auslaufs.
+Negative Temperaturen bleiben unterstützt; die mehrdeutige Temperaturkennung
+`FFFF` bleibt unverfügbar. Entitäts-IDs und Einstellungen bleiben erhalten.
+Nach Installation HA neu starten.
 
 Seit 0.15.0 ersetzt die Integration sieben bestätigte Rohanzeigen
 durch verständliche Werte, einschließlich der aktuellen Zu-/Abluft-Ansteuerung
