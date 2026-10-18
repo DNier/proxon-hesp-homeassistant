@@ -1,6 +1,6 @@
 # Freigabestand der Schaltzustände
 
-Stand: 9. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
+Stand: 18. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
 mit 41 unterschiedlichen Aufnahmefenstern der Referenzanlage:
 183.780 prüfsummengültige Frames, keine
 unaufgelösten Bytes. Identische Startzeit/Chunk-Folgen sind dedupliziert;
@@ -57,8 +57,13 @@ zeitgleiche BDE-Referenz keine neue Anzeige aktiven Abtauens. Bit 28 und
 MV-Abtau dürfen nicht gleichgesetzt werden.
 
 Der stabile vollständige Status `8200131A` ist separat mit BDE-Luftstufe 3
-abgeglichen und ab 0.15.1 für diese Anzeige freigegeben. Alle übrigen
-ungeprüften vollständigen Wörter bleiben unverfügbar. Negative Temperaturen
+abgeglichen und ab 0.15.1 für diese Anzeige freigegeben. Ab 0.15.2 ergänzt
+`8200111A` ausschließlich diese Luftstufenanzeige: Eine neue BDE-Hauptseitenreferenz
+zeigt Stufe 3 innerhalb eines stabilen Recorder-Fensters dieses vollständigen
+Worts. Die ungefähre Telegram-Fotozeit ersetzt keine genaue Anzeige-Flanke;
+die Referenz ist keine neue verlustfreie Rohaufnahme. Herkunft und Testgrenzen
+stehen unter [Luftstufenbelegen (Englisch)](DATA_POINTS.md#optional-diagnostics).
+Alle übrigen ungeprüften vollständigen Wörter bleiben unverfügbar. Negative Temperaturen
 werden anhand des Messblocks und einer ausdrücklichen negativen BDE-Anzeige
 geprüft; [Codierung und Grenzen](TEMPERATURE_EVIDENCE.md) (Englisch).
 

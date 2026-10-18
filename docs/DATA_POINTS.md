@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.15.1.
+This table describes the published data-point mappings in version 0.15.2.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -36,7 +36,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Eleven display-backed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Twelve display-backed words; other bits and words are not interpreted; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -158,7 +158,7 @@ Controller fan level accepts only these complete status words:
 |---|---|
 | 1 | `8000100A` |
 | 2 | `80001012` |
-| 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A` |
+| 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A`, `8200111A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
 
 The two additional words `8000921A` and `8000931A` were compared with displayed
@@ -172,6 +172,15 @@ and fan control percentages are separate observations, not its validation source
 Bit 25 is not assigned a meaning and is not masked off for other words. The
 transition words `82001212`, `82001312` and bit-28 words `9200131A`/`92001312`
 remain uninterpreted as levels without their own display references.
+
+Version 0.15.2 adds only `8200111A` (payload `1a110082`, identity
+`224000/0208/4`). A new BDE main-page reference shows level 3 during a stable
+roughly 91-second Recorder interval with that complete word. The reference uses
+existing checksum-validated raw sensors and an approximate Telegram photo time;
+it is not a new lossless wire capture or an exact display-transition timestamp.
+The regression replays the observed payload with synthetic framing and checksum,
+separately from recorded wire-checksum fixtures. Other words, including
+`8200101A`, `8200121A`, `82001312` and `9200131A`, remain unassigned.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction

@@ -49,6 +49,11 @@ PERCENT_KEYS = tuple(f"{key}_percent" for key in CONTROL_KEYS)
 ENTITY_KEYS = ("controller_fan_level", *PERCENT_KEYS)
 
 
+# Display/Recorder reference: observed payload, not a captured wire checksum.
+# Framing and CRC are synthesized only to replay the existing decoder path.
+WINTER_RUNOUT_BODY = bytes.fromhex("22400008020000081a110082")
+
+
 def checked(body):
     """Synthetic invalid data gets a valid CRC to exercise value validation."""
     return body + checksum(body).to_bytes(2, "little")
@@ -84,6 +89,19 @@ def test_recorded_diagnostics_at_every_stream_split(raw, expected):
         } == expected_values
 
 
+def test_display_observed_winter_payload_at_every_stream_split():
+    frame = checked(WINTER_RUNOUT_BODY)
+    for split in range(len(frame) + 1):
+        decoder = Decoder()
+        readings = decoder.feed(frame[:split]) + decoder.feed(frame[split:])
+        assert {r.key: r.value for r in readings} == {
+            "controller_fan_level": 3,
+            "experimental_status_0208": "1a110082",
+            "raw_0208": "1a110082",
+        }
+        assert decoder.stats.checksum_rejected == 0
+
+
 @pytest.mark.parametrize("raw", [LEVELS[0][0], CONTROLS[0][0]])
 def test_invalid_identity_and_crc_rejected_with_recovery(raw):
     frame = bytes.fromhex(raw)
@@ -113,7 +131,6 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x8000135A,
         0x9200131A,
         0x8200101A,
-        0x8200111A,
         0x8200121A,
         0x82001212,
         0x82001312,
@@ -187,7 +204,10 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             100,
             70,
         ]
-        for raw, expected in LEVELS[-2:]:
+        for raw, expected in [
+            *LEVELS[-2:],
+            (checked(WINTER_RUNOUT_BODY).hex(), 3),
+        ]:
             reader.feed_data(bytes.fromhex(raw))
             await hass.async_block_till_done()
             assert hass.states.get(ids["controller_fan_level"]).state == str(expected)
