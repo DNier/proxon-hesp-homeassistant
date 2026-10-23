@@ -18,8 +18,9 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.15.2** ist die stabile Version. Gegenüber 0.15.1 ergänzt sie einen weiteren
-am BDE abgeglichenen Statuswert für Luftstufe 3 während des belegten Heiz-Auslaufs.
+**0.15.3** ist die stabile Version. Gegenüber 0.15.2 ergänzt sie einen weiteren,
+durch zwei BDE-Fotovergleiche bestätigten Statuswert für Luftstufe 2 im Winterbetrieb.
+Luftstufe 3 während des belegten Heiz-Auslaufs wird seit 0.15.2 erkannt.
 Negative Temperaturen bleiben unterstützt; die mehrdeutige Temperaturkennung
 `FFFF` bleibt unverfügbar. Entitäts-IDs und Einstellungen bleiben erhalten.
 Nach Installation HA neu starten.

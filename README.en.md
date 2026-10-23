@@ -41,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.15.2**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.15.3**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -49,10 +49,11 @@ Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
 
-Version 0.15.2 adds one complete display-backed controller word for fan level 3
-during the observed heating run-out, closing an unavailable-state gap.
-Existing entity IDs and settings are preserved; restart Home Assistant after
-installation. See [fan-level evidence](docs/DATA_POINTS.md#optional-diagnostics).
+Version 0.15.3 adds one complete controller word for fan level 2 during winter
+operation, corroborated by two independent BDE photo comparisons and stable raw
+captures. Existing entity IDs and settings are preserved; restart Home Assistant
+after installation. Fan level 3 during the observed heating run-out remains
+supported since 0.15.2. See [fan-level evidence](docs/DATA_POINTS.md#optional-diagnostics).
 
 Signed temperatures in the existing block remain supported since 0.15.1.
 The ambiguous temperature word `FFFF` remains unavailable; see

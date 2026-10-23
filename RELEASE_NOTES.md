@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.3 – Zusätzliche Luftstufe 2 im Winterbetrieb
+
+- **Luftstufe laut Steuerung:** Ein weiterer vollständiger Statuswert wird als
+  Stufe 2 erkannt. Zwei unabhängige BDE-Fotovergleiche mit stabilen Rohaufnahmen
+  bestätigen die Ergänzung.
+- Ungeprüfte benachbarte Statuswörter bleiben unbekannt. Daraus entsteht keine
+  neue Heiz-/Kühl-, Abtau- oder PTC-Zuordnung.
+- Die vorhandene Entität, IDs, Einstellungen und Aktualitätsregeln bleiben
+  erhalten. Die Ergänzung liest ausschließlich vorhandene Daten.
+
+Update von 0.15.2 ohne Konfigurationsmigration. Home Assistant ab 2026.9;
+nach Installation neu starten. Bei Updates von vor 0.15.0 gelten weiterhin die
+[Entitätswechsel ab 0.15.0](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Rückweg: Version 0.15.2 wieder installieren; das ergänzte Statuswort liefert dann
+wieder keine Luftstufe.
+
 ## 0.15.2 – Luftstufe 3 während des Heiz-Auslaufs
 
 - **Luftstufe laut Steuerung:** Ein weiterer vollständiger, am BDE mit Stufe 3

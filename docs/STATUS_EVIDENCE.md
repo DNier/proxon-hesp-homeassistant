@@ -1,6 +1,6 @@
 # Freigabestand der Schaltzustände
 
-Stand: 18. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
+Stand: 23. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
 mit 41 unterschiedlichen Aufnahmefenstern der Referenzanlage:
 183.780 prüfsummengültige Frames, keine
 unaufgelösten Bytes. Identische Startzeit/Chunk-Folgen sind dedupliziert;
@@ -63,6 +63,19 @@ zeigt Stufe 3 innerhalb eines stabilen Recorder-Fensters dieses vollständigen
 Worts. Die ungefähre Telegram-Fotozeit ersetzt keine genaue Anzeige-Flanke;
 die Referenz ist keine neue verlustfreie Rohaufnahme. Herkunft und Testgrenzen
 stehen unter [Luftstufenbelegen (Englisch)](DATA_POINTS.md#optional-diagnostics).
+
+Ab 0.15.3 ergänzt `82001312` ausschließlich Stufe 2. Zwei
+unabhängige Originalfotos vom 20. und 21. Oktober zeigen diese Stufe; die jeweils
+angezeigte Geräteminute liegt vollständig in einem stabilen Rohwortfenster.
+Das identische Telegramm einschließlich aufgezeichneter Prüfsumme ist in beiden
+Mitschnitten enthalten. Die Zuordnung beruht auf einer getrennten Sichtprüfung
+und dem Zeitkontext; die strengere automatische Fünfsekundenregel des privaten
+Beobachters wurde dafür nicht als erfüllt behandelt. Die benachbarten Wörter
+`80001312`, `82001212`, `92001312` und `9200131A` bleiben ungeklärt.
+Weitere natürliche Winteranläufe wiederholen den längeren Bit-28-Zeitraum um
+MV-Abtau; sie liefern ohne neue BDE-Fotos keine zusätzliche Heiz-, Abtau- oder
+PTC-Zuordnung. Die Basiskorpuszahlen oben bleiben unverändert.
+
 Alle übrigen ungeprüften vollständigen Wörter bleiben unverfügbar. Negative Temperaturen
 werden anhand des Messblocks und einer ausdrücklichen negativen BDE-Anzeige
 geprüft; [Codierung und Grenzen](TEMPERATURE_EVIDENCE.md) (Englisch).

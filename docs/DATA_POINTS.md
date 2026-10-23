@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.15.2.
+This table describes the published data-point mappings in version 0.15.3.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -36,7 +36,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Twelve display-backed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Thirteen display-backed words; other bits and words are not interpreted; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -157,7 +157,7 @@ Controller fan level accepts only these complete status words:
 | Level | Status words |
 |---|---|
 | 1 | `8000100A` |
-| 2 | `80001012` |
+| 2 | `80001012`, `82001312` |
 | 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A`, `8200111A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
 
@@ -170,7 +170,7 @@ Version 0.15.1 adds only `8200131A`: the BDE showed level 3 during natural winte
 heating while the recorded complete word remained stable. Requested level 1
 and fan control percentages are separate observations, not its validation source.
 Bit 25 is not assigned a meaning and is not masked off for other words. The
-transition words `82001212`, `82001312` and bit-28 words `9200131A`/`92001312`
+transition word `82001212` and bit-28 words `9200131A`/`92001312`
 remain uninterpreted as levels without their own display references.
 
 Version 0.15.2 adds only `8200111A` (payload `1a110082`, identity
@@ -180,7 +180,29 @@ existing checksum-validated raw sensors and an approximate Telegram photo time;
 it is not a new lossless wire capture or an exact display-transition timestamp.
 The regression replays the observed payload with synthetic framing and checksum,
 separately from recorded wire-checksum fixtures. Other words, including
-`8200101A`, `8200121A`, `82001312` and `9200131A`, remain unassigned.
+`8200101A`, `8200121A` and `9200131A`, remain unassigned.
+
+Version 0.15.3 adds `82001312` (payload `12130082`, identity
+`224000/0208/4`) as level 2. Two independent BDE main-page photos from
+20 and 21 October 2026 show Eco Winter, level 2 and the heating label. Each
+displayed device-clock minute lies wholly inside a stable interval of this
+complete word in its corresponding raw capture. The approximate Telegram send
+time is not an exact photo or display-transition timestamp; the independent
+review uses both clock-minute context and the stable raw intervals:
+
+| Date (CEST) | Stable raw-word interval | Device minute shown |
+|---|---|---|
+| 20 October 2026 | 10:43:23.775–10:47:07.987 | 10:44 |
+| 21 October 2026 | 14:33:02.600–14:36:40.414 | 14:34 |
+
+The identical wire frame `2240000802000008121300820001`, including its recorded
+checksum, occurs in both captures and is replayed at every TCP split in tests.
+This is a manually corroborated complete-word mapping, not an automatic finding
+under the stricter five-second matching rule used by the private observer.
+Neither bit 25 nor bit 28 is masked to extend this result. `80001312`,
+`82001212`, `92001312` and `9200131A` remain unassigned; in particular the
+bit-28 main-page photo showing level 2 overlaps a raw-word change in its
+displayed device minute and cannot validate either adjacent word.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction

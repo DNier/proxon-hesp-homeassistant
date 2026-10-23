@@ -13,6 +13,10 @@ from custom_components.proxon_hesp.const import DOMAIN, PROFILE
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from custom_components.proxon_hesp.hesp.decoder import Decoder
 
+# 2026-10-20/21: identical captured wire frame; two independent BDE level-2
+# references lie inside stable complete-word intervals. This CRC is recorded.
+WINTER_LEVEL_TWO_FRAME = "2240000802000008121300820001"
+
 # Fixed recorded frames/checksums with display-validated controller levels.
 LEVELS = [
     ("22400008020000081a100080b2dc", 3),
@@ -23,6 +27,7 @@ LEVELS = [
     ("22400008020000081a130080d98b", 3),
     # 2026-10-09: fixed captured CRC, independently displayed controller level 3.
     ("22400008020000081a130082a028", 3),
+    (WINTER_LEVEL_TWO_FRAME, 2),
     ("224000080200000822100080d200", 4),
     ("22400008020000081210008012f5", 2),
     ("22400008020000081a92008089d8", 3),
@@ -102,7 +107,7 @@ def test_display_observed_winter_payload_at_every_stream_split():
         assert decoder.stats.checksum_rejected == 0
 
 
-@pytest.mark.parametrize("raw", [LEVELS[0][0], CONTROLS[0][0]])
+@pytest.mark.parametrize("raw", [LEVELS[0][0], CONTROLS[0][0], WINTER_LEVEL_TWO_FRAME])
 def test_invalid_identity_and_crc_rejected_with_recovery(raw):
     frame = bytes.fromhex(raw)
     for index, value in ((0, 0x11), (1, 0x41), (2, 1), (5, 1), (7, 0)):
@@ -129,11 +134,12 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x80009322,
         0x8080121A,
         0x8000135A,
+        0x80001312,
         0x9200131A,
+        0x92001312,
         0x8200101A,
         0x8200121A,
         0x82001212,
-        0x82001312,
     ],
 )
 def test_unknown_status_is_not_a_guessed_level(status):
@@ -207,6 +213,7 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
         for raw, expected in [
             *LEVELS[-2:],
             (checked(WINTER_RUNOUT_BODY).hex(), 3),
+            (WINTER_LEVEL_TWO_FRAME, 2),
         ]:
             reader.feed_data(bytes.fromhex(raw))
             await hass.async_block_till_done()
@@ -225,9 +232,9 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             assert all(
                 float(hass.states.get(ids[key]).state) == 52 for key in PERCENT_KEYS
             )
-        reader.feed_data(bytes.fromhex(LEVELS[0][0]))
+        reader.feed_data(bytes.fromhex(WINTER_LEVEL_TWO_FRAME))
         await hass.async_block_till_done()
-        assert hass.states.get(ids["controller_fan_level"]).state == "3"
+        assert hass.states.get(ids["controller_fan_level"]).state == "2"
         invalid = checked(valid[:8] + b"\xff" * 4)
         invalid += checked(bytes.fromhex(CONTROLS[0][0])[:8] + b"\xff" * 8)
         previous = {key: runtime.values[key] for key in KEYS}
