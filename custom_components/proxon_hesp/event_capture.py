@@ -1,5 +1,6 @@
-"""Opt-in, bounded recording of validated compressor and status transitions."""
+"""Opt-in, bounded recording of validated readings and undecoded bit edges."""
 
+import asyncio
 import time
 from collections import deque
 from copy import deepcopy
@@ -10,6 +11,14 @@ from .const import STALE_SECONDS
 
 PRE_SECONDS = 180
 POST_SECONDS = 180
+RAW_BIT_POST_SECONDS = 600
+# Bound extensions relative to the first event, independently of prehistory.
+MAX_POST_SECONDS = 900
+RAW_BIT_TRIGGERS = {
+    "raw_118000_01f8": 11,
+    "raw_118000_03b6": 1,
+    "raw_118007_0191": 1,
+}
 RING_BYTES = 524_288
 RING_CHUNKS = 8192
 MAX_CAPTURES = 4
@@ -28,6 +37,9 @@ class EventCapture:
         self.ring_size = 0
         self.baseline = None
         self.status_baseline = None
+        self.raw_bit_baselines = {}
+        self.first_event_time = None
+        self.post_seconds = POST_SECONDS
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
@@ -58,6 +70,9 @@ class EventCapture:
         self.ring_size = 0
         self.baseline = None
         self.status_baseline = None
+        self.raw_bit_baselines.clear()
+        self.first_event_time = None
+        self.post_seconds = POST_SECONDS
         self.events = []
         self.omitted_events = 0
         self.pre_seconds = 0.0
@@ -70,6 +85,7 @@ class EventCapture:
         self.ring_size = 0
         self.baseline = None
         self.status_baseline = None
+        self.raw_bit_baselines.clear()
         self.capture.stop(reason)
 
     def feed(self, data):
@@ -146,6 +162,31 @@ class EventCapture:
             "joined_existing_capture": joined,
         }
 
+    def observe_raw_bit(self, key, raw):
+        """Record exact decoder-validated bit edges, without a PTC interpretation."""
+        if not self.enabled or key not in RAW_BIT_TRIGGERS:
+            return
+        now = time.monotonic()
+        bit = RAW_BIT_TRIGGERS[key]
+        active = bool(int.from_bytes(bytes.fromhex(raw), "little") & (1 << bit))
+        previous = self.raw_bit_baselines.get(key)
+        self.raw_bit_baselines[key] = (active, now)
+        if (
+            previous is None
+            or now - previous[1] >= STALE_SECONDS
+            or previous[0] == active
+        ):
+            return
+        self._record_event(
+            now,
+            "raw_bit_changed",
+            post_seconds=RAW_BIT_POST_SECONDS,
+            key=key,
+            bit=bit,
+            active=active,
+            raw=raw,
+        )
+
     def _finish_due_capture(self, now):
         # A service can run before an overdue timer, without an incoming chunk.
         if (
@@ -154,9 +195,17 @@ class EventCapture:
         ):
             self.capture.stop("duration_limit")
 
-    def _record_event(self, now, event_type, **details):
+    def _record_event(self, now, event_type, *, post_seconds=None, **details):
         """Share bounded recording windows across independent trigger sources."""
         self._finish_due_capture(now)
+        if (
+            post_seconds is not None
+            and self.capture.reason == "recording"
+            and now + post_seconds > self.first_event_time + MAX_POST_SECONDS
+        ):
+            # Preserve the old partial window and start another with prehistory.
+            # Never silently truncate a requested photo window or grow forever.
+            self.capture.stop("candidate_retriggered")
         if self.capture.reason != "recording":
             if self.capture.reason != "idle":
                 self.previous_captures.append(self._export_current())
@@ -165,6 +214,8 @@ class EventCapture:
                     self.overwritten_captures += 1
             self.events = []
             self.omitted_events = 0
+            self.first_event_time = now
+            self.post_seconds = POST_SECONDS
             # on_data already buffered the chunk containing this transition.
             before = [(t, p) for t, p in self.ring if now - t <= PRE_SECONDS]
             start = before[0][0] if before else now
@@ -180,6 +231,15 @@ class EventCapture:
                 for t, p in before
             ]
             self.capture.size = sum(len(p) for _, p in before)
+        if post_seconds is not None:
+            self.post_seconds = post_seconds
+            self.capture.recording_duration = (
+                now - self.capture.monotonic_start + post_seconds
+            )
+            self.capture.timer.cancel()
+            self.capture.timer = asyncio.get_running_loop().call_later(
+                post_seconds, self.capture.stop, "duration_limit"
+            )
         if len(self.events) < MAX_EVENTS:
             self.events.append(
                 {
@@ -190,7 +250,7 @@ class EventCapture:
             )
         else:
             self.omitted_events += 1
-        # Further transitions do not extend the fixed post-event timer.
+        # Only explicit raw-bit edges extend the bounded photo window.
         self._notify()
 
     def summary(self):
@@ -201,7 +261,8 @@ class EventCapture:
             "enabled": self.enabled,
             "pre_duration_seconds": round(self.pre_seconds, 3),
             "requested_pre_seconds": PRE_SECONDS,
-            "requested_post_seconds": POST_SECONDS,
+            "requested_post_seconds": self.post_seconds,
+            "max_post_seconds": MAX_POST_SECONDS,
             "event_count": len(self.events),
             "omitted_events": self.omitted_events,
             "capture_count": len(self.previous_captures)

@@ -90,9 +90,11 @@ Bits 28 aus `0x0208` eine Aufnahme aus. Das Bit wird dabei ausdrücklich nicht a
 bestätigtes Abtausignal bezeichnet. Die Diagnose arbeitet auch dann, wenn die
 experimentelle Bit-Entität deaktiviert ist. Die bestehende Aktivierungseinstellung
 gilt weiterhin; Verdichterstart und -stopp bleiben als Auslöser erhalten.
-Alle Auslöser teilen dieselben vier Speicherplätze und festen Aufnahmefenster.
-Ein Wechsel innerhalb eines laufenden Fensters wird nur markiert. Ein späterer
-Wechsel kann ein neues Fenster mit überlappender Vorgeschichte starten.
+Alle Auslöser teilen dieselben vier Speicherplätze. Verdichter- und Bit-28-Wechsel
+innerhalb eines laufenden Fensters werden nur markiert. Ein späterer Wechsel
+kann ein neues Fenster mit überlappender Vorgeschichte starten. Die
+[Rohbit-Auslöser ab 0.15.4](#rohbitwechsel-mit-längerem-fotofenster-ab-0154)
+können den Nachlauf eines Fensters verlängern.
 Im Export heißt das Ereignis `status_0208_bit_28_changed`; `active` enthält den
 neuen Bitzustand und `raw` die vier Statusbytes in Telegrammreihenfolge.
 
@@ -114,9 +116,10 @@ Seit **0.11.0** gilt:
   Export nur ein Zwischenstand.
 - Bis zu **vier Aufnahmen einschließlich einer laufenden** bleiben erhalten.
   Eine fünfte ersetzt die älteste; `overwritten_captures` zählt Ersetzungen.
-  Weitere Übergänge innerhalb eines laufenden Fensters werden als Ereignisse
-  vermerkt, ohne es zu verlängern. Maximal 32 Ereignisse werden einzeln gespeichert;
-  weitere werden gezählt. „Bereit“ bedeutet nicht, dass die Automatik angehalten ist.
+  Weitere Verdichter- und Bit-28-Übergänge innerhalb eines laufenden Fensters
+  werden als Ereignisse vermerkt, ohne es zu verlängern. Maximal 32 Ereignisse
+  werden einzeln gespeichert; weitere werden gezählt. „Bereit“ bedeutet nicht,
+  dass die Automatik angehalten ist.
 - **Ereignisaufnahmen löschen** entfernt alle gespeicherten Ereignisaufnahmen.
   Die nächste gültige Zustandsänderung kann erneut eine Aufnahme auslösen.
 - Die jüngste Aufnahme steht in `event_capture.chunks` und `events`.
@@ -124,7 +127,7 @@ Seit **0.11.0** gilt:
   mit eigenen Zeitstempeln und Abschlussgründen. `capture_count` zählt auch
   eine laufende Aufnahme.
 - Manuelle Aufnahmen sind unabhängig. Ihre Dauer verändert nicht die automatischen
-  180/180-Sekunden-Fenster. Deaktivieren der Automatik verwirft den Vorlaufpuffer
+  Aufnahmefenster. Deaktivieren der Automatik verwirft den Vorlaufpuffer
   und beendet eine laufende Ereignisaufnahme mit `disabled`; das Teilergebnis
   bleibt herunterladbar. Erneutes Aktivieren erhält gespeicherte Aufnahmen und
   beginnt mit einer neuen Ausgangsbasis.
@@ -193,6 +196,49 @@ und `joined_existing_capture`. Letzteres ist wahr, wenn nur ein Ereignis zu
 einem laufenden Fenster hinzugefügt wurde. Anschließend den gewöhnlichen
 Diagnoseexport herunterladen; die vorhandenen Offline-Werkzeuge lesen die
 Aufnahme mit `--event`, auch aus den früheren gespeicherten Fenstern.
+
+### Rohbitwechsel mit längerem Fotofenster ab 0.15.4
+
+Ab **0.15.4** lösen bei aktivierter Ereignisaufnahme auch frische Wechsel
+dieser drei bislang ungeklärten Bits eine Aufnahme aus:
+
+| Telegrammkennung | Datenpunkt | Nutzdatenlänge | Bit (nullbasiert, Little Endian) |
+| --- | --- | --- | --- |
+| `118000` | `0x01F8` | 4 Bytes | 11 |
+| `118000` | `0x03B6` | 4 Bytes | 1 |
+| `118007` | `0x0191` | 2 Bytes | 1 |
+
+Das Ereignis `raw_bit_changed` speichert Schlüssel, Bitnummer, Rohwert und
+Bitstatus. Daraus entstehen keine PTC-Sensoren; das Ereignis bestätigt weder
+PTC-Wohnen noch eine Heizfreigabe. Erstwerte, unveränderte Bits, ungültige
+Telegramme, Wiederverbindungen und Datenlücken
+von mindestens 30 Sekunden lösen keine Aufnahme aus. Andere Bits desselben
+Worts lösen ebenfalls nichts aus. Zusätzliche Rohsensoren müssen dafür nicht
+aktiviert werden; die Aufnahme verwendet den vorhandenen Decoder und dieselbe
+empfangende Verbindung.
+
+Nach einem solchen Wechsel werden bis zu **600 Sekunden Nachlauf** angefordert,
+auch wenn bereits ein Verdichter- oder Diagnosefenster läuft. Weitere relevante
+Rohbitwechsel verlängern diesen Nachlauf, höchstens jedoch bis **900 Sekunden
+nach dem ersten Ereignis** des Fensters. Würde ein neuer Wechsel diese Grenze
+überschreiten, bleibt das bisherige Fenster als Teilaufnahme mit Abschlussgrund
+`candidate_retriggered` erhalten und ein neues beginnt mit dem vorhandenen
+Vorlauf. Beide Fenster können sich überlappen und zählen nicht als unabhängige
+Belege. Verdichter-, Bit-28- und manuelle Diagnoseauslöser verlängern ein
+laufendes Fenster weiterhin nicht.
+
+Die bisherigen Grenzen von vier Fenstern, 1 MiB und 16.384 Empfangsblöcken pro
+Fenster sowie 32 einzeln gespeicherten Ereignissen gelten weiter. Der Export
+nennt den angeforderten Nachlauf und die tatsächliche Dauer; Speichergrenzen
+oder Verbindungsabbrüche können früher beenden. Einschließlich Vorlauf kann
+ein Fenster höchstens 1.080 Sekunden dauern. Gespeicherte Aufnahmen werden
+weiterhin nur durch die bestehende Vier-Fenster-Rotation ersetzt.
+
+Die zehn Minuten schaffen Zeit für eine spätere BDE-Fotoreferenz, garantieren
+aber keine vollständigen Rohdaten zu jedem Foto. Besonders verspätete
+Benachrichtigungen, späte Fotos und vorzeitig beendete Aufnahmen müssen in der
+Auswertung ausdrücklich ohne passenden Rohkontext bleiben. Die Fotozeit ist
+die ungefähre Ablesezeit und kein Beleg für den ursprünglichen Umschaltzeitpunkt.
 
 ## Status und Exportfelder
 

@@ -3,6 +3,38 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.4 – Passive Rohbit-Ereignisaufnahmen mit längerem Fotofenster
+
+- Bei aktivierter Ereignisaufnahme lösen frische Wechsel von drei bislang
+  ungeklärten Rohbits zusätzlich eine Diagnoseaufnahme aus: Bit 11 aus
+  `118000/0x01F8/4`, Bit 1 aus `118000/0x03B6/4` und Bit 1 aus
+  `118007/0x0191/2`. Daraus entstehen keine PTC-Sensoren oder bestätigten
+  Heizfreigaben. Erstwerte, unveränderte Bits, ungültige Daten,
+  Wiederverbindungen und mindestens 30 Sekunden alte Ausgangswerte lösen
+  keine Aufnahme aus.
+- Ein solcher Wechsel fordert bis zu 600 Sekunden Nachlauf für eine spätere
+  BDE-Fotoreferenz an. Weitere relevante Rohbitwechsel verlängern das Fenster
+  höchstens bis 900 Sekunden nach seinem ersten Ereignis. Würde der gewünschte
+  Nachlauf diese Grenze überschreiten, bleibt die bisherige Teilaufnahme mit
+  `candidate_retriggered` erhalten und ein neues Fenster beginnt mit dem
+  vorhandenen Vorlauf. Überlappende Fenster sind keine unabhängigen Belege.
+- Die bestehenden Grenzen von vier Fenstern, 1 MiB und 16.384 Empfangsblöcken
+  pro Fenster sowie 32 einzeln gespeicherten Ereignissen bleiben erhalten.
+  Speicherlimits oder Verbindungsabbrüche können Aufnahmen früher beenden;
+  eine spätere Fotoreferenz hat daher nicht automatisch passenden Rohkontext.
+- Die vorhandene Aktivierungseinstellung, Entitäts-IDs und übrigen
+  Benutzereinstellungen bleiben erhalten. Zusätzliche Rohsensoren müssen
+  nicht aktiviert werden. Die Aufnahme sendet keine Anlagenbefehle, startet
+  keine Abfragen und öffnet keine zusätzliche Verbindung.
+
+Update von 0.15.3 ohne Konfigurationsmigration. Home Assistant ab 2026.9;
+nach dem HACS-Update Home Assistant neu starten. Bei Updates von vor 0.15.0
+gelten weiterhin die [Entitätswechsel ab 0.15.0](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Details im [Diagnosehandbuch](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md#rohbitwechsel-mit-längerem-fotofenster-ab-0154).
+Rückweg: Version 0.15.3 wieder installieren und Home Assistant neu starten;
+die zusätzlichen Rohbit-Auslöser und ihr längerer Nachlauf entfallen dann.
+Vor einem Neustart benötigte Aufnahmen herunterladen.
+
 ## 0.15.3 – Zusätzliche Luftstufe 2 im Winterbetrieb
 
 - **Luftstufe laut Steuerung:** Ein weiterer vollständiger Statuswert wird als

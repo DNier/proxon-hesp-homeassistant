@@ -116,6 +116,10 @@ class ProxonRuntime:
                                 self.event_capture.observe_rpm(reading.value)
                             elif reading.key == "experimental_status_0208":
                                 self.event_capture.observe_status(reading.value)
+                            else:
+                                self.event_capture.observe_raw_bit(
+                                    reading.key, reading.value
+                                )
                             self.values[reading.key] = (reading, now)
                             if (
                                 reading.key == "uptime"
