@@ -58,7 +58,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.15.3.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.15.4.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
@@ -70,7 +70,13 @@ Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
 
-**Update von 0.15.2 auf 0.15.3:** Ein weiterer, durch zwei BDE-Fotovergleiche
+**Update auf 0.15.4:** Bei aktivierter Ereignisaufnahme lösen drei ungeklärte
+Rohbitwechsel zusätzliche passive Aufnahmen mit längerem Nachlauf für BDE-Fotos
+aus. Daraus werden keine neuen PTC- oder Heiz-/Kühlsensoren abgeleitet.
+Entitäts-IDs und Einstellungen bleiben erhalten; Home Assistant nach der
+Installation neu starten. [Aufnahmefenster und Grenzen](docs/DIAGNOSTICS.md#rohbitwechsel-mit-längerem-fotofenster-ab-0154).
+
+**Seit 0.15.3:** Ein weiterer, durch zwei BDE-Fotovergleiche
 bestätigter Statuswert liefert Luftstufe 2 im Winterbetrieb. Entitäts-IDs und
 Einstellungen bleiben erhalten; Home Assistant nach der Installation neu starten.
 

@@ -41,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.15.3**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.15.4**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -49,7 +49,13 @@ Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
 
-Version 0.15.3 adds one complete controller word for fan level 2 during winter
+Version 0.15.4 adds passive captures for three unmapped raw-bit transitions when
+event capture is enabled, with a longer post-event window for BDE photos.
+This does not establish new PTC or heating/cooling sensors. Existing entity IDs
+and settings are preserved; restart Home Assistant after installation.
+See [capture windows and limits](docs/DIAGNOSTICS.md#rohbitwechsel-mit-längerem-fotofenster-ab-0154).
+
+Since version 0.15.3, one complete controller word provides fan level 2 during winter
 operation, corroborated by two independent BDE photo comparisons and stable raw
 captures. Existing entity IDs and settings are preserved; restart Home Assistant
 after installation. Fan level 3 during the observed heating run-out remains
