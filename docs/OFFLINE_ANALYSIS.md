@@ -80,6 +80,79 @@ wrappers and bare capture objects. Timestamps must be nonnegative monotonic
 integers. Missing metadata remains `null`. Comparison output paths must differ
 from the inputs and from each other.
 
+### Targeted SET payload comparison
+
+The comparison also contains a `set_analysis` view on each side. It reuses the
+inventory's checksum-valid, ordered frame observations; there is no additional
+wire parser. A first header byte whose low nibble is `1` is listed as a
+**SET-type candidate**. This classification does not identify the sender as a
+BDE, establish write permissions, or prove that a value controls an actuator.
+Some cyclic SET payloads carry measured values or time rather than user commands.
+
+```sh
+uv run python -m tools.compare_captures diagnostics.json \
+  --set-dp 0x01F8 --set-dp 0x03B6 --set-dp 0x0191 --sets-only \
+  --output tmp/sets.json --report tmp/sets.md
+```
+
+`--set-dp` is repeatable; omitting it includes all observed SET-type data points.
+The filter applies only to the SET view. `--sets-only` shortens Markdown while
+JSON retains the general inventory and comparison. With no second input, the
+same recording is shown twice unless different before/after windows are supplied.
+
+Each complete identity (three header bytes, DP and payload length) has counts
+for observations, unchanged repetitions, payload changes and new baselines.
+Runs retain first/last observation times, old/new payloads and changed bits.
+Byte offsets and bits are zero-based; bits are LSB-first. Multiple frames
+completed in one TCP chunk retain their stream order, but do not acquire
+invented sub-chunk times. A change is bounded by the last old and first new
+observation, not assigned an exact electrical switching time.
+
+The first observation in each window is a baseline. A payload length change,
+intervening unparsed bytes, or an interval of at least `--set-max-gap-ms`
+(default 30000) starts another baseline. Different lengths remain separate
+identities; returning to an earlier length does not bridge across the intervening
+format. This limit is an analysis choice, not a guaranteed bus cadence. Complete
+exported-byte coverage cannot establish that no electrical bus traffic was lost.
+Separate captures/windows do not establish an edge between their final values.
+
+For photos, supply a private JSON list with `--before-observations` or
+`--after-observations`. A sidecar replaces that side's embedded marks for this
+comparison only; no input is modified. Each entry uses the same required
+`elapsed_ms`, `label` and `observation` fields as a manual mark. Optional
+`evidence_id` and `trigger_elapsed_ms` retain provenance:
+
+```json
+[
+  {
+    "elapsed_ms": 125000,
+    "label": "BDE switching states",
+    "observation": "PTC-Wohnen Off; MV-Abtau On",
+    "evidence_id": "local-photo-reference",
+    "trigger_elapsed_ms": 90000
+  }
+]
+```
+
+The example times are illustrative. Convert an actual photo/read time to the
+recording's clock and document its uncertainty privately. Telegram send time is
+only an approximate read time; the BDE clock may differ from the host clock.
+References remain point-in-time observations and are never extended until the
+next photo. Only changes within `--set-observation-window-ms` (default 5000)
+of the **observation** time are listed, with signed time differences. The earlier
+trigger is retained separately and never used to align the photo. References
+outside the selected capture/window remain explicitly without raw context.
+Each reference also lists at most the closest preceding and following actual
+SET sample per full identity within the same time limit, so constant payloads
+can be inspected without inventing an unchanged equipment state. When samples
+share the reference timestamp, their order relative to the photo remains
+unknown, even if the frame stream itself has a known order.
+Temporal proximity confirms neither causation nor the meaning of a status bit;
+an empty nearby-change list is not an unchanged/off equipment state.
+
+Keep raw reports, reference sidecars and photos private. The tool opens no
+equipment connection, sends no SET and does not change integration entities.
+
 ### Aligning recorded user observations
 
 Manual captures can contain an `observations` list. Each entry has `elapsed_ms`,

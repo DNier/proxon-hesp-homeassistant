@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from tools.inventory_capture import inventory, load_capture
+from tools.set_comparison import analyze_sets, changed_bits, normalize_data_points
 
 METADATA = (
     "format_version",
@@ -23,21 +24,31 @@ METADATA = (
 )
 
 
-def changed_bits(before: str, after: str) -> list[dict] | None:
-    """Byte offsets and LSB-first bit indexes; no inferred semantic labels."""
-    left, right = bytes.fromhex(before), bytes.fromhex(after)
-    if len(left) != len(right):
-        return None
-    return [
-        {"byte": offset, "bit": bit, "before": (a >> bit) & 1, "after": (b >> bit) & 1}
-        for offset, (a, b) in enumerate(zip(left, right, strict=True))
-        for bit in range(8)
-        if (a ^ b) & (1 << bit)
-    ]
-
-
-def describe(capture: dict, window: tuple, event: dict | None) -> dict:
-    result = inventory(capture["chunks"], start_ms=window[0], end_ms=window[1])
+def describe(
+    capture: dict,
+    window: tuple,
+    event: dict | None,
+    *,
+    set_data_points=None,
+    set_max_gap_ms=30000,
+    set_observation_window_ms=5000,
+    observations=None,
+) -> dict:
+    result = inventory(
+        capture["chunks"],
+        start_ms=window[0],
+        end_ms=window[1],
+        include_frame_observations=True,
+    )
+    marks = capture.get("observations", []) if observations is None else observations
+    result["set_analysis"] = analyze_sets(
+        result,
+        max_gap_ms=set_max_gap_ms,
+        data_points=set_data_points,
+        observations=marks,
+        observation_window_ms=set_observation_window_ms,
+    )
+    del result["frame_observations"]
     result["metadata"] = {key: capture.get(key) for key in METADATA}
     if event is not None:
         if type(event["elapsed_ms"]) is not int or event["elapsed_ms"] < 0:
@@ -68,10 +79,25 @@ def compare(
     after_window=(0, None),
     before_event=None,
     after_event=None,
+    set_data_points=None,
+    set_max_gap_ms=30000,
+    set_observation_window_ms=5000,
+    before_observations=None,
+    after_observations=None,
 ) -> dict:
     """Compare observed sequences; each window is half-open [start, end)."""
-    left = describe(before, before_window, before_event)
-    right = describe(after, after_window, after_event)
+    set_data_points = normalize_data_points(set_data_points)
+    options = {
+        "set_data_points": set_data_points,
+        "set_max_gap_ms": set_max_gap_ms,
+        "set_observation_window_ms": set_observation_window_ms,
+    }
+    left = describe(
+        before, before_window, before_event, observations=before_observations, **options
+    )
+    right = describe(
+        after, after_window, after_event, observations=after_observations, **options
+    )
     groups = {}
     for key in sorted(left["groups"].keys() | right["groups"].keys()):
         a, b = left["groups"].get(key), right["groups"].get(key)
@@ -106,7 +132,7 @@ def compare(
     }
 
 
-def render(report: dict) -> str:
+def render(report: dict, *, sets_only: bool = False) -> str:
     lines = [
         "# Capture comparison",
         "",
@@ -128,6 +154,25 @@ def render(report: dict) -> str:
             lines.append(
                 "Manual event (correlation only): " + json.dumps(data["event"])
             )
+        sets = data["set_analysis"]
+        lines += ["", "### SET-type observations", sets["classification"]]
+        for key, group in sets["groups"].items():
+            lines.append(
+                f"{key}: {group['total']} observations, {group['repeats']} repeats, "
+                f"{group['transitions']} changes, {group['baselines']} baselines"
+            )
+            lines.extend(json.dumps(run) for run in group["runs"])
+        if not sets["groups"]:
+            lines.append("No matching SET-type observations; state is unknown.")
+        for observation in sets["observations"]:
+            lines.append("Point-in-time reference: " + json.dumps(observation))
+        lines.append(
+            "Byte/bit indexes are zero-based. First samples and gaps are "
+            "baselines. SET payloads do not prove accepted commands or "
+            "actuator state; nearby photos establish correlation only."
+        )
+    if sets_only:
+        return "\n".join(lines) + "\n"
     for key, item in report["groups"].items():
         lines += [f"\n## {key}: {item['presence']}", json.dumps(item)]
         for side in ("before", "after"):
@@ -158,6 +203,25 @@ def main():
         parser.add_argument(f"--{side}-end-ms", type=int)
         parser.add_argument(f"--{side}-event-ms", type=int)
         parser.add_argument(f"--{side}-event-description", default="Manual event")
+        parser.add_argument(
+            f"--{side}-observations",
+            type=Path,
+            help="Private JSON list of point-in-time references; "
+            "replaces embedded observation marks for this side",
+        )
+    parser.add_argument(
+        "--set-dp",
+        action="append",
+        type=lambda value: int(value, 0),
+        help="Limit SET view to a DP, e.g. 0x01F8; repeatable",
+    )
+    parser.add_argument("--set-max-gap-ms", type=int, default=30000)
+    parser.add_argument("--set-observation-window-ms", type=int, default=5000)
+    parser.add_argument(
+        "--sets-only",
+        action="store_true",
+        help="Show only SET observations in Markdown; JSON keeps inventory",
+    )
     parser.add_argument(
         "--event", action="store_true", help="Use automatic event capture"
     )
@@ -172,13 +236,24 @@ def main():
     args = parser.parse_args()
     if args.event_index != -1 and not args.event:
         parser.error("--event-index requires --event")
+    sources = [args.before, args.after or args.before]
+    sources.extend(
+        path
+        for path in (args.before_observations, args.after_observations)
+        if path is not None
+    )
     if args.output.resolve() == args.report.resolve() or any(
         out.resolve() == source.resolve()
         for out in (args.output, args.report)
-        for source in (args.before, args.after or args.before)
+        for source in sources
     ):
         parser.error("output paths must be distinct from each other and inputs")
     options = {}
+    options.update(
+        set_data_points=args.set_dp,
+        set_max_gap_ms=args.set_max_gap_ms,
+        set_observation_window_ms=args.set_observation_window_ms,
+    )
     for side in ("before", "after"):
         options[f"{side}_window"] = (
             getattr(args, f"{side}_start_ms"),
@@ -194,6 +269,10 @@ def main():
             }
         )
     try:
+        for side in ("before", "after"):
+            path = getattr(args, f"{side}_observations")
+            if path is not None:
+                options[f"{side}_observations"] = json.loads(path.read_text())
         report = compare(
             load_capture(args.before, event=args.event, event_index=args.event_index),
             load_capture(
@@ -206,7 +285,7 @@ def main():
     except (ValueError, KeyError, TypeError) as err:
         parser.error(str(err))
     args.output.write_text(json.dumps(report, indent=2) + "\n")
-    args.report.write_text(render(report))
+    args.report.write_text(render(report, sets_only=args.sets_only))
 
 
 if __name__ == "__main__":

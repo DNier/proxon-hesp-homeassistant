@@ -51,3 +51,42 @@ def test_empty_and_invalid_timing():
         inventory([chunk(OFF, 2), chunk(ON, 1)])
     with pytest.raises(ValueError, match="nonnegative"):
         inventory([chunk(OFF, True)])
+
+
+def test_optional_ordered_observations_keep_size_changes_and_skipped_bytes():
+    body = bytes.fromhex("118000f8010000044000")
+    short = body + checksum(body).to_bytes(2, "little")
+    result = inventory(
+        [chunk(OFF + short + b"noise" + ON, 42)],
+        include_frame_observations=True,
+    )
+    rows = result["frame_observations"]
+    assert [row["identity"] for row in rows] == [
+        "118000/0x01F8/4",
+        "118000/0x01F8/2",
+        "118000/0x01F8/4",
+    ]
+    assert [row["frame_index"] for row in rows] == [0, 1, 2]
+    assert [row["unparsed_bytes_before"] for row in rows] == [0, 0, 5]
+    assert [row["elapsed_ms"] for row in rows] == [42, 42, 42]
+    assert "frame_observations" not in inventory([chunk(OFF)])
+
+
+def test_observation_windows_retain_global_wire_order_and_frame_completion():
+    result = inventory(
+        [chunk(OFF + ON[:4], 0), chunk(ON[4:], 10), chunk(OFF, 20)],
+        start_ms=10,
+        end_ms=20,
+        include_frame_observations=True,
+    )
+    assert result["frame_observations"] == [
+        {
+            "identity": "118000/0x01F8/4",
+            "elapsed_ms": 10,
+            "frame_index": 1,
+            "payload_hex": "40000000",
+            "unparsed_bytes_before": 0,
+        }
+    ]
+    with pytest.raises(ValueError, match="boolean"):
+        inventory([], include_frame_observations=1)

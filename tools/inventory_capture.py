@@ -26,7 +26,11 @@ def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> d
 
 
 def inventory(
-    chunks: list[dict], *, start_ms: int = 0, end_ms: int | None = None
+    chunks: list[dict],
+    *,
+    start_ms: int = 0,
+    end_ms: int | None = None,
+    include_frame_observations: bool = False,
 ) -> dict:
     """Group by complete three-byte identity, DP and payload size.
 
@@ -39,6 +43,8 @@ def inventory(
         raise ValueError("start_ms must be a nonnegative integer")
     if end_ms is not None and (type(end_ms) is not int or end_ms <= start_ms):
         raise ValueError("end_ms must be an integer greater than start_ms")
+    if type(include_frame_observations) is not bool:
+        raise ValueError("include_frame_observations must be a boolean")
     data = bytearray()
     ends, times = [], []
     for chunk in chunks:
@@ -52,6 +58,8 @@ def inventory(
         times.append(timestamp)
 
     groups = {}
+    observations = []
+    frame_index = 0
     pos = parsed = frames = 0
     while pos + 10 <= len(data):
         header = data[pos : pos + 8]
@@ -76,9 +84,12 @@ def inventory(
         ):
             pos += 1
             continue
+        frame_start = pos
         pos += length
         parsed += length
         timestamp = times[bisect_left(ends, pos)]
+        current_frame_index = frame_index
+        frame_index += 1
         if timestamp < start_ms or (end_ms is not None and timestamp >= end_ms):
             continue
         frames += 1
@@ -100,6 +111,16 @@ def inventory(
             },
         )
         raw = frame[8:-2].hex()
+        if include_frame_observations:
+            observations.append(
+                {
+                    "identity": key,
+                    "elapsed_ms": timestamp,
+                    "frame_index": current_frame_index,
+                    "payload_hex": raw,
+                    "unparsed_bytes_before": frame_start - (parsed - length),
+                }
+            )
         item["count"] += 1
         item["payload_counts"][raw] = item["payload_counts"].get(raw, 0) + 1
         item["last_seen_ms"] = timestamp
@@ -107,7 +128,7 @@ def inventory(
             item["values"].append(raw)
         if not item["changes"] or item["changes"][-1]["payload_hex"] != raw:
             item["changes"].append({"elapsed_ms": timestamp, "payload_hex": raw})
-    return {
+    result = {
         "window": {"start_ms": start_ms, "end_ms": end_ms},
         "byte_coverage_scope": "whole_capture",
         "max_chunk_gap_ms": max(
@@ -120,6 +141,9 @@ def inventory(
         "last_chunk_ms": times[-1] if times else 0,
         "groups": dict(sorted(groups.items())),
     }
+    if include_frame_observations:
+        result["frame_observations"] = observations
+    return result
 
 
 def main():

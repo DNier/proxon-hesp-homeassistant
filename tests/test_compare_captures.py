@@ -115,3 +115,101 @@ def test_cli_and_legacy_wrappers(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         main()
     assert load_capture(source) == data
+
+
+def test_targeted_sets_reuse_inventory_and_window_baselines():
+    source = capture((0, OFF), (5, OFF), (10, ON), (15, ON), (20, OFF))
+    report = compare(
+        source,
+        source,
+        before_window=(0, 10),
+        after_window=(10, 21),
+        set_data_points=[0x01F8],
+        after_observations=[
+            {
+                "elapsed_ms": 19,
+                "label": "BDE",
+                "observation": "display read now",
+                "trigger_elapsed_ms": 0,
+            }
+        ],
+    )
+    key = "118000/0x01F8/4"
+    before = report["before"]["set_analysis"]["groups"][key]
+    after = report["after"]["set_analysis"]["groups"][key]
+    assert (before["total"], before["baselines"], before["repeats"]) == (2, 1, 1)
+    assert after["runs"][0]["kind"] == "baseline"
+    assert after["runs"][0]["previous_payload_hex"] is None
+    assert after["transitions"] == 1
+    point = report["after"]["set_analysis"]["observations"][0]
+    assert point["nearby_changes"][0]["delta_ms"] == 1
+    assert point["trigger_elapsed_ms"] == 0
+    assert "frame_observations" not in report["after"]
+    assert "1 changes" in render(report, sets_only=True)
+    assert "payload frequencies" not in render(report, sets_only=True)
+    assert "payload frequencies" in render(report)
+
+
+def test_set_cli_reference_sidecar_is_preserved(tmp_path, monkeypatch):
+    source, marks = tmp_path / "capture.json", tmp_path / "references.json"
+    source.write_text(json.dumps(capture((0, OFF), (10, ON))))
+    marks.write_text(
+        json.dumps(
+            [
+                {
+                    "elapsed_ms": 9,
+                    "label": "BDE photo",
+                    "observation": "PTC-Wohnen Off",
+                    "evidence_id": "photo-A",
+                    "trigger_elapsed_ms": 1,
+                }
+            ]
+        )
+    )
+    original = marks.read_bytes()
+    output, report = tmp_path / "sets.json", tmp_path / "sets.md"
+    argv = [
+        "compare",
+        str(source),
+        "--after-observations",
+        str(marks),
+        "--set-dp",
+        "0x01F8",
+        "--sets-only",
+        "--output",
+        str(output),
+        "--report",
+        str(report),
+    ]
+    monkeypatch.setattr("sys.argv", argv)
+    main()
+    result = json.loads(output.read_text())
+    point = result["after"]["set_analysis"]["observations"][0]
+    assert point["evidence_id"] == "photo-A"
+    assert point["nearby_changes"][0]["elapsed_ms"] == 10
+    assert marks.read_bytes() == original
+    argv[argv.index(str(output))] = str(marks)
+    monkeypatch.setattr("sys.argv", argv)
+    with pytest.raises(SystemExit):
+        main()
+    assert marks.read_bytes() == original
+
+
+def test_set_filter_generator_is_shared_by_both_sides():
+    source = capture((0, OFF), (10, ON))
+    report = compare(source, source, set_data_points=(dp for dp in [0x01F8]))
+    assert report["before"]["set_analysis"] == report["after"]["set_analysis"]
+    assert set(report["after"]["set_analysis"]["groups"]) == {"118000/0x01F8/4"}
+
+
+def test_one_same_timestamp_sample_does_not_order_photo_and_frame():
+    report = compare(
+        capture((10, OFF)),
+        capture((10, OFF)),
+        after_observations=[
+            {"elapsed_ms": 10, "label": "BDE", "observation": "read now"}
+        ],
+    )
+    sample = report["after"]["set_analysis"]["observations"][0]["nearby_samples"][0]
+    assert sample["relation"] == "at"
+    assert sample["same_timestamp_order_ambiguous"]

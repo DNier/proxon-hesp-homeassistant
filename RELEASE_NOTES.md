@@ -3,6 +3,33 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.15.5 – Gezielter Offline-Vergleich von SET-Telegrammen
+
+- Die vorhandene Offline-Auswertung zeigt SET-Typkandidaten getrennt nach
+  vollständiger Telegrammkennung, Datenpunkt und Nutzdatenlänge. Sie unterscheidet
+  unveränderte Wiederholungen von Nutzdatenwechseln und nennt alte/neue Bytes,
+  Bitänderungen sowie die begrenzenden Beobachtungszeiten.
+- Aufnahmebeginn, Datenlücken, unaufgelöste Bytes und Längenwechsel bilden eine
+  neue Ausgangsbasis. Fehlende Werte werden nicht als Aus oder unverändert
+  interpretiert. Die bestehende Inventarisierung und Prüfsumme werden wiederverwendet.
+- Private BDE-Fotoreferenzen lassen sich als einzelne Ablesepunkte mit nahen
+  SET-Samples und Änderungen vergleichen. Foto-/Ablesezeit und ein früherer
+  Auslösezeitpunkt bleiben getrennt. Daraus entsteht keine automatische
+  Bestätigung einer Bitbedeutung, Befehlsannahme oder mechanischen Stellung.
+- Datenpunktfilter und eine kompakte SET-Berichtsansicht ergänzen die CLI.
+  Beschreibung und Beispiele: [Offline-Auswertung (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/OFFLINE_ANALYSIS.md#targeted-set-payload-comparison).
+
+Diese Version erweitert die Entwicklerwerkzeuge. Sie enthält keine neue
+PTC-Wohnen- oder Heiz-/Kühlzuordnung und keine zusätzlichen Anlagenbefehle.
+Bestehende Entitäts-IDs, Einstellungen und Aufnahmeformate bleiben erhalten;
+keine Konfigurationsmigration. Home Assistant ab 2026.9. Ein HACS-Update und
+HA-Neustart sind für die Nutzung der Offline-Werkzeuge aus dem Repository nicht
+erforderlich. Wer die Integrationsversion über HACS aktualisiert, sollte vor
+dem anschließenden HA-Neustart benötigte Arbeitsspeicher-Aufnahmen herunterladen.
+Die automatische Auswertung auf einem eigenen NAS ist eine separate Installation.
+Rückweg: Für die Offline-Werkzeuge den vorherigen Repositorystand verwenden;
+für eine über HACS installierte Integration Version 0.15.4 wieder installieren.
+
 ## 0.15.4 – Passive Rohbit-Ereignisaufnahmen mit längerem Fotofenster
 
 - Bei aktivierter Ereignisaufnahme lösen frische Wechsel von drei bislang
