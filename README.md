@@ -45,8 +45,9 @@ Ab Version 0.13.1 ergänzt **MV-Abtau** die optionalen BDE-Schaltzustände.
 Er zeigt keine tatsächliche Abtauaktivität an.
 
 Ab Version 0.16.0 gibt es die optionale **BDE-Betriebsanzeige**. Sie zeigt
-**Heizbetrieb** nur in einer exakt belegten Winterkonstellation nach 15 Sekunden
-stabilen, frischen Empfangs. In anderen Heizphasen, beim Anlauf oder Stopp bleibt
+**Heizbetrieb** nur in ausdrücklich belegten Winterkonstellationen nach 15 Sekunden
+stabilen, frischen Empfangs. Version 0.16.2 ergänzt einen weiteren belegten
+Kontext mit Luftstufe 3. In anderen Heizphasen, beim Anlauf oder Stopp bleibt
 sie **nicht verfügbar**; daraus folgt keine Aussage „Aus“. Die Entität ist
 standardmäßig deaktiviert und unterscheidet noch nicht allgemein zwischen
 Heizen, Kühlen und Abtauen. [Belege und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
@@ -65,7 +66,7 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.16.1.** Die Installation erfordert keine Freigabe von
+**Stabile Version: 0.16.2.** Die Installation erfordert keine Freigabe von
 Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an

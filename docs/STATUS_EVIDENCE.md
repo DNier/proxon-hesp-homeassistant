@@ -112,7 +112,11 @@ Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
 
 Vier unabhängige Fotoreferenzen zeigen Heizbetrieb im exakten Kontext Eco Winter,
 `0208=0x82001312`, `006C=0x27` und positive Verdichterdrehzahl. Die sichtbaren
-Geräteminuten liegen vollständig im passenden Rohkontext. Nach mindestens
+Geräteminuten liegen vollständig im passenden Rohkontext. Seit 0.16.2 ist
+zusätzlich das vollständige Statuswort `0x8200131A` mit denselben übrigen
+Bedingungen zugelassen. Zwei getrennte, über die sichtbare Geräteminute
+abgesicherte Aufnahmeepisoden zeigen dazu Luftstufe 3 und Heizbetrieb.
+Die übrigen Statusbits werden nicht maskiert oder verallgemeinert. Nach mindestens
 15 Sekunden stabilen Empfangs zeigt die neue optionale Diagnoseentität diesen
 BDE-Text; jede Quelle muss innerhalb von sechs Sekunden frisch sein. Andere
 Kontexte bleiben nicht verfügbar, einschließlich anderer Heizphasen. Es gibt

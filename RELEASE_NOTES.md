@@ -3,6 +3,29 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.2 – Weiterer belegter Heizkontext in der BDE-Betriebsanzeige
+
+- Die optionale **BDE-Betriebsanzeige** erkennt zusätzlich eine durch zwei
+  unabhängige, zeitlich geprüfte BDE-Referenzen belegte Winterkonstellation
+  mit Luftstufe 3 und dem sichtbaren Text **Heizbetrieb**.
+- Zugelassen wird ausschließlich ein weiteres vollständiges Statuswort bei
+  Eco Winter, passendem Ventilwort und positiver Verdichterdrehzahl. Jede Quelle
+  muss höchstens sechs Sekunden alt sein; der vollständige Kontext muss
+  15 Sekunden durch echten Empfang stabil bleiben. Auch beim Wechsel zwischen
+  den beiden erlaubten Kontexten beginnt diese Bestätigung erneut.
+- Andere Heizphasen, Anlauf, Stopp und ungeklärte Zustände bleiben nicht verfügbar.
+  Die Anzeige ist weiterhin keine allgemeine Heiz-/Kühl-/Abtau-Erkennung und
+  ergänzt keinen PTC-Zustand. Nicht verfügbar bedeutet nicht „Aus“.
+  [Belege und genauer Umfang (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
+Bestehende Entitäts-IDs, Aktivierungseinstellungen und Aufnahmeformate bleiben
+erhalten; keine Konfigurationsmigration. Die Diagnoseentität bleibt standardmäßig
+deaktiviert. Nach dem HACS-Update Home Assistant neu starten und die vorhandene
+BDE-Betriebsanzeige bei Bedarf aktivieren. Benötigte flüchtige Aufnahmen vorher
+herunterladen. Home Assistant ab 2026.9. Rückweg: Version 0.16.1 über HACS wieder
+installieren und HA neu starten; damit entfällt nur der zusätzliche Kontext.
+Der Empfang bleibt passiv.
+
 ## 0.16.1 – Adress- und Anfrage-/Antwortvergleich in der Offline-Auswertung
 
 - Das bestehende Inventar zeigt zusätzlich die vorgeschlagenen Adressfelder

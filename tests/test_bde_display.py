@@ -1,4 +1,4 @@
-"""Recorded bounded display context, fail-closed source and HA lifecycle checks."""
+"""Public wire vectors, fail-closed source checks and HA lifecycle regressions."""
 
 import asyncio
 import json
@@ -25,10 +25,23 @@ from custom_components.proxon_hesp.sensor import DESCRIPTIONS, ProxonSensor
 RECORDED = json.loads(
     (Path(__file__).parent / "fixtures/bde_display_frames.json").read_text()
 )["frames"]
+FAN3_PUBLIC_FIXTURE = json.loads(
+    (Path(__file__).parent / "fixtures/bde_display_fan3_frames.json").read_text()
+)
+FAN3_PUBLIC_VECTORS = FAN3_PUBLIC_FIXTURE["sequences"]
 # Original checksums from the reviewed minimal reference sequence.
 RPM, MODE, VALVES, STATUS = [bytes.fromhex(item["hex"]) for item in RECORDED[:4]]
 SOURCES = (MODE, STATUS, VALVES, RPM)
 ALL = b"".join(SOURCES)
+# Reuse published source payloads; fan-level-3 replay timing is synthetic.
+FAN3_SOURCES = tuple(
+    next(
+        frame
+        for item in FAN3_PUBLIC_VECTORS[0]["frames"]
+        if (frame := bytes.fromhex(item["hex"]))[:8] == source[:8]
+    )
+    for source in SOURCES
+)
 STOPPED = bytes.fromhex("2240001c0500000800000000ea60")
 A7 = bytes.fromhex("2240006c00000008a70000004738")
 STATUS_9200131A = bytes.fromhex("22400008020000081a130092bd31")
@@ -37,6 +50,14 @@ STATUS_9200131A = bytes.fromhex("22400008020000081a130092bd31")
 def checked(body):
     """Create synthetic negative cases; positive fixtures keep recorded checksums."""
     return body + checksum(body).to_bytes(2, "little")
+
+
+STATUS_8200111A = checked(STATUS[:8] + bytes.fromhex("1a110082"))
+
+
+@pytest.fixture(params=(SOURCES, FAN3_SOURCES), ids=("fan-level-2", "fan-level-3"))
+def heating_sources(request):
+    return request.param
 
 
 @pytest.fixture
@@ -54,9 +75,9 @@ def display_stream():
     return display, feed, decoder
 
 
-def stabilize(feed, start=0.0):
+def stabilize(feed, start=0.0, sources=SOURCES):
     for at in (start, start + 5, start + 10, start + 15):
-        feed(ALL, at)
+        feed(b"".join(sources), at)
 
 
 def test_recorded_sequence_qualifies_on_fresh_receipt_after_15_seconds(display_stream):
@@ -79,7 +100,33 @@ def test_recorded_sequence_qualifies_on_fresh_receipt_after_15_seconds(display_s
     assert display.value(43.579001) is None
 
 
-@pytest.mark.parametrize("frame", SOURCES)
+@pytest.mark.parametrize("sequence", FAN3_PUBLIC_VECTORS, ids=lambda item: item["name"])
+def test_public_fan3_vectors_qualify_only_after_fresh_15_seconds(
+    display_stream, sequence
+):
+    assert (
+        FAN3_PUBLIC_FIXTURE["source"]
+        == "synthetic_timing_of_previously_public_wire_frames"
+    )
+    display, feed, _ = display_stream
+    first_heating = None
+    for item in sequence["frames"]:
+        now = item["elapsed_ms"] / 1000
+        feed(bytes.fromhex(item["hex"]), now)
+        if item["elapsed_ms"] < sequence["first_heating_ms"]:
+            assert display.value(now) is None
+        else:
+            assert display.value(now) == "heating"
+            if first_heating is None:
+                first_heating = item["elapsed_ms"]
+    assert first_heating == sequence["first_heating_ms"]
+    assert first_heating >= 15000
+    assert display.expires_at is not None
+    assert display.value(display.expires_at - 0.001) == "heating"
+    assert display.value(display.expires_at + 0.001) is None
+
+
+@pytest.mark.parametrize("frame", tuple(dict.fromkeys(SOURCES + FAN3_SOURCES)))
 def test_recorded_sources_at_every_stream_split(frame):
     expected = Decoder().feed(frame)
     for split in range(len(frame) + 1):
@@ -111,60 +158,72 @@ def test_observer_preserves_typed_output_and_rejection_statistics():
     assert observed[-1][0] == "operating_mode"
 
 
-def test_property_reads_and_unrelated_frames_cannot_qualify(display_stream):
+def test_property_reads_and_unrelated_frames_cannot_qualify(
+    display_stream, heating_sources
+):
     display, feed, _ = display_stream
+    all_sources = b"".join(heating_sources)
     for now in (0, 5, 10, 14):
-        feed(ALL, now)
+        feed(all_sources, now)
     for now in (14.5, 15, 15.5):
         assert display.value(now) is None
     feed(bytes.fromhex("118000e1000000040300dba6"), 16)
     assert display.value(16) is None
-    feed(RPM, 16)
+    feed(heating_sources[3], 16)
     assert display.value(16) == "heating"
 
 
 @pytest.mark.parametrize("missing", range(4))
-def test_missing_or_stale_source_never_qualifies(display_stream, missing):
+def test_missing_or_stale_source_never_qualifies(
+    display_stream, heating_sources, missing
+):
     display, feed, _ = display_stream
     for now in (0, 5, 10, 15, 20, 25):
-        for index, frame in enumerate(SOURCES):
+        for index, frame in enumerate(heating_sources):
             if index != missing or now == 0:
                 feed(frame, now)
         assert display.value(now) is None
 
 
-def test_expired_gap_cannot_be_bridged_by_new_complete_batch(display_stream):
+def test_expired_gap_cannot_be_bridged_by_new_complete_batch(
+    display_stream, heating_sources
+):
     display, feed, _ = display_stream
-    stabilize(feed)
+    all_sources = b"".join(heating_sources)
+    stabilize(feed, sources=heating_sources)
     assert display.value(21) == "heating"
     assert display.value(21.001) is None
     # No expiry callback or property mutation is needed to detect the gap.
     for now in (22, 27, 32):
-        feed(ALL, now)
+        feed(all_sources, now)
         assert display.value(now) is None
-    feed(ALL, 37)
+    feed(all_sources, 37)
     assert display.value(37) == "heating"
     assert display.expire(43.001)
     assert not display.expire(43.002)
-    feed(ALL, 44)
+    feed(all_sources, 44)
     assert display.value(44) is None
 
 
-def test_future_receipts_and_incoherent_sources_fail_closed(display_stream):
+def test_future_receipts_and_incoherent_sources_fail_closed(
+    display_stream, heating_sources
+):
     display, feed, _ = display_stream
-    stabilize(feed)
+    all_sources = b"".join(heating_sources)
+    mode = heating_sources[0]
+    stabilize(feed, sources=heating_sources)
     assert display.value(14.999) is None
-    feed(MODE, 14.999)
+    feed(mode, 14.999)
     assert display.value(15) is None
     display.reset()
-    for at, frame in zip((20, 26.1, 26.2, 26.3), SOURCES, strict=True):
+    for at, frame in zip((20, 26.1, 26.2, 26.3), heating_sources, strict=True):
         feed(frame, at)
     assert display.value(26.3) is None
     # Bringing the oldest source into the coherent interval starts a new window.
-    feed(MODE, 26.4)
+    feed(mode, 26.4)
     assert display.value(26.4) is None
     for now in (31.4, 36.4, 41.4):
-        feed(ALL, now)
+        feed(all_sources, now)
     assert display.value(41.4) == "heating"
 
 
@@ -181,59 +240,97 @@ def test_future_receipts_and_incoherent_sources_fail_closed(display_stream):
         checked(STATUS[:8] + b"\xff\xff\xff\xff"),
         A7,
         STATUS_9200131A,
+        STATUS_8200111A,
     ),
 )
 def test_changed_or_rejected_source_immediately_clears_indication(
-    display_stream, frame
+    display_stream, heating_sources, frame
 ):
     display, feed, _ = display_stream
-    stabilize(feed)
+    all_sources = b"".join(heating_sources)
+    stabilize(feed, sources=heating_sources)
     assert display.value(15) == "heating"
     feed(frame, 16)
     assert display.value(16) is None
     for now in (17, 22, 27):
-        feed(ALL, now)
+        feed(all_sources, now)
         assert display.value(now) is None
-    feed(ALL, 32)
+    feed(all_sources, 32)
     assert display.value(32) == "heating"
 
 
 @pytest.mark.parametrize("valves", (VALVES, A7))
 def test_9200131a_context_remains_unavailable_with_either_valve_word(
-    display_stream, valves
+    display_stream, heating_sources, valves
 ):
     display, feed, _ = display_stream
+    mode, _, _, rpm = heating_sources
     for now in (0, 5, 10, 15, 20):
-        feed(MODE + STATUS_9200131A + valves + RPM, now)
+        feed(mode + STATUS_9200131A + valves + rpm, now)
         assert display.value(now) is None
 
 
-def test_invalid_then_valid_mode_in_one_chunk_restarts_proof(display_stream):
+@pytest.mark.parametrize(
+    "before,after",
+    ((SOURCES, FAN3_SOURCES), (FAN3_SOURCES, SOURCES)),
+    ids=("fan-level-2-to-3", "fan-level-3-to-2"),
+)
+def test_switching_allowed_full_context_restarts_15_second_proof(
+    display_stream, before, after
+):
     display, feed, _ = display_stream
-    stabilize(feed)
-    unknown = checked(MODE[:8] + b"\xff\xff")
-    feed(MODE + unknown + ALL, 16)
+    stabilize(feed, sources=before)
+    assert display.value(15) == "heating"
+    all_sources = b"".join(after)
+    for now in (16, 21, 26, 30.999):
+        feed(all_sources, now)
+        assert display.value(now) is None
+    feed(all_sources, 31)
+    assert display.value(31) == "heating"
+
+
+def test_neighboring_full_word_stays_unknown_despite_fan_level_three_mapping(
+    display_stream, heating_sources
+):
+    display, feed, _ = display_stream
+    mode, _, valves, rpm = heating_sources
+    readings = Decoder().feed(STATUS_8200111A)
+    assert {item.key: item.value for item in readings}["controller_fan_level"] == 3
+    for now in (0, 5, 10, 15, 20):
+        feed(mode + STATUS_8200111A + valves + rpm, now)
+        assert display.value(now) is None
+
+
+def test_invalid_then_valid_mode_in_one_chunk_restarts_proof(
+    display_stream, heating_sources
+):
+    display, feed, _ = display_stream
+    all_sources = b"".join(heating_sources)
+    mode, status, valves, rpm = heating_sources
+    stabilize(feed, sources=heating_sources)
+    unknown = checked(mode[:8] + b"\xff\xff")
+    feed(mode + unknown + all_sources, 16)
     assert display.value(16) is None
     for now in (21, 26):
-        feed(ALL, now)
+        feed(all_sources, now)
         assert display.value(now) is None
-    feed(ALL, 31)
+    feed(all_sources, 31)
     assert display.value(31) == "heating"
-    feed(ALL + unknown, 32)
+    feed(all_sources + unknown, 32)
     assert display.value(32) is None
     # A new status/valve/RPM receipt cannot resurrect the rejected mode.
-    feed(STATUS + VALVES + RPM, 33)
+    feed(status + valves + rpm, 33)
     assert display.value(33) is None
 
 
 @pytest.mark.parametrize("source_index", range(4))
 @pytest.mark.parametrize("damage", ("checksum", "identity", "reserved", "length"))
 def test_bad_frames_cannot_refresh_or_extend_source(
-    display_stream, source_index, damage
+    display_stream, heating_sources, source_index, damage
 ):
     display, feed, decoder = display_stream
-    stabilize(feed)
-    frame = SOURCES[source_index]
+    stabilize(feed, sources=heating_sources)
+    frame = heating_sources[source_index]
     body = bytearray(frame[:-2])
     if damage == "checksum":
         bad = frame[:-1] + bytes([frame[-1] ^ 1])
@@ -248,7 +345,7 @@ def test_bad_frames_cannot_refresh_or_extend_source(
     accepted = decoder.stats.accepted
     feed(bad, 20)
     assert decoder.stats.accepted == accepted
-    for index, other in enumerate(SOURCES):
+    for index, other in enumerate(heating_sources):
         if index != source_index:
             feed(other, 20)
     assert display.value(21) == "heating"
@@ -256,8 +353,9 @@ def test_bad_frames_cannot_refresh_or_extend_source(
 
 
 async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recovery(
-    hass, frames
+    hass, frames, heating_sources
 ):
+    all_sources = b"".join(heating_sources)
     reader = asyncio.StreamReader()
     reader.feed_data(frames["0xe1"])
     clock = SimpleNamespace(now=100.0)
@@ -314,9 +412,9 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
             await hass.async_block_till_done()
 
         for now in (100, 105, 110):
-            await receive_at(ALL, now)
+            await receive_at(all_sources, now)
             assert hass.states.get(entity_id).state == "unavailable"
-        await receive_at(ALL, 115)
+        await receive_at(all_sources, 115)
         state = hass.states.get(entity_id)
         assert state.state == "heating"
         assert state.attributes["device_class"] == "enum"
@@ -327,17 +425,17 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
         assert not probe.available
         assert probe.native_value is None
         for now in (122, 127, 132, 137):
-            await receive_at(ALL, now)
+            await receive_at(all_sources, now)
             if now == 122:
                 assert hass.states.get(entity_id).state == "unavailable"
         assert hass.states.get(entity_id).state == "heating"
         # A rejected-mode-only chunk yields no typed readings, yet must notify HA.
         rejected = runtime.decoder.stats.value_rejected
-        await receive_at(checked(MODE[:8] + b"\xff\xff"), 138)
+        await receive_at(checked(heating_sources[0][:8] + b"\xff\xff"), 138)
         assert runtime.decoder.stats.value_rejected == rejected + 1
         assert hass.states.get(entity_id).state == "unavailable"
         for now in (139, 144, 149, 154):
-            await receive_at(ALL, now)
+            await receive_at(all_sources, now)
         assert hass.states.get(entity_id).state == "heating"
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         reader.feed_data(frames["0xe1"])
@@ -350,7 +448,7 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
         assert registry.async_get(entity_id).disabled_by is None
         assert hass.states.get(entity_id).state == "unavailable"
         for now in (160, 165, 170, 175):
-            await receive_at(ALL, now)
+            await receive_at(all_sources, now)
         assert hass.states.get(entity_id).state == "heating"
         reader.feed_eof()
         await hass.async_block_till_done()
@@ -362,20 +460,21 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
         assert entry.runtime_data.reconnects == 1
         assert hass.states.get(entity_id).state == "unavailable"
         for now in (180, 185, 190):
-            await receive_at(ALL, now)
+            await receive_at(all_sources, now)
             assert hass.states.get(entity_id).state == "unavailable"
-        await receive_at(ALL, 195)
+        await receive_at(all_sources, 195)
         assert hass.states.get(entity_id).state == "heating"
         # Expired state must also notify when the next chunk is rejected-only.
-        await receive_at(checked(MODE[:8] + b"\xff\xff"), 202.001)
+        await receive_at(checked(heating_sources[0][:8] + b"\xff\xff"), 202.001)
         assert hass.states.get(entity_id).state == "unavailable"
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_silent_stream_publishes_unavailable_at_scheduled_source_deadline(
-    hass, frames
+    hass, frames, heating_sources
 ):
     """Drive the real event-loop timer, including a refreshed earliest deadline."""
+    all_sources = b"".join(heating_sources)
     loop = asyncio.get_running_loop()
     clock = SimpleNamespace(now=loop.time())
     start = clock.now
@@ -437,11 +536,11 @@ async def test_silent_stream_publishes_unavailable_at_scheduled_source_deadline(
             await hass.async_block_till_done()
 
         for elapsed in (0, 5, 10, 15):
-            await receive_at(ALL, elapsed)
+            await receive_at(all_sources, elapsed)
         assert hass.states.get(registered.entity_id).state == "heating"
-        await receive_at(ALL, 16)
+        await receive_at(all_sources, 16)
         # Updating only mode cannot extend the older remaining source receipts.
-        await receive_at(MODE, 17)
+        await receive_at(heating_sources[0], 17)
         assert runtime.bde_display.expires_at == start + 22
         assert_one_expiry_timer()
         await advance_to(20)

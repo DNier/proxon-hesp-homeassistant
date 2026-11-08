@@ -493,8 +493,10 @@ physical start time. Heating/cooling/defrost classification remains unimplemente
 ## Bounded BDE operating-display indication (0.16.0)
 
 The optional diagnostic enum `bde_operating_display` reports `heating` only for
-Eco Winter with full `224000/0208/4=0x82001312`, full `224000/006C/4=0x27` and
-fresh positive `224000/051C/4` compressor speed. All four sources must meet the
+Eco Winter with full `224000/0208/4=0x82001312` or, from 0.16.2,
+`0x8200131A`, full `224000/006C/4=0x27` and fresh positive
+`224000/051C/4` compressor speed. The additional complete word has two independent
+device-minute-backed display references; other level-3 words remain unavailable. All four sources must meet the
 six-second freshness/coherency bound and the combination must remain valid for
 15 seconds of actual receptions. Elsewhere the entity is unavailable; there is
 no Off, cooling, defrost or last-known-value fallback. Existing general telemetry

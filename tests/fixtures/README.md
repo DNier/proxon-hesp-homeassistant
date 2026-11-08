@@ -36,3 +36,13 @@ one SET/CONFIRM pair and one QUERY/RESPONSE pair. Original wire checksums and
 inter-receipt intervals are retained with a shifted time origin. The values are
 uninterpreted; the empty confirmation does not prove any actuator effect. No
 capture identifier, original timestamp, endpoint or hardware role is included.
+
+`bde_display_fan3_frames.json` combines four wire frames already published in
+commit `7d11d54`: the fan-level-3 status frame from `test_fan_diagnostics.py` and
+mode, valve and RPM frames from `bde_display_frames.json`. Original frame bytes
+and checksums are unchanged. The two cases use deliberately synthetic five-second
+cycles with simultaneous or staggered receipts; they are regression cases, not
+two recorded display references. `first_heating_ms` is the first receipt at which
+the tracker qualifies the exact Eco Winter / `0x8200131A` / `0x00000027` context
+with positive RPM after 15 seconds. No private recording, timing, photo or
+metadata is included.
