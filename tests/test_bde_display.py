@@ -476,7 +476,8 @@ async def test_silent_stream_publishes_unavailable_at_scheduled_source_deadline(
     """Drive the real event-loop timer, including a refreshed earliest deadline."""
     all_sources = b"".join(heating_sources)
     loop = asyncio.get_running_loop()
-    clock = SimpleNamespace(now=loop.time())
+    # An integral origin keeps the exact 15-second boundary representable.
+    clock = SimpleNamespace(now=float(int(loop.time())))
     start = clock.now
     reader = asyncio.StreamReader()
     reader.feed_data(frames["0xe1"])
