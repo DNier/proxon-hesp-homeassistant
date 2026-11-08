@@ -41,7 +41,7 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.15.5**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required for stable **0.16.0**. Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -134,3 +134,11 @@ Original code is [MIT licensed](LICENSE); protocol attribution and exclusions
 are documented in [NOTICE.md](NOTICE.md).
 
 [Experimental status-bit comparison guide (German)](docs/EXPERIMENTAL.md).
+
+## Bounded BDE operating display (0.16.0)
+
+The optional, disabled-by-default **BDE operating display** reports Heating only
+for one independently corroborated Eco Winter context after 15 seconds of stable,
+fresh source reception. Other contexts are unavailable, including other heating
+phases, startup and stop; unavailable does not mean Off. This is not a general
+heating/cooling/defrost classifier. See [evidence and exact scope](docs/BDE_DISPLAY_EVIDENCE.md).

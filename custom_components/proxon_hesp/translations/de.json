@@ -49,6 +49,12 @@
       "fan_level": {
         "name": "Angeforderte Luftstufe"
       },
+      "bde_operating_display": {
+        "name": "BDE-Betriebsanzeige",
+        "state": {
+          "heating": "Heizbetrieb"
+        }
+      },
       "operating_mode": {
         "name": "Betriebsart",
         "state": {

@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
+from .bde_display import BdeDisplay
 from .capture import DURATION, Capture
 from .const import PROFILE, STALE_SECONDS
 from .event_capture import EventCapture
@@ -20,6 +21,9 @@ from .hesp.decoder import Decoder, Reading, Statistics
 from .hesp.transport import NoSupportedData, open_receiver, receive
 
 _LOGGER = logging.getLogger(__name__)
+# Schedule just beyond the inclusive six-second receipt bound. This also avoids
+# immediate rescheduling if the event loop wakes a timer slightly early.
+_BDE_EXPIRY_MARGIN = 0.001
 
 
 class ProxonRuntime:
@@ -56,10 +60,12 @@ class ProxonRuntime:
         self.ready = asyncio.Event()
         self.last_error: str | None = None
         self.reconnects = 0
-        self.decoder = Decoder()
+        self.bde_display = BdeDisplay()
+        self.decoder = Decoder(self._observe_bde_display)
         self.previous_stats = Statistics()
         self.task: asyncio.Task | None = None
         self.timer: asyncio.TimerHandle | None = None
+        self._next_general_expiry: float | None = None
         self.writer: asyncio.StreamWriter | None = None
         self.application_bytes_sent = 0
         self.clock_sync_status = "idle"
@@ -86,12 +92,14 @@ class ProxonRuntime:
         if self.timer:
             self.timer.cancel()
             self.timer = None
+        self._next_general_expiry = None
         if self.task:
             self.task.cancel()
             with suppress(asyncio.CancelledError):
                 await self.task
             self.task = None
         self.connected = False
+        self.bde_display.reset()
         self.values.clear()
         self.listeners.clear()
         self.diagnostic_listeners.clear()
@@ -139,6 +147,7 @@ class ProxonRuntime:
             finally:
                 self._set_writer(None)
                 self.connected = False
+                self.bde_display.reset()
                 self.values.clear()
                 self.event_capture.disconnect()
                 self.capture.stop("disconnected")
@@ -150,10 +159,23 @@ class ProxonRuntime:
                     name,
                     getattr(self.previous_stats, name) + value,
                 )
-            self.decoder = Decoder()
+            self.decoder = Decoder(self._observe_bde_display)
             self.reconnects += 1
             await asyncio.sleep(delay)
             delay = min(delay * 2, 60)
+
+    def _observe_bde_display(self, source: str, readings: list[Reading]) -> None:
+        previous_expiry = self.bde_display.expires_at
+        changed = self.bde_display.observe(source, readings, time.monotonic())
+        if self.timer is not None and previous_expiry != self.bde_display.expires_at:
+            self._schedule_expiry()
+        if changed:
+            self._notify()
+
+    def get_bde_operating_display(self) -> str | None:
+        if not self.connected:
+            return None
+        return self.bde_display.value(time.monotonic())
 
     @callback
     def _set_writer(self, writer) -> None:
@@ -249,16 +271,39 @@ class ProxonRuntime:
             listener()
 
     def _schedule_expiry(self) -> None:
-        self.timer = asyncio.get_running_loop().call_later(5, self._expire)
+        now = time.monotonic()
+        if self._next_general_expiry is None:
+            self._next_general_expiry = now + 5
+        deadline = self._next_general_expiry
+        display_expiry = self.bde_display.expires_at
+        if display_expiry is not None:
+            deadline = min(deadline, display_expiry + _BDE_EXPIRY_MARGIN)
+        if self.timer is not None:
+            self.timer.cancel()
+        self.timer = asyncio.get_running_loop().call_later(
+            max(_BDE_EXPIRY_MARGIN, deadline - now), self._expire
+        )
 
     @callback
     def _expire(self) -> None:
-        expired = [key for key in self.values if self.get(key) is None]
-        for key in expired:
-            del self.values[key]
-        if expired:
+        self.timer = None
+        now = time.monotonic()
+        expired = []
+        general_due = (
+            self._next_general_expiry is None or now >= self._next_general_expiry
+        )
+        if general_due:
+            # Earlier display deadlines must not move the general sweep or
+            # diagnostics notifications away from their five-second cadence.
+            expired = [key for key in self.values if self.get(key) is None]
+            for key in expired:
+                del self.values[key]
+            self._next_general_expiry = now + 5
+        display_expired = self.bde_display.expire(now)
+        if expired or display_expired:
             self._notify()
-        self._notify_diagnostics()
+        if general_due:
+            self._notify_diagnostics()
         self._schedule_expiry()
 
     def get(self, key: str) -> Reading | None:

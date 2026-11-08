@@ -22,3 +22,11 @@ Tests do not transmit these frames to equipment.
 default activation and units were extracted from the 0.8.0 release commit noted
 in the file. The `existing_*` entity IDs simulate previously registered IDs;
 no real Home Assistant registry or private identifiers are included.
+
+`bde_display_frames.json` contains a minimal sequence of the four display
+classifier sources with their original recorded checksums and relative receipt
+times. The display comparison supports only Eco Winter, complete status word
+`0x82001312`, complete valve word `0x00000027`, and positive compressor RPM.
+The expected classification also requires fresh coherent sources for 15 seconds;
+individual frames do not establish a general heating, cooling or defrost decoder.
+No photo, wall-clock time, capture identifier or endpoint is included.

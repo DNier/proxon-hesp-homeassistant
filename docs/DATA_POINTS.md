@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.15.3.
+This table describes the published data-point mappings in version 0.16.0.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -489,3 +489,15 @@ is a generic cooling indicator. Positive RPM can also be reported only after the
 LED illuminates and supply air starts cooling, on both the BDE and HESP. The
 existing compressor entity reports RPM > 0, not an independently measured
 physical start time. Heating/cooling/defrost classification remains unimplemented.
+
+## Bounded BDE operating-display indication (0.16.0)
+
+The optional diagnostic enum `bde_operating_display` reports `heating` only for
+Eco Winter with full `224000/0208/4=0x82001312`, full `224000/006C/4=0x27` and
+fresh positive `224000/051C/4` compressor speed. All four sources must meet the
+six-second freshness/coherency bound and the combination must remain valid for
+15 seconds of actual receptions. Elsewhere the entity is unavailable; there is
+no Off, cooling, defrost or last-known-value fallback. Existing general telemetry
+freshness and all other interpretations remain unchanged. This bounded display
+reference does not change the unimplemented physical-activity interpretations
+above. [Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).

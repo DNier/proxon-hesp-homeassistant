@@ -3,6 +3,27 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.0 – Begrenzte BDE-Betriebsanzeige für einen belegten Winterzustand
+
+- Neue optionale Diagnoseentität **BDE-Betriebsanzeige**. Sie zeigt
+  **Heizbetrieb** ausschließlich in einer durch vier unabhängige BDE-Referenzen
+  bestätigten Winterkonstellation. Sie ist standardmäßig deaktiviert.
+- Die Quellen müssen innerhalb von sechs Sekunden frisch und zeitlich passend
+  sein; die Kombination muss 15 Sekunden lang durch echten Empfang stabil
+  bestätigt werden. Bei anderem Zustand, Datenlücken oder Verbindungsabbruch
+  bleibt die Anzeige nicht verfügbar. Nicht verfügbar bedeutet nicht „Aus“.
+- Die Anzeige bildet einen begrenzten BDE-Text ab. Sie unterscheidet noch nicht
+  allgemein zwischen Heizen, Kühlen und Abtauen und ergänzt keinen PTC-Sensor.
+  [Genauer Umfang und Belege (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
+Vorhandene Entitäts-IDs, Einstellungen und Aufnahmeformate bleiben erhalten;
+keine Konfigurationsmigration. Home Assistant ab 2026.9. Nach dem HACS-Update
+Home Assistant neu starten und die neue Diagnoseentität bei Bedarf am PROXON-Gerät
+aktivieren. Vorher benötigte Arbeitsspeicher-Aufnahmen herunterladen.
+Rückweg: Version 0.15.5 über HACS wieder installieren und HA neu starten;
+die neue Anzeige entfällt dann. Der Empfang bleibt passiv und sendet keine
+zusätzlichen Anlagenbefehle.
+
 ## 0.15.5 – Gezielter Offline-Vergleich von SET-Telegrammen
 
 - Die vorhandene Offline-Auswertung zeigt SET-Typkandidaten getrennt nach

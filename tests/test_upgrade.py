@@ -97,13 +97,14 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 78
+        assert len(all_entities) == 79
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
             if e.unique_id not in baseline
         }
         assert set(new) == {
+            "bde_operating_display",
             "cooling_threshold",
             "fan_supply_control_percent",
             "fan_extract_control_percent",
@@ -143,6 +144,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         assert new["max_cooling_output"].disabled_by is None
         assert new["device_date"].disabled_by is None
         for key in (
+            "bde_operating_display",
             "cooling_threshold",
             "fan_supply_control_percent",
             "fan_extract_control_percent",

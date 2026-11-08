@@ -33,6 +33,15 @@ AIR_TEMPERATURE_KEYS = frozenset(TEMPERATURE_KEYS[:4])
 
 DESCRIPTIONS = (
     SensorEntityDescription(
+        key="bde_operating_display",
+        translation_key="bde_operating_display",
+        device_class=SensorDeviceClass.ENUM,
+        options=["heating"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:monitor-dashboard",
+    ),
+    SensorEntityDescription(
         key="cooling_threshold",
         translation_key="cooling_threshold",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -290,6 +299,8 @@ class ProxonSensor(SensorEntity):
 
     @property
     def available(self) -> bool:
+        if self.entity_description.key == "bde_operating_display":
+            return self.runtime.get_bde_operating_display() is not None
         if self.entity_description.key.endswith("_control_percent"):
             return self._fan_control_percent() is not None
         return self.runtime.get(self.source_key) is not None
@@ -304,6 +315,8 @@ class ProxonSensor(SensorEntity):
 
     @property
     def native_value(self):
+        if self.entity_description.key == "bde_operating_display":
+            return self.runtime.get_bde_operating_display()
         if self.entity_description.key.endswith("_control_percent"):
             return self._fan_control_percent()
         reading = self.runtime.get(self.source_key)

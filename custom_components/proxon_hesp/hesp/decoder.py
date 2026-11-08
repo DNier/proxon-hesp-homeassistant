@@ -6,6 +6,7 @@ length and checksum-validated subset can produce sensor values.
 
 import math
 import struct
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -126,9 +127,17 @@ class Statistics:
 
 
 class Decoder:
-    """Accept arbitrary TCP boundaries; retain at most one supported candidate."""
+    """Accept arbitrary TCP boundaries; retain at most one supported candidate.
 
-    def __init__(self) -> None:
+    The optional observer derives local state from validated frames, including
+    rejected typed values. It must never perform network or device operations.
+    """
+
+    def __init__(
+        self,
+        on_validated_frame: Callable[[str, list[Reading]], None] | None = None,
+    ) -> None:
+        self._on_validated_frame = on_validated_frame
         self.buffer = bytearray()
         self.stats = Statistics()
 
@@ -164,6 +173,8 @@ class Decoder:
                 self.stats.checksum_rejected += 1
             else:
                 decoded = self._readings(key, frame[8:-2])
+                if self._on_validated_frame is not None:
+                    self._on_validated_frame(key, decoded)
                 if decoded:
                     readings.extend(decoded)
                     self.stats.accepted += 1

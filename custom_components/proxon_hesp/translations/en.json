@@ -49,6 +49,12 @@
       "fan_level": {
         "name": "Requested fan level"
       },
+      "bde_operating_display": {
+        "name": "BDE operating display",
+        "state": {
+          "heating": "Heating"
+        }
+      },
       "operating_mode": {
         "name": "Operating mode",
         "state": {

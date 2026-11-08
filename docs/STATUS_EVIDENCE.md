@@ -107,3 +107,19 @@ und [FWT-Kompatibilitätsgrenzen](COMPATIBILITY.md).
 Bedienhinweis ergänzt am 4. Oktober 2026 auf Grundlage der Beobachtung an der
 Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
 [Bedienverhalten und passende Versuchsbedingungen](REFERENCE_TESTS.md).
+
+## Begrenzte BDE-Betriebsanzeige ab 0.16.0
+
+Vier unabhängige Fotoreferenzen zeigen Heizbetrieb im exakten Kontext Eco Winter,
+`0208=0x82001312`, `006C=0x27` und positive Verdichterdrehzahl. Die sichtbaren
+Geräteminuten liegen vollständig im passenden Rohkontext. Nach mindestens
+15 Sekunden stabilen Empfangs zeigt die neue optionale Diagnoseentität diesen
+BDE-Text; jede Quelle muss innerhalb von sechs Sekunden frisch sein. Andere
+Kontexte bleiben nicht verfügbar, einschließlich anderer Heizphasen. Es gibt
+keinen allgemeinen Heiz-/Kühl-/Abtauklassifikator und keine Aus-Ableitung.
+
+Die zunächst betrachteten Bit-28-Erweiterungen werden wegen ihrer engeren
+Zeitbeleggrenzen nicht aufgenommen. Die PTC-Gegenfälle wurden anhand unabhängiger
+numerischer Nachbaranzeigen beziehungsweise Geräteuhr-/Videozeiten erneut geprüft;
+eine falsche zeitliche Zuordnung erklärt sie nicht. Daraus folgt weiterhin keine
+allgemeine PTC-Anzeige. [Genauer Belegumfang (Englisch)](BDE_DISPLAY_EVIDENCE.md).
