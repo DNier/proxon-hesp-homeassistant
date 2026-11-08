@@ -1,11 +1,12 @@
 """Offline comparison preserves observations and uncertainty."""
 
 import json
+from pathlib import Path
 
 import pytest
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
-from tools.compare_captures import changed_bits, compare, main, render
+from tools.compare_captures import changed_bits, compare, describe, main, render
 from tools.inventory_capture import load_capture
 
 OFF = bytes.fromhex("118000f80100000800000000a1fd")
@@ -213,3 +214,180 @@ def test_one_same_timestamp_sample_does_not_order_photo_and_frame():
     sample = report["after"]["set_analysis"]["observations"][0]["nearby_samples"][0]
     assert sample["relation"] == "at"
     assert sample["same_timestamp_order_ambiguous"]
+
+
+def address_capture():
+    return {
+        "chunks": json.loads(
+            (Path(__file__).parent / "fixtures/address_frames.json").read_text()
+        )
+    }
+
+
+def test_address_analysis_is_separate_per_capture_and_preserves_inputs():
+    chunks = address_capture()["chunks"]
+    before = {"chunks": [chunks[2]]}
+    after = {"chunks": [chunks[3]]}
+    original = json.loads(json.dumps([before, after]))
+    result = compare(before, after)
+    assert [before, after] == original
+    for side in ("before", "after"):
+        assert result[side]["address_analysis"]["pairs"] == []
+        assert "frame_observations" not in result[side]
+    assert result["before"]["address_analysis"]["counts"]["query"] == 1
+    assert result["after"]["address_analysis"]["counts"]["response"] == 1
+
+
+def test_describe_includes_candidate_routing_and_respects_response_limit():
+    result = describe(address_capture(), (0, None), None, response_max_delay_ms=8)
+    pairs = result["address_analysis"]["pairs"]
+    assert [pair["kind"] for pair in pairs] == ["set_confirm"]
+    assert result["address_analysis"]["max_response_ms"] == 8
+    assert result["groups"]["118007/0x0191/2"]["address"]["destination"] == 30
+    assert "frame_observations" not in result
+
+
+def test_compare_response_limit_applies_to_both_independent_sides():
+    result = compare(address_capture(), address_capture(), response_max_delay_ms=8)
+    assert result["before"]["address_analysis"] == result["after"]["address_analysis"]
+    assert result["after"]["address_analysis"]["counts"]["pairs"] == 1
+
+
+def test_exchange_cli_json_and_compact_markdown(tmp_path, monkeypatch):
+    source, output, markdown = (
+        tmp_path / "capture.json",
+        tmp_path / "result.json",
+        tmp_path / "report.md",
+    )
+    source.write_text(json.dumps(address_capture()))
+    original = source.read_bytes()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "compare",
+            str(source),
+            "--response-max-delay-ms",
+            "8",
+            "--exchanges-only",
+            "--output",
+            str(output),
+            "--report",
+            str(markdown),
+        ],
+    )
+    main()
+    result = json.loads(output.read_text())
+    assert result["before"]["address_analysis"]["counts"]["pairs"] == 1
+    assert result["after"]["address_analysis"]["counts"]["pairs"] == 1
+    assert "set_analysis" in result["after"]
+    assert "groups" in result["after"]
+    rendered = markdown.read_text()
+    assert "candidate" in rendered.lower()
+    assert "SET-type observations" not in rendered
+    assert "payload frequencies" not in rendered
+    assert "set_confirm" in rendered
+    assert source.read_bytes() == original
+    full = render(result)
+    assert "SET-type observations" in full
+    assert "payload frequencies" in full
+
+
+def test_compact_modes_are_mutually_exclusive_in_api_and_cli(tmp_path, monkeypatch):
+    result = compare(address_capture(), address_capture())
+    with pytest.raises(ValueError):
+        render(result, sets_only=True, exchanges_only=True)
+    source, output, markdown = (
+        tmp_path / "in.json",
+        tmp_path / "out.json",
+        tmp_path / "out.md",
+    )
+    source.write_text(json.dumps(address_capture()))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "compare",
+            str(source),
+            "--sets-only",
+            "--exchanges-only",
+            "--output",
+            str(output),
+            "--report",
+            str(markdown),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        main()
+    assert not output.exists()
+    assert not markdown.exists()
+
+
+@pytest.mark.parametrize(
+    "collision", ["before", "after", "references", "same_output", "symlink"]
+)
+def test_exchange_cli_never_overwrites_inputs_or_colliding_outputs(
+    tmp_path, monkeypatch, collision
+):
+    source, second, references = (
+        tmp_path / "before.json",
+        tmp_path / "after.json",
+        tmp_path / "references.json",
+    )
+    output, markdown = tmp_path / "out.json", tmp_path / "out.md"
+    source.write_text(json.dumps(address_capture()))
+    second.write_text(json.dumps(address_capture()))
+    references.write_text("[]")
+    originals = {path: path.read_bytes() for path in (source, second, references)}
+    if collision == "before":
+        output = source
+    elif collision == "after":
+        markdown = second
+    elif collision == "references":
+        output = references
+    elif collision == "same_output":
+        markdown = output
+    else:
+        output.symlink_to(source)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "compare",
+            str(source),
+            str(second),
+            "--after-observations",
+            str(references),
+            "--exchanges-only",
+            "--output",
+            str(output),
+            "--report",
+            str(markdown),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        main()
+    assert all(path.read_bytes() == raw for path, raw in originals.items())
+
+
+def test_exchange_cli_rejects_negative_delay_without_outputs(tmp_path, monkeypatch):
+    source, output, markdown = (
+        tmp_path / "in.json",
+        tmp_path / "out.json",
+        tmp_path / "out.md",
+    )
+    source.write_text(json.dumps(address_capture()))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "compare",
+            str(source),
+            "--response-max-delay-ms",
+            "-1",
+            "--output",
+            str(output),
+            "--report",
+            str(markdown),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        main()
+    assert not output.exists()
+    assert not markdown.exists()

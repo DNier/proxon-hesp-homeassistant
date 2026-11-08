@@ -3,6 +3,33 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.1 – Adress- und Anfrage-/Antwortvergleich in der Offline-Auswertung
+
+- Das bestehende Inventar zeigt zusätzlich die vorgeschlagenen Adressfelder
+  der Telegrammköpfe: Typ, Quelle und Ziel. Vollständige Kennung, Datenpunkt
+  und Nutzdatenlänge bleiben getrennt; der vorhandene Parser und die
+  Prüfsummenberechnung werden wiederverwendet.
+- Neue Ansicht für Kandidatenpaare aus Anfrage/Antwort oder SET/Bestätigung.
+  Umgekehrte Adressen, gleicher Datenpunkt, Reihenfolge und eine einstellbare
+  Zeitgrenze sind erforderlich. Überlappende offene Anfragen bleiben mehrdeutig;
+  Datenlücken, verwaiste, doppelte und späte Antworten werden ausdrücklich genannt.
+- `--exchanges-only` ergänzt die kompakte Berichtsausgabe. JSON enthält weiterhin
+  Inventar und SET-Auswertung. Zeitangaben beziehen sich auf den TCP-Empfang,
+  nicht auf elektrische Buslaufzeiten. Ein Paar bestätigt weder eine Schaltwirkung
+  noch eine Geräte-, Raum- oder PTC-Bedeutung.
+- Die explizite CRC-Beschreibung ist unabhängig gegen die bisherige Transformation
+  und aufgezeichnete Prüfsummen geprüft. Die Produktionsberechnung bleibt gleich.
+  [Offline-Anleitung (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/OFFLINE_ANALYSIS.md#candidate-addresses-and-requestreply-pairs-0161).
+
+Diese Version erweitert die Entwicklerwerkzeuge; bestehende Entitäts-IDs,
+Einstellungen und Aufnahmeformate bleiben erhalten. Keine Konfigurationsmigration,
+keine neuen Anlagenbefehle oder Sensorzuordnungen. Home Assistant ab 2026.9.
+Die automatische NAS-Auswertung ist eine separate Installation. Für die Nutzung
+der Offline-Werkzeuge ist kein HA-Update erforderlich. Bei einem HACS-Update
+vor dem HA-Neustart benötigte flüchtige Aufnahmen herunterladen.
+Rückweg: Version 0.16.0 wieder installieren beziehungsweise deren Offline-Werkzeuge
+verwenden; private Aufnahmen und bereits erstellte Ergebnisse bleiben erhalten.
+
 ## 0.16.0 – Begrenzte BDE-Betriebsanzeige für einen belegten Winterzustand
 
 - Neue optionale Diagnoseentität **BDE-Betriebsanzeige**. Sie zeigt

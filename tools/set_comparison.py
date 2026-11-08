@@ -4,7 +4,6 @@ The low command nibble classifies candidates, not their sender or meaning.
 Raw reports and manually supplied reference observations belong in private storage.
 """
 
-import re
 from bisect import bisect_left, bisect_right
 
 from custom_components.proxon_hesp.capture import (
@@ -13,9 +12,8 @@ from custom_components.proxon_hesp.capture import (
     MAX_OBSERVATIONS,
     validate_observation_text,
 )
-
-_IDENTITY = re.compile(r"([a-f0-9]{6})/0x([0-9A-F]{4})/(0|[1-9][0-9]{0,2})")
-_HEX = re.compile(r"(?:[a-fA-F0-9]{2})*")
+from tools.frame_observations import frames as _frames
+from tools.frame_observations import integer as _integer
 
 
 def changed_bits(before: str, after: str) -> list[dict] | None:
@@ -29,16 +27,6 @@ def changed_bits(before: str, after: str) -> list[dict] | None:
         for bit in range(8)
         if (a ^ b) & (1 << bit)
     ]
-
-
-def _integer(value, name, *, minimum=0, maximum=None):
-    if (
-        type(value) is not int
-        or value < minimum
-        or (maximum is not None and value > maximum)
-    ):
-        raise ValueError(f"{name} must be an integer in its allowed range")
-    return value
 
 
 def normalize_data_points(data_points):
@@ -55,47 +43,6 @@ def normalize_data_points(data_points):
             raise ValueError("too many data_points")
         result.add(_integer(point, "data point", maximum=65535))
     return result
-
-
-def _frames(report):
-    rows = report.get("frame_observations")
-    if not isinstance(rows, list):
-        raise ValueError("inventory requires include_frame_observations=True")
-    previous_time = previous_index = previous_unparsed = -1
-    for row in rows:
-        if not isinstance(row, dict):
-            raise ValueError("invalid frame observation")
-        identity = row.get("identity")
-        match = _IDENTITY.fullmatch(identity) if isinstance(identity, str) else None
-        if match is None:
-            raise ValueError("invalid frame identity")
-        header, dp, size = match.groups()
-        size = int(size)
-        raw = row.get("payload_hex")
-        if (
-            size > 128
-            or not isinstance(raw, str)
-            or _HEX.fullmatch(raw) is None
-            or len(raw) != size * 2
-        ):
-            raise ValueError("payload does not match frame identity")
-        time = _integer(row.get("elapsed_ms"), "frame elapsed_ms")
-        index = _integer(row.get("frame_index"), "frame_index")
-        unparsed = _integer(row.get("unparsed_bytes_before"), "unparsed_bytes_before")
-        if (
-            time < previous_time
-            or index <= previous_index
-            or unparsed < previous_unparsed
-        ):
-            raise ValueError("frame observations must preserve monotonic wire order")
-        previous_time, previous_index, previous_unparsed = time, index, unparsed
-        yield {
-            **row,
-            "header": header,
-            "dp": int(dp, 16),
-            "payload_bytes": size,
-            "payload_hex": raw.lower(),
-        }
 
 
 def _reference_points(observations):

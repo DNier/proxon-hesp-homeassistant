@@ -90,3 +90,49 @@ def test_observation_windows_retain_global_wire_order_and_frame_completion():
     ]
     with pytest.raises(ValueError, match="boolean"):
         inventory([], include_frame_observations=1)
+
+
+def test_candidate_addresses_enrich_groups_without_mutating_observation_rows():
+    chunks = [chunk(OFF + ACK, 10)]
+    original = [dict(row) for row in chunks]
+    result = inventory(chunks, include_frame_observations=True)
+    assert chunks == original
+    group = result["groups"]["118000/0x01F8/4"]
+    assert group["address"] == {
+        "header_le24": 0x008011,
+        "type": 1,
+        "type_name": "set",
+        "source": 1,
+        "destination": 2,
+    }
+    assert result["frame_observations"][0] == {
+        "identity": "118000/0x01F8/4",
+        "elapsed_ms": 10,
+        "frame_index": 0,
+        "payload_hex": "00000000",
+        "unparsed_bytes_before": 0,
+    }
+    assert set(result["frame_observations"][1]) == {
+        "identity",
+        "elapsed_ms",
+        "frame_index",
+        "payload_hex",
+        "unparsed_bytes_before",
+    }
+
+
+def test_same_dp_other_address_and_unknown_type_keep_distinct_groups():
+    def checked(raw):
+        body = bytes.fromhex(raw)
+        return body + checksum(body).to_bytes(2, "little")
+
+    other_address = checked("118007f80100000800000000")
+    unknown_type = checked("1f8007f80100000800000000")
+    result = inventory([chunk(OFF + other_address + unknown_type)])
+    assert len(result["groups"]) == 3
+    assert result["groups"]["118000/0x01F8/4"]["address"]["destination"] == 2
+    assert result["groups"]["118007/0x01F8/4"]["address"]["destination"] == 30
+    unknown = result["groups"]["1f8007/0x01F8/4"]["address"]
+    assert unknown["type"] == 15
+    assert unknown["type_name"] == "unknown"
+    assert result["frames"] == 3

@@ -8,6 +8,7 @@ import argparse
 import json
 from pathlib import Path
 
+from tools.address_analysis import analyze_exchanges
 from tools.inventory_capture import inventory, load_capture
 from tools.set_comparison import analyze_sets, changed_bits, normalize_data_points
 
@@ -32,6 +33,7 @@ def describe(
     set_data_points=None,
     set_max_gap_ms=30000,
     set_observation_window_ms=5000,
+    response_max_delay_ms=1000,
     observations=None,
 ) -> dict:
     result = inventory(
@@ -47,6 +49,9 @@ def describe(
         data_points=set_data_points,
         observations=marks,
         observation_window_ms=set_observation_window_ms,
+    )
+    result["address_analysis"] = analyze_exchanges(
+        result, max_response_ms=response_max_delay_ms
     )
     del result["frame_observations"]
     result["metadata"] = {key: capture.get(key) for key in METADATA}
@@ -82,6 +87,7 @@ def compare(
     set_data_points=None,
     set_max_gap_ms=30000,
     set_observation_window_ms=5000,
+    response_max_delay_ms=1000,
     before_observations=None,
     after_observations=None,
 ) -> dict:
@@ -91,6 +97,7 @@ def compare(
         "set_data_points": set_data_points,
         "set_max_gap_ms": set_max_gap_ms,
         "set_observation_window_ms": set_observation_window_ms,
+        "response_max_delay_ms": response_max_delay_ms,
     }
     left = describe(
         before, before_window, before_event, observations=before_observations, **options
@@ -132,7 +139,68 @@ def compare(
     }
 
 
-def render(report: dict, *, sets_only: bool = False) -> str:
+def _render_addresses(analysis):
+    lines = [
+        "",
+        "### Candidate address exchanges",
+        analysis["classification"],
+        analysis["header_layout"],
+        f"Response analysis bound: {analysis['max_response_ms']} ms (inclusive)",
+        "Counts: " + json.dumps(analysis["counts"]),
+        analysis["caution"],
+    ]
+    for participant in analysis["participants"]:
+        lines.append(
+            f"Participant {participant['address']}: "
+            f"sent {participant['sent']}, received {participant['received']}"
+        )
+    for route in analysis["routes"]:
+        lines.append(
+            f"Route {route['source']} -> {route['destination']}: "
+            f"{route['count']} frames; types {route['type_counts']}"
+        )
+    for pair in analysis["pairs"]:
+        request, reply = pair["request"], pair["reply"]
+        resolution = (
+            "; same TCP timestamp, bus latency unknown"
+            if pair["same_tcp_timestamp"]
+            else ""
+        )
+        lines.append(
+            f"Candidate {pair['kind']}: "
+            f"{request['identity']} #{request['frame_index']} "
+            f"at {request['elapsed_ms']} ms payload={request['payload_hex']!r} -> "
+            f"{reply['identity']} #{reply['frame_index']} "
+            f"at {reply['elapsed_ms']} ms payload={reply['payload_hex']!r}; "
+            f"delta {pair['delta_ms']} ms{resolution}"
+        )
+    for item in analysis["unmatched"]:
+        frame = item["frame"]
+        lines.append(
+            f"Unmatched {item['reason']}: {frame['identity']} "
+            f"#{frame['frame_index']} at {frame['elapsed_ms']} ms "
+            f"payload={frame['payload_hex']!r}"
+        )
+    for frame in analysis["unknown_frames"]:
+        address = frame["address"]
+        lines.append(
+            f"Unknown type {address['type']}: {frame['identity']} "
+            f"#{frame['frame_index']} at {frame['elapsed_ms']} ms; "
+            f"{address['source']} -> {address['destination']}; "
+            f"payload={frame['payload_hex']!r}"
+        )
+    for boundary in analysis["continuity_breaks"]:
+        lines.append("Continuity break: " + json.dumps(boundary))
+    if not analysis["counts"]["frames"]:
+        lines.append("No validated observations in this window; state is unknown.")
+    return lines
+
+
+def render(
+    report: dict, *, sets_only: bool = False, exchanges_only: bool = False
+) -> str:
+    if sets_only and exchanges_only:
+        raise ValueError("sets_only and exchanges_only are mutually exclusive")
     lines = [
         "# Capture comparison",
         "",
@@ -154,24 +222,28 @@ def render(report: dict, *, sets_only: bool = False) -> str:
             lines.append(
                 "Manual event (correlation only): " + json.dumps(data["event"])
             )
-        sets = data["set_analysis"]
-        lines += ["", "### SET-type observations", sets["classification"]]
-        for key, group in sets["groups"].items():
+        if not exchanges_only:
+            sets = data["set_analysis"]
+            lines += ["", "### SET-type observations", sets["classification"]]
+            for key, group in sets["groups"].items():
+                lines.append(
+                    f"{key}: {group['total']} observations, "
+                    f"{group['repeats']} repeats, "
+                    f"{group['transitions']} changes, {group['baselines']} baselines"
+                )
+                lines.extend(json.dumps(run) for run in group["runs"])
+            if not sets["groups"]:
+                lines.append("No matching SET-type observations; state is unknown.")
+            for observation in sets["observations"]:
+                lines.append("Point-in-time reference: " + json.dumps(observation))
             lines.append(
-                f"{key}: {group['total']} observations, {group['repeats']} repeats, "
-                f"{group['transitions']} changes, {group['baselines']} baselines"
+                "Byte/bit indexes are zero-based. First samples and gaps are "
+                "baselines. SET payloads do not prove accepted commands or "
+                "actuator state; nearby photos establish correlation only."
             )
-            lines.extend(json.dumps(run) for run in group["runs"])
-        if not sets["groups"]:
-            lines.append("No matching SET-type observations; state is unknown.")
-        for observation in sets["observations"]:
-            lines.append("Point-in-time reference: " + json.dumps(observation))
-        lines.append(
-            "Byte/bit indexes are zero-based. First samples and gaps are "
-            "baselines. SET payloads do not prove accepted commands or "
-            "actuator state; nearby photos establish correlation only."
-        )
-    if sets_only:
+        if not sets_only:
+            lines.extend(_render_addresses(data["address_analysis"]))
+    if sets_only or exchanges_only:
         return "\n".join(lines) + "\n"
     for key, item in report["groups"].items():
         lines += [f"\n## {key}: {item['presence']}", json.dumps(item)]
@@ -217,10 +289,17 @@ def main():
     )
     parser.add_argument("--set-max-gap-ms", type=int, default=30000)
     parser.add_argument("--set-observation-window-ms", type=int, default=5000)
-    parser.add_argument(
+    parser.add_argument("--response-max-delay-ms", type=int, default=1000)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--sets-only",
         action="store_true",
         help="Show only SET observations in Markdown; JSON keeps inventory",
+    )
+    mode.add_argument(
+        "--exchanges-only",
+        action="store_true",
+        help="Show only candidate address exchanges in Markdown; JSON stays complete",
     )
     parser.add_argument(
         "--event", action="store_true", help="Use automatic event capture"
@@ -253,6 +332,7 @@ def main():
         set_data_points=args.set_dp,
         set_max_gap_ms=args.set_max_gap_ms,
         set_observation_window_ms=args.set_observation_window_ms,
+        response_max_delay_ms=args.response_max_delay_ms,
     )
     for side in ("before", "after"):
         options[f"{side}_window"] = (
@@ -285,7 +365,9 @@ def main():
     except (ValueError, KeyError, TypeError) as err:
         parser.error(str(err))
     args.output.write_text(json.dumps(report, indent=2) + "\n")
-    args.report.write_text(render(report, sets_only=args.sets_only))
+    args.report.write_text(
+        render(report, sets_only=args.sets_only, exchanges_only=args.exchanges_only)
+    )
 
 
 if __name__ == "__main__":

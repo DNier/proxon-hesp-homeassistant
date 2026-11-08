@@ -29,3 +29,20 @@ def test_recorded_checksums_and_every_single_bit_corruption(frame):
         damaged = bytearray(frame)
         damaged[bit // 8] ^= 1 << (bit % 8)
         assert checksum(damaged[:-2]) != int.from_bytes(damaged[-2:], "little")
+
+
+def test_explicit_word_crc_matches_existing_transform_and_recorded_wire():
+    """Independent polynomial description from the external protocol proposal."""
+
+    def step(state):
+        for _ in range(16):
+            state = (state >> 1) ^ 0x8048 if state & 1 else state >> 1
+        return state
+
+    # Both mappings are linear, so equality on the basis proves the whole step.
+    assert tuple(step(1 << bit) for bit in range(16)) == BYTE_TRANSFORM
+    for frame in FRAMES:
+        state = 0xFFFF
+        for byte in frame[:-2]:
+            state = step(state ^ byte)
+        assert state == int.from_bytes(frame[-2:], "little")

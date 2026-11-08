@@ -30,3 +30,9 @@ times. The display comparison supports only Eco Winter, complete status word
 The expected classification also requires fresh coherent sources for 15 seconds;
 individual frames do not establish a general heating, cooling or defrost decoder.
 No photo, wall-clock time, capture identifier or endpoint is included.
+
+`address_frames.json` contains four minimal recorded frames for address 30:
+one SET/CONFIRM pair and one QUERY/RESPONSE pair. Original wire checksums and
+inter-receipt intervals are retained with a shifted time origin. The values are
+uninterpreted; the empty confirmation does not prove any actuator effect. No
+capture identifier, original timestamp, endpoint or hardware role is included.

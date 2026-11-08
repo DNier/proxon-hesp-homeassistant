@@ -15,7 +15,19 @@ The final state is transmitted as two little-endian bytes. Those bytes are not
 part of the input. T is stored as 16 columns (`BYTE_TRANSFORM`); applying T means
 XORing column i for each set state bit i. This is a constant-size algorithm for
 all supported message lengths, not a table of observed payloads or checksums.
-It does not assert an equivalent named standard CRC polynomial.
+The same transform is equivalent to 16 reflected CRC shifts with polynomial
+`0x8048` (normal form `0x1201`) after each byte, with seed `0xFFFF` and no final
+XOR. This is 16 shifts per byte rather than the usual eight: equivalently, feed
+each byte followed by a zero byte into that reflected recurrence. It is not a
+claim of a named catalogue CRC variant.
+
+This explicit parametrization was proposed by Martin (`mkneppe`) in
+[upstream PR #2](https://github.com/markusmauch/proxon-hesp/pull/2).
+It was independently compared with all 65,536 possible input states of the
+existing linear transform and with 2,064 messages spanning its supported length
+range; there was no difference. The production checksum implementation is
+unchanged. A basis-column regression and the retained wire vectors check the
+correspondence without replacing the independent derivation below.
 
 ## Independent derivation
 
@@ -81,8 +93,8 @@ lengths use the same recurrence but were not all observed individually.
 
 The decoder's existing data-point, node, length and semantic allowlists remain
 in force. Correct checksum validation does not alone authorize a new sensor or
-an active query. In particular, 0x032E can now pass checksum validation while its
-meaning still remains a neutral raw diagnostic, not seconds or a decoded date.
-Version 0.4.0 also adds explicitly mapped actual fan speeds (0x00C9) and
-temperatures (0x03B7) with their own node, length and value checks.
-No bus sender, automatic read query or control operation is added.
+an active query. Calendar, speed, temperature and switching-state interpretations
+have their own evidence and bounds in [data points](DATA_POINTS.md). The explicit
+[device-time correction](CLOCK_SYNC.md) is separate from checksum analysis.
+Describing this recurrence or inspecting candidate addresses introduces no
+additional sender, automatic read query or control operation.

@@ -30,6 +30,20 @@ https://github.com/Mannheim68199/proxon-hesp-esp32/tree/2ef75eb99d663f1aabb6bdd1
 The photograph is referenced, not redistributed. No license or manufacturer
 endorsement of that source is inferred. See docs/SERVICE_SETTINGS_EVIDENCE.md.
 
+## Additional protocol evidence
+
+Martin (`mkneppe`) proposed explicit CRC parameters and packed source/destination
+header fields in:
+
+- https://github.com/markusmauch/proxon-hesp/pull/2
+- https://github.com/DNier/proxon-hesp-homeassistant/discussions/2#discussioncomment-19475847
+
+The reviewed proposal is pinned to commit
+`f7600bdfffe675e00d5fa86d659fe58fde60393b` in `mkneppe/proxon-hesp`.
+CRC equivalence was independently checked against the existing byte transform.
+The address interpretation is used only by offline analysis and does not assign
+hardware roles or widen production mappings. See docs/ADDRESS_EVIDENCE.md.
+
 ## Logo
 
 The supplied PROXON logo in `custom_components/proxon_hesp/brand/` is used

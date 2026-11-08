@@ -10,6 +10,7 @@ from bisect import bisect_left
 from pathlib import Path
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
+from tools.address_analysis import decode_header
 
 
 def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> dict:
@@ -100,6 +101,7 @@ def inventory(
             key,
             {
                 "header": identity,
+                "address": decode_header(identity),
                 "dp": f"0x{dp:04X}",
                 "payload_bytes": size,
                 "count": 0,

@@ -80,6 +80,45 @@ wrappers and bare capture objects. Timestamps must be nonnegative monotonic
 integers. Missing metadata remains `null`. Comparison output paths must differ
 from the inputs and from each other.
 
+### Candidate addresses and request/reply pairs (0.16.1)
+
+From 0.16.1, inventory groups add an `address` object with candidate
+`type`, `type_name`, `source`, `destination` and `header_le24` fields. Original
+group identities, DP numbers and payload sizes remain separate. Ordered frame
+observation rows retain their previous schema.
+
+Each side of a comparison adds `address_analysis`: sorted participant/route
+counts, candidate pairs, unmatched messages with reasons, unknown type frames,
+and continuity breaks. Existing inventory and SET results remain present. The
+analysis reuses the existing parser, checksum and ordered observations; it opens
+no connection and sends no messages.
+
+```sh
+uv run python -m tools.compare_captures before.json after.json \
+  --response-max-delay-ms 1000 --exchanges-only \
+  --output tmp/exchanges.json --report tmp/exchanges.md
+```
+
+`--exchanges-only` selects a compact Markdown view; JSON retains all comparison
+sections. It is mutually exclusive with `--sets-only`. Without either flag,
+Markdown includes both SET and address/exchange sections. Maximum reply delay
+is a nonnegative integer in milliseconds, inclusive; zero admits only messages
+with the same recorded TCP timestamp and does not establish zero bus latency.
+
+Pairs require reversed endpoint addresses, the same DP, wire order, an expected
+query/response or set/confirmation type combination, and the configured delay
+bound. Request and reply payload lengths may differ. Same-key overlapping
+requests remain ambiguous through their latest deadline. Parser gaps and missing
+frame indexes break continuity; windows and separate recordings never share
+pending messages. Orphan, duplicate, late and boundary-limited observations stay
+explicit. An unmatched reason describes failure of this matching model, not a
+proven protocol error or offline device.
+
+There is no established transaction identifier. A unique candidate pair does
+not prove command acceptance, write permissions, payload meaning, a hardware
+role or physical actuator effect. Raw payloads, including addresses other than
+the main unit, remain private diagnostic data. See [address evidence and limits](ADDRESS_EVIDENCE.md).
+
 ### Targeted SET payload comparison
 
 The comparison also contains a `set_analysis` view on each side. It reuses the
