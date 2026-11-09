@@ -3,6 +3,36 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.3 – Metadaten-Folgeseiten und Einheitenlisten offline prüfen
+
+- Die Offline-Inventarisierung unterstützt vorbereitete Metadaten-Folgeseiten
+  für `0033`, `0034`, `0038` und `0039`. Vollständige Register-IDs halten
+  unterschiedliche Seiten getrennt; Anfrage und Antwort werden anhand dieser
+  vollständigen ID zugeordnet.
+- Die Metadatenprüfung führt identische Überlappungen zusammen und meldet
+  widersprüchliche Werte oder mehrdeutige Zuordnungen als Fehler. Fehlende Seiten,
+  Spalten und unbeantwortete Anfragen bleiben sichtbar. Aus 64 Einträgen oder
+  einer ausbleibenden Antwort wird keine vollständige Kataloglänge abgeleitet.
+- Vorhandene Rohaufnahmen und HA-Diagnoseexporte mit ursprünglichen TCP-Blöcken
+  lassen sich über `--capture` prüfen. Das bisherige Drei-Spalten-Eingabeformat
+  bleibt erhalten. Einheitenlisten enthalten ausschließlich ungedeutete Rohcodes,
+  keine bestätigten physikalischen Einheiten oder Schreibrechte.
+- Die Erweiterung bereitet das gemeldete FWT-2-R-Seitenschema konservativ vor.
+  Originalbelege existieren weiterhin nur für die bisherigen Metadatenlisten;
+  Folgeseiten und `0039` sind mit ausdrücklich synthetischen Beispielen geprüft.
+  Der vollständige Originalexport steht noch aus.
+  [Anleitung und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/OFFLINE_ANALYSIS.md#metadata-replies-and-follow-up-pages).
+
+Diese Version erweitert die Offline-Werkzeuge. Bestehende Entitäts-IDs,
+Einstellungen und Aufnahmeformate bleiben erhalten; keine Konfigurationsmigration,
+neuen Sensorzuordnungen oder Anlagenabfragen. Für die Offline-Auswertung ist
+kein HA-Update erforderlich; die automatische NAS-Auswertung bleibt eine separate
+Installation. Home Assistant ab 2026.9. Bei einem HACS-Update benötigte flüchtige
+Aufnahmen vor dem anschließenden HA-Neustart herunterladen. Rückweg: die
+Offline-Werkzeuge aus Version 0.16.2 verwenden beziehungsweise diese Version über
+HACS wieder installieren. Private Originale und bereits erzeugte Ergebnisse
+beim Rückweg erhalten.
+
 ## 0.16.2 – Weiterer belegter Heizkontext in der BDE-Betriebsanzeige
 
 - Die optionale **BDE-Betriebsanzeige** erkennt zusätzlich eine durch zwei

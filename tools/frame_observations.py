@@ -2,8 +2,11 @@
 
 import re
 
-_IDENTITY = re.compile(r"([a-f0-9]{6})/0x([0-9A-F]{4})/(0|[1-9][0-9]{0,2})")
+_IDENTITY = re.compile(
+    r"([a-f0-9]{6})/0x([0-9A-F]{4}(?:[0-9A-F]{4})?)/(0|[1-9][0-9]{0,2})"
+)
 _HEX = re.compile(r"(?:[a-fA-F0-9]{2})*")
+METADATA_POINTS = frozenset((0x0033, 0x0034, 0x0038, 0x0039))
 
 
 def integer(value, name, *, minimum=0, maximum=None):
@@ -30,7 +33,13 @@ def frames(report):
         match = _IDENTITY.fullmatch(identity) if isinstance(identity, str) else None
         if match is None:
             raise ValueError("invalid frame identity")
-        header, dp, size = match.groups()
+        header, register, size = match.groups()
+        register_id = int(register, 16)
+        selector = register_id >> 16
+        if len(register) == 8 and not selector:
+            raise ValueError(
+                "zero-selector identity must retain the legacy four-digit DP"
+            )
         size = int(size)
         raw = row.get("payload_hex")
         if (
@@ -40,6 +49,16 @@ def frames(report):
             or len(raw) != size * 2
         ):
             raise ValueError("payload does not match frame identity")
+        if selector and not (
+            register_id & 0xFFFF in METADATA_POINTS
+            and (
+                (header == "108000" and size == 2 and raw.lower() == "0100")
+                or (header == "224000" and size == 128)
+            )
+        ):
+            raise ValueError(
+                "unsupported selector-bearing metadata identity or payload"
+            )
         time = integer(row.get("elapsed_ms"), "frame elapsed_ms")
         index = integer(row.get("frame_index"), "frame_index")
         unparsed = integer(row.get("unparsed_bytes_before"), "unparsed_bytes_before")
@@ -51,9 +70,19 @@ def frames(report):
             raise ValueError("frame observations must preserve monotonic wire order")
         previous_time, previous_index, previous_unparsed = time, index, unparsed
         yield {
-            **row,
+            # Only the five inventory fields are input. Never trust caller-supplied
+            # derived IDs/offsets (including a one-field pair) over the identity.
+            "identity": identity,
+            "elapsed_ms": time,
+            "frame_index": index,
+            "unparsed_bytes_before": unparsed,
             "header": header,
-            "dp": int(dp, 16),
+            "dp": register_id & 0xFFFF,
+            **(
+                {"register_id": register_id, "selector_offset": selector}
+                if selector
+                else {}
+            ),
             "payload_bytes": size,
             "payload_hex": raw.lower(),
         }

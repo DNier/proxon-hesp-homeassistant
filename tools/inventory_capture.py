@@ -11,6 +11,7 @@ from pathlib import Path
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from tools.address_analysis import decode_header
+from tools.frame_observations import METADATA_POINTS
 
 
 def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> dict:
@@ -33,11 +34,12 @@ def inventory(
     end_ms: int | None = None,
     include_frame_observations: bool = False,
 ) -> dict:
-    """Group by complete three-byte identity, DP and payload size.
+    """Group by complete three-byte identity, register ID and payload size.
 
     Uses the observed even nibble-length encoding and the narrowly confirmed
-    128-byte metadata shape, reserved zero bytes and checksum. Unknown payload
-    types remain uninterpreted.
+    128-byte metadata shape and checksum. Nonzero upper register bits are only
+    admitted for candidate metadata pages; other reserved bytes remain zero.
+    Page offsets and 0039 are prepared offline, not independently recorded here.
     Times refer to the chunk completing a frame, not its wire transmission.
     """
     if type(start_ms) is not int or start_ms < 0:
@@ -65,19 +67,26 @@ def inventory(
     while pos + 10 <= len(data):
         header = data[pos : pos + 8]
         size = header[7] // 2
+        dp = int.from_bytes(header[3:5], "little")
+        register_id = int.from_bytes(header[3:7], "little")
+        selector = register_id >> 16
         # Four recorded replies establish this shape only for these identities.
         # Do not reinterpret zero-length ACKs or unrelated zero-length frames.
         extended_metadata = (
-            header[:3] == b"\x22\x40\x00"
-            and int.from_bytes(header[3:5], "little") in (0x0033, 0x0034, 0x0038)
-            and header[7] == 0
+            header[:3] == b"\x22\x40\x00" and dp in METADATA_POINTS and header[7] == 0
         )
         if extended_metadata:
             size = 128
         length = 10 + size
         frame = data[pos : pos + length]
+        metadata_query = (
+            header[:3] == b"\x10\x80\x00"
+            and dp in METADATA_POINTS
+            and header[7] == 4
+            and frame[8:10] == b"\x01\x00"
+        )
         if (
-            header[5:7] != b"\0\0"
+            (selector and not (extended_metadata or metadata_query))
             or header[7] % 2
             or (size > 112 and not extended_metadata)
             or len(frame) != length
@@ -95,8 +104,8 @@ def inventory(
             continue
         frames += 1
         identity = header[:3].hex()
-        dp = int.from_bytes(header[3:5], "little")
-        key = f"{identity}/0x{dp:04X}/{size}"
+        register_text = f"0x{register_id:08X}" if selector else f"0x{dp:04X}"
+        key = f"{identity}/{register_text}/{size}"
         item = groups.setdefault(
             key,
             {
@@ -112,6 +121,8 @@ def inventory(
                 "changes": [],
             },
         )
+        if selector:
+            item.update(register_id=register_text, selector_offset=selector)
         raw = frame[8:-2].hex()
         if include_frame_observations:
             observations.append(

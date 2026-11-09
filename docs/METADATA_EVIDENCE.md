@@ -1,6 +1,6 @@
 # Metadatenlisten: belegte Telegramme und offene Bedeutung
 
-Stand der Auswertung: 27. September 2026.
+Original recorded evidence: 27 September 2026. Offline page preparation: 9 November 2026.
 
 ## Herkunft und Prüfung
 
@@ -26,8 +26,8 @@ ihre positionsweise Zuordnung ist eine Arbeitshypothese auf Basis derselben Anla
 
 ## Eng begrenzte Erkennung
 
-Nur bei Identität `224000`, reservierten Bytes `0000`, Datenpunkt `0033`, `0034`
-oder `0038` und Längenfeld `00` erkennt die Offline-Inventarisierung diese
+Die ursprünglich belegte Form umfasst Identität `224000`, reservierte Bytes `0000`,
+Datenpunkt `0033`, `0034` oder `0038` und Längenfeld `00`. Sie beschreibt diese
 138-Byte-Form. Daraus folgt keine allgemeine Regel, jedes Längenfeld `00` als
 128 Bytes zu interpretieren. Insbesondere besitzen Bestätigungen weiterhin leere
 Nutzdaten. Ob `00` hier einen Überlauf der Nibble-Länge oder eine spezielle
@@ -112,6 +112,51 @@ Eine fehlende zyklische Einzelantwort macht einen Listeneintrag nicht ungültig.
 | 62 | `0x0195` | `0x0203` | `0x0055` |
 | 63 | `0x0107` | `0x0203` | `0x00C0` |
 | 64 | `0x010D` | `0x0203` | `0x0055` |
+
+
+## Offline preparation for follow-up pages and units (9 November 2026)
+
+Martin's [FWT 2-R report in discussion #6](https://github.com/DNier/proxon-hesp-homeassistant/discussions/6)
+proposes that the upper 16 bits of a metadata register ID select an **element
+offset**, with 64 uint16 entries in each reply. His adapter additionally reads
+`0039` as an array of unit codes. This is useful new candidate evidence; the
+complete original metadata export and its timed QUERY/RESPONSE recording have
+not yet been supplied to this project. The original public fixture above remains
+the recorded evidence for zero-offset `0033`, `0034` and `0038` only.
+
+The existing offline inventory is prepared for these narrowly bounded forms:
+
+- Header `224000`, metadata DP `0033`, `0034`, `0038` or `0039`, length byte `00`,
+  exactly 128 payload bytes, and a valid original checksum. Upper ID bits are
+  retained as a candidate offset, including for `0039` at offset zero.
+- Header `108000` to the same metadata points, two payload bytes exactly `0100`
+  (uint16 count **1**). This follows Martin's reported request form; **64 entries
+  in a reply do not establish a request count of 64**. Other counts are unsupported
+  by the page auditor. Other frame families still require zero reserved bytes.
+
+This does not generalize the length-byte wrap rule to every identity, accept
+empty confirmations as 128-byte replies, or change the production decoder.
+Offset-zero group keys and all five fields of existing frame observations remain
+unchanged. A nonzero offset uses the complete ID, for example
+`224000/0x00400033/128`; the group additionally reports `register_id` and
+`selector_offset`. The address matcher pairs **the full register ID**, so replies
+to different pages cannot be merged by the lower DP alone.
+
+The page auditor uses the same inventory, checksums and conservative exchange
+matcher. It merges identical overlap entries at their original absolute indices,
+rejects conflicting overlaps and ambiguous/orphaned exchanges, and keeps failed
+queries visible. Missing column/page ranges are explicit. `catalog_length` stays
+`null`: a 64-entry page, a highest observed offset, or a timeout cannot prove a
+complete device catalog. An optional `0039` column contains raw `unit_code`
+values only; type, mask and unit meanings and write permissions are not approved.
+
+All new offset/`0039` regression examples are **synthetic**, including the
+0/64/86 overlapping-last-page example. They verify offline handling, not actual
+FWT/P2 compatibility, list length, access rights or units. No bus query, sender,
+new entity, automatic discovery or firmware change is introduced. The existing
+temperature candidates and production `03B7` mapping are unchanged.
+
+See [input formats and usage](OFFLINE_ANALYSIS.md#metadata-replies-and-follow-up-pages).
 
 ## Grenzen des Exports
 

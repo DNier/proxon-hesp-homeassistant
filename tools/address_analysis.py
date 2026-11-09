@@ -34,6 +34,14 @@ def _record(row):
         "identity": row["identity"],
         "header": row["header"],
         "dp": f"0x{row['dp']:04X}",
+        **(
+            {
+                "register_id": f"0x{row['register_id']:08X}",
+                "selector_offset": row["selector_offset"],
+            }
+            if "register_id" in row
+            else {}
+        ),
         "payload_bytes": row["payload_bytes"],
         "payload_hex": row["payload_hex"],
         "elapsed_ms": row["elapsed_ms"],
@@ -225,9 +233,15 @@ def analyze_exchanges(report: dict, *, max_response_ms: int = 1000) -> dict:
         route["count"] += 1
         route["type_counts"][name] += 1
         if type_code in (0, 1):
-            matcher.request((type_code, source, destination, row["dp"]), frame)
+            matcher.request(
+                (type_code, source, destination, row.get("register_id", row["dp"])),
+                frame,
+            )
         elif type_code in (2, 3):
-            matcher.reply((type_code - 2, destination, source, row["dp"]), frame)
+            matcher.reply(
+                (type_code - 2, destination, source, row.get("register_id", row["dp"])),
+                frame,
+            )
         else:
             unknown_frames.append(frame)
         previous = row

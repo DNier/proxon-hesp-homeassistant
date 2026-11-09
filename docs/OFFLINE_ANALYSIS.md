@@ -300,36 +300,90 @@ The Python `inventory(bytes)` helper also retains that candidate-scan API,
 including checksum status. Unlike the new capture audit, this byte scan does
 not establish frame boundaries for embedded patterns.
 
-## Metadatenantworten prüfen
+## Metadata replies and follow-up pages
 
-`python -m tools.audit_metadata input.json --output result.json` prüft vollständige
-Antworttelegramme auf `0033`, `0034` und `0038`. Die Eingabe ist ein JSON-Objekt
-mit diesen drei Schlüsseln und je einem vollständigen Hex-Telegramm als Wert.
-Das Werkzeug verwendet die vorhandene Inventarisierung und Prüfsumme; es öffnet
-keine Verbindung zur Anlage. Abgeschnittene Antworten, abweichende Identitäten,
-leere Nutzdaten und unterschiedlich lange Listen werden zurückgewiesen.
+```sh
+uv run python -m tools.audit_metadata input.json --output tmp/metadata-audit.json
+```
 
-Die Ausgabe enthält positionsweise Datenpunkt, Typcode und Maskencode. Sie
-bestätigt weder deren Bedeutung noch Schreibrechte oder einen vollständigen
-Gerätekatalog. Für Antworten mit Identität `224000` und Datenpunkt `0033`, `0034` oder `0038`
-wird das belegte Längenfeld `00` als 128 Byte Nutzdaten erkannt: insgesamt
-138 Byte einschließlich Header und Prüfsumme. Diese Ausnahme gilt ausschließlich
-für diese drei Antworten. Insbesondere bleiben leere Bestätigungen leer.
-Die Herkunft und Grenzen der Belege beschreibt [METADATA_EVIDENCE.md](METADATA_EVIDENCE.md).
-Die Prüfung vollständiger Frames bestätigt nicht, dass alle Katalogseiten oder
-alle Datenpunkte eines Geräts enthalten sind.
+The original input format remains supported: a JSON mapping from `0033`, `0034`
+and `0038` to one complete original hexadecimal response each. These must have
+header `224000`, offset zero and equally sized uint16 columns. Its existing
+output is unchanged. An optional `0039` response adds raw `unit_code` fields;
+without it, no unit field is added to legacy rows.
 
-Der getrennte `ReadProbe` ist weiterhin nur für die bereits beobachtete
-Filterabfrage `0x00ED` vorbereitet. Er besitzt keinen Netzwerkzugriff und verlangt
-einen koordinierten Sender. Ein erfolgreicher Offline-Test belegt keine sichere
-Busarbitrierung über TCP. Empfangene passende Antworten können außerdem vom
-regulären Master ausgelöst worden sein; sie beweisen allein keine Reaktion auf
-eine eigene Abfrage. Die passive Integration startet keine solchen Tests.
+For follow-up pages, use `proxon-metadata-pages-1` with ordered original frames.
+The following is a **schematic format**, not a recording or executable fixture;
+replace each placeholder with the complete original frame, including checksum,
+and retain its actual TCP completion time relative to the recording start:
 
-Die [Gegenprüfung eines Community-Exports](COMMUNITY_EXPORT_ANALYSIS.md) beschreibt
-belegte Gemeinsamkeiten, anlagenspezifische Lüfterwerte und die Grenzen gefilterter
-SQL-Aufzeichnungen. Die Originaldaten wurden nicht als kontinuierlicher Busstrom
-zusammengesetzt.
+```json
+{
+  "format": "proxon-metadata-pages-1",
+  "frames": [
+    {"elapsed_ms": 0, "hex": "<original QUERY 108000, full ID 00000033, count 0100>"},
+    {"elapsed_ms": 20, "hex": "<original RESPONSE 224000, full ID 00000033, 64 entries>"},
+    {"elapsed_ms": 12000, "hex": "<original QUERY 108000, full ID 00400033, count 0100>"},
+    {"elapsed_ms": 12020, "hex": "<original RESPONSE 224000, full ID 00400033, 64 entries>"},
+    {"elapsed_ms": 24000, "hex": "<original QUERY 108000, full ID 00560033, count 0100>"},
+    {"elapsed_ms": 24020, "hex": "<original RESPONSE 224000, full ID 00560033, 64 entries>"}
+  ]
+}
+```
+
+This example illustrates offsets **0, 64 and 86**, whose last two pages overlap.
+Include the corresponding original `0034` and `0038` exchanges and optionally
+`0039` exchanges at their actual positions in the same stream. Each record must
+contain exactly one complete frame. Unrelated supported frames may remain in the
+input. Metadata from other participants or unsupported shapes is rejected rather
+than silently assigned to the controller. The format accepts at most 16,384 records and 16 MiB of hexadecimal input bytes.
+It does not generate queries or transmit any bytes.
+
+For an existing capture with original `chunks`, use the same JSON format with a
+`chunks` array **instead of** `frames`. Chunks may contain multiple frames or split
+one frame across several TCP reads; the existing inventory supplies frame boundaries
+and original completion times. Bare captures, `capture` wrappers and Home Assistant
+diagnostic `data.capture` wrappers can be audited directly:
+
+```sh
+uv run python -m tools.audit_metadata capture.json --capture --output tmp/metadata-audit.json
+```
+
+The source is read without modification, and output must use a different path.
+This is not an importer for arbitrary ioBroker object/state exports. Such an export
+needs explicit normalization to the documented schema when it actually retains
+full original frames, selectors and timestamps. Aggregated values without those
+sources cannot be turned into verified page exchanges; request the missing
+originals instead of inventing request frames or times.
+
+Only metadata QUERY header `108000`, payload `0100` (count **1**), and RESPONSE
+header `224000` with 128 payload bytes are prepared. Do not convert the request
+count to 64 just because a reply contains 64 entries. An optional
+`max_response_ms` input field changes the conservative pairing bound from its
+1,000 ms default; it is not a measured bus latency or a retry policy. Preserve
+equal TCP timestamps and original frame order. Do not synthesize timestamps to
+claim independently timed pairs or combine different recordings into one stream.
+
+The result includes source page indices and full IDs, raw hexadecimal DP/type/
+mask/unit codes, identical-overlap merging, explicit missing half-open index
+ranges, duplicate replies, and unanswered queries. Ambiguous requests, unmatched
+responses, conflicting overlaps, invalid checksums and truncated frames are
+errors. A required missing column or page makes
+`required_columns_aligned_over_observed_extent` false; absent optional units are
+reported separately. Missing values stay `null`, not zero. `observed_extent` is
+only the greatest covered index plus one. **`catalog_length` remains `null` even
+when every observed position is covered**; neither a timeout nor a 64-entry page
+establishes the end of the catalog. No type, permission or physical unit is
+inferred from a code.
+
+The existing parser now retains nonzero metadata offsets in full-ID group keys
+such as `224000/0x00400033/128`. Offset-zero keys and the five-field frame
+observation format are unchanged. Other frame families still require zero
+reserved bytes. This is conservative offline preparation based on the reported
+FWT 2-R paging scheme; actual follow-up-page and `0039` captures are still missing.
+The original recorded fixture covers only zero-offset `0033`/`0034`/`0038`; all
+paging/unit regression frames are explicitly synthetic. See
+[recorded evidence and boundaries](METADATA_EVIDENCE.md).
 
 ## Lüfterkennlinien vergleichen
 
