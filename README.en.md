@@ -41,7 +41,9 @@ so control without the BDE remains untested. See the scoped
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required for stable **0.16.2**. Add this repository to HACS as a custom repository, category
+Home Assistant **2026.9 or later** is required. Install the
+[latest stable release](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest).
+Add this repository to HACS as a custom repository, category
 **Integration**, install PROXON HESP and restart HA. Then use
 **Settings → Devices & services → Add integration → PROXON HESP**.
 Enter the gateway host, TCP port (default 4196), name and supported profile.
@@ -104,11 +106,19 @@ defrost.
 
 ## Community discussion
 
+Use [GitHub Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions)
+for questions and ideas, or the [issue forms](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
+for bugs and compatibility reports. Unknown hardware details are acceptable;
+supporting evidence is optional and must be sanitized before sharing.
+Contributions follow [Contributing](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md). Report suspected vulnerabilities
+[privately (German guidance)](SECURITY.md).
+
 Join the [Home Assistant forum topic](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
 for a connection overview, compatibility reports and ways to contribute.
 Reports from other owners are most useful with board revisions, BDE software
-version and a matching display observation. Review diagnostics for private
-information before sharing them.
+version and a matching display observation. Keep full diagnostic exports and
+original recordings private; share only necessary sanitized excerpts voluntarily.
 
 ## Documentation and contributing
 

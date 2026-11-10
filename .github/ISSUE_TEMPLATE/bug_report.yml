@@ -1,0 +1,48 @@
+name: Fehler melden
+description: Ein unerwartetes Verhalten der Integration beschreiben.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Für Fragen und Ideen nutze bitte die [Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions). Vermutete Sicherheitslücken bitte [vertraulich melden](https://github.com/DNier/proxon-hesp-homeassistant/security/advisories/new).
+
+        Beschreibe vorhandene Beobachtungen. Löse keine Anlagenstörung aus und schalte keine Geräte für diesen Bericht. Bitte keine vollständigen Diagnoseexporte, Rohaufnahmen, Videos, Zugangsdaten, IP-Adressen, Seriennummern oder privaten Haushaltsverläufe veröffentlichen. Hinweise: [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integrationsversion
+      description: Version aus HACS oder den Integrationseinstellungen; unbekannt ist zulässig.
+      placeholder: "Version oder unbekannt"
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home-Assistant-Version
+      placeholder: "Version oder unbekannt"
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Anlage und ausgewähltes Hardwareprofil
+      description: "Optional: Modell, Platine, BDE-/Gerätefirmware, Gateway, bereits bekannter Anschluss und ausgewähltes Integrationsprofil. Unbekannte Angaben einfach als unbekannt kennzeichnen; keine Anlage öffnen."
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Erwartetes und beobachtetes Verhalten
+      description: Welche Entität oder Funktion ist betroffen? Was erwartest du und was passiert tatsächlich? Fehlende oder unbekannte Werte bitte von null oder aus unterscheiden.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Bekannter Ablauf und Häufigkeit
+      description: Beschreibe, bei welchem bereits beobachteten Ablauf das Problem auftritt und ob es wiederholt vorkam. Falls nicht reproduzierbar, genügt dieser Hinweis. Keine zusätzliche Geräteprobe nötig.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Bereinigte Hinweise (optional)
+      description: Nur bei Bedarf einen kurzen relevanten Fehlertext oder ein minimales bereinigtes Beispiel ergänzen. Vor dem Teilen Kennungen, Adressen, private Pfade und nicht benötigte Messwerte entfernen. Originalaufnahmen und Displayfotos privat aufbewahren.

@@ -18,30 +18,19 @@ Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
 
 ## Versionsstand
 
-**0.15.3** ist die stabile Version. Gegenüber 0.15.2 ergänzt sie einen weiteren,
-durch zwei BDE-Fotovergleiche bestätigten Statuswert für Luftstufe 2 im Winterbetrieb.
-Luftstufe 3 während des belegten Heiz-Auslaufs wird seit 0.15.2 erkannt.
-Negative Temperaturen bleiben unterstützt; die mehrdeutige Temperaturkennung
-`FFFF` bleibt unverfügbar. Entitäts-IDs und Einstellungen bleiben erhalten.
-Nach Installation HA neu starten.
+Installiere die [aktuelle stabile Version](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest).
+Die [Versionshinweise](../RELEASE_NOTES.md) beschreiben Änderungen und nötige
+Upgrade-Schritte für die jeweilige Version.
 
-Seit 0.15.0 ersetzt die Integration sieben bestätigte Rohanzeigen
-durch verständliche Werte, einschließlich der aktuellen Zu-/Abluft-Ansteuerung
-in Prozent. Eigene Verweise auf entfernte Sensoren müssen angepasst werden;
-Details im [Migrationsabschnitt](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
-Die seit 0.14.0 verfügbaren lesenden Service-Einstellungen bleiben erhalten.
-Keine neuen Schreibfunktionen.
-Sie ergänzt gegenüber 0.11.0 außerdem optionale
-Heizräume als native HA-Untereinträge, Gerätezeit-Anzeige und manuellen Zeitabgleich
-sowie eine übersichtlichere [Einteilung der Entitäten](ENTITY_ORGANIZATION.md).
-Optionale Diagnoseentitäten zeigen drei experimentelle Statusbits und den
-beobachteten BDE-Schaltzustand **MV-Heizen/Kühlen**. Dessen Anzeige belegt keine
-aktive Kühlung. Ungeklärte Bitbedeutungen bleiben auch in der stabilen Version
-ungeklärt; die dokumentierten Hardwaregrenzen gelten weiterhin.
+Benötigte Mitschnitte vor einem Update herunterladen: Sie liegen nur im
+Arbeitsspeicher. Nach der Installation Home Assistant neu starten.
 
-Automatische Aufnahmen erfassen Verdichterstarts und -stopps sowie Wechsel des
-experimentellen Bits 28 mit bis zu 180 Sekunden Vor- und Nachlauf. Die vier
-jüngsten Ereignisaufnahmen bleiben im Arbeitsspeicher erhalten.
+Beim Update von einer Version vor 0.15.0 werden sieben bisherige Rohanzeigen
+durch verständliche Sensoren ersetzt. Eigene Dashboards und Automationen mit
+entfernten Entitäts-IDs müssen angepasst werden; die bisherigen Rohverläufe
+werden nicht nachträglich umgerechnet. Die
+[Migrationsregeln](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
+beschreiben Ersatzsensoren und Aktivierungseinstellungen.
 
 Vor dem Wechsel von einer Version vor 0.12.0b3 ein HA-Backup erstellen:
 Das Konfigurationsformat steigt auf Version 2. Ältere Integrationsversionen
@@ -51,7 +40,7 @@ Details stehen in den [Versionshinweisen](../RELEASE_NOTES.md).
 
 ## Voraussetzungen und Kompatibilität
 
-0.12.0 benötigt **Home Assistant ab 2026.9**.
+Die Integration benötigt **Home Assistant ab 2026.9**.
 Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
 Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
 Konfiguration. Zusätzlich ist die **FWT 2-L mit LT-ZIM V1.3 und BDE Comfort
@@ -76,7 +65,11 @@ Details und Quellenabgrenzung: [Herstellerangaben](MANUFACTURER_INFORMATION.md).
 | Zehn Anlagentemperaturen sowie Lüfter- und Verdichterdrehzahlen | Lesend |
 | Verdichter läuft, Bypass-Schaltzustand, Intensivlüftung | Lesend; kein Nachweis von Heiz-/Kühlbetrieb |
 | Filterrestlaufzeit und acht Betriebsstundenzähler | Lesend |
-| Regler-Luftstufe, rohe Stellwerte und Hex-Datenpunkte | Optionale Diagnose |
+| Kühlschwelle, maximale Heiz-/Kühlleistung und Lüfterkennlinien | Lesende optionale Diagnose |
+| Aktuelle Zu-/Abluft-Ansteuerung | Prozentanzeige bei frischer passender Kennlinienstufe |
+| Regler-Luftstufe, ungeklärte Rohwerte und Hex-Datenpunkte | Optionale Diagnose |
+| BDE-Schaltzustände MV-Heizen/Kühlen und MV-Abtau | Optionale Diagnose; kein Nachweis aktiver Kühlung oder Abtauung |
+| Begrenzte BDE-Betriebsanzeige | Heizbetrieb nur in ausdrücklich belegten Winterkonstellationen |
 | Manuelle und automatische Mitschnitte | Passiv, zeitlich und im Speicher begrenzt |
 | Gerätedatum/-uhrzeit und manueller Zeitabgleich | Optional, ab 0.12.0b1 |
 | Heizräume mit vorhandenen HA-Entitäten | Herstellerunabhängige Überwachung, ab 0.12.0b1 |
@@ -93,10 +86,18 @@ Intensivlüftung schaltet dort für die eingestellte Dauer auf Stufe 4. Eco biet
 keine separate Intensivlüftung. Diese Bedienerbeobachtung gilt zunächst für die
 Referenzanlage; [Details und Vergleichsbedingungen](REFERENCE_TESTS.md).
 
-Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keinen bestätigten
-Heizen/Kühlen/Abtauen-Sensor, keinen Fehlertextsensor, keinen Countdown für
-Intensivlüftung und keine Warmwasserintegration. Die technische
-[Datenpunktreferenz (Englisch)](DATA_POINTS.md) beschreibt die Beleglage.
+Die optionale, standardmäßig deaktivierte **BDE-Betriebsanzeige** zeigt
+**Heizbetrieb** nur in den belegten Winterkonstellationen nach 15 Sekunden
+stabilen, frischen Empfangs. Andere Konstellationen, Anlauf und Stopp bleiben
+**nicht verfügbar**; das bedeutet nicht „Aus“. Die BDE-Schaltzustände
+**MV-Heizen/Kühlen** und **MV-Abtau** sind ebenfalls optionale Diagnoseanzeigen,
+keine Bestätigung tatsächlicher Kühlung oder Abtauaktivität.
+[Belege und Grenzen (Englisch)](BDE_DISPLAY_EVIDENCE.md).
+
+Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keine allgemeine
+Unterscheidung aktiver Heizung, Kühlung und Abtauung, keinen Fehlertextsensor,
+keinen Countdown für Intensivlüftung und keine Warmwasserintegration.
+Die technische [Datenpunktreferenz (Englisch)](DATA_POINTS.md) beschreibt die Beleglage.
 
 ## Installation mit HACS
 
@@ -177,7 +178,13 @@ Eine bestehende TCP-Verbindung belegt keine aktuellen Messwerte.
 Für Untersuchungen auf der Geräteseite **Aufnahme starten**, anschließend
 **Mitschnitt stoppen** und Diagnosedaten herunterladen. Dauer und automatische
 Ereignisaufnahmen werden am Integrationseintrag unter **Konfigurieren** eingestellt.
-Diagnosedateien vor dem Teilen auf private Angaben prüfen.
+Vollständige Diagnoseexporte und Originalaufnahmen privat aufbewahren.
+Nur benötigte bereinigte Auszüge freiwillig teilen.
+
+Für Fehler und Kompatibilitätsberichte die [Meldeformulare](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
+nutzen; bereinigte Belege sind freiwillig. Fragen gehören in die
+[Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions),
+vermutete Sicherheitslücken in den [vertraulichen Meldeweg](../SECURITY.md).
 
 ## Dokumentation
 

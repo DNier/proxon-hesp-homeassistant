@@ -1,0 +1,36 @@
+name: Kompatibilität berichten
+description: Vorhandene Erfahrungen mit einer Anlagen- oder Firmwarevariante teilen.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ein Kompatibilitätsbericht ist ein Erfahrungsbericht, keine Zertifizierung der Anlage oder aller Funktionen. Für Fragen vor einer Installation nutze bitte die [Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions).
+
+        Berichte nur aus vorhandenem normalem Betrieb. Keine Anlage öffnen, Einstellungen verändern, Geräte schalten oder Busabfragen senden. Unbekannte Modell-, Platinen- oder Firmwareangaben sind in Ordnung. Belege sind optional: keine vollständigen Diagnoseexporte, Rohaufnahmen, Videos, IP-Adressen, Zugangsdaten, Seriennummern oder privaten Haushaltsverläufe veröffentlichen. Hinweise: [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
+  - type: textarea
+    id: setup
+    attributes:
+      label: Anlage und ausgewähltes Hardwareprofil
+      description: "Welche Variante ist bekannt? Optional: Modell, Platine, BDE-/Gerätefirmware, Gateway, bereits bekannter Anschluss und ausgewähltes Integrationsprofil. Nicht bekannte Angaben als unbekannt angeben."
+      placeholder: "Modell: unbekannt\nPlatine: unbekannt\nFirmware/BDE: unbekannt\nGateway/Anschluss: unbekannt\nAusgewähltes Hardwareprofil: unbekannt"
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Integrations- und Home-Assistant-Version
+      placeholder: "Integration: …; Home Assistant: …; unbekannt ist zulässig"
+    validations:
+      required: true
+  - type: textarea
+    id: observations
+    attributes:
+      label: Was wurde tatsächlich beobachtet?
+      description: Welche Entitäten oder Funktionen liefern plausible Werte, welche fehlen oder weichen ab? Nenne den ungefähren Beobachtungszeitraum und gegebenenfalls den vorhandenen Vergleich, etwa eine abgelesene BDE-Anzeige. Nicht beobachtete Funktionen bitte als ungeprüft kennzeichnen.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Bereinigte Hinweise (optional)
+      description: Ein kurzes bereinigtes Beispiel kann helfen, ist aber keine Voraussetzung. Kennungen, Adressen, private Pfade und nicht benötigte Messwerte vorher entfernen. Originalaufnahmen und Displayfotos privat aufbewahren.
