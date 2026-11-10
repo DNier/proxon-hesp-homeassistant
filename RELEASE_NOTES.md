@@ -3,6 +3,31 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.4 – Community-Meldungen und aktuelle Einrichtungshinweise
+
+- Deutsche Formulare erleichtern Fehler- und Kompatibilitätsberichte. Unbekannte
+  Hardwareangaben sind zulässig; bereinigte Belege bleiben freiwillig. Fragen und
+  Ideen werden zu GitHub Discussions geleitet. Ein Kompatibilitätsbericht ist
+  keine Zertifizierung einer Anlage oder aller Funktionen.
+- Eine Sicherheitsrichtlinie beschreibt den vertraulichen Meldeweg. Verhaltenskodex
+  und schlanke PR-Vorlage ergänzen die Hinweise für Beiträge. Vollständige
+  Diagnoseexporte und Originalaufnahmen bleiben privat.
+- Die deutschen und englischen Einrichtungstexte verweisen auf die dokumentierten
+  Hardwarekombinationen und Grenzen. Der veraltete Hinweis, nur Eco Sommer sei
+  abgeglichen, entfällt; das Profil wird weiterhin ausdrücklich ausgewählt und
+  bedeutet keine automatische Modellerkennung.
+- Einstieg und Installationsanleitung verlinken die aktuelle stabile Version.
+  Die Anleitung beschreibt die vorhandenen lesenden Einstellungen, Prozentanzeigen,
+  optionalen BDE-Ventilindikatoren und die eng begrenzte BDE-Betriebsanzeige mit
+  ihren jeweiligen Aussagegrenzen.
+
+Bestehende Entitäts-IDs, Einstellungen und Aufnahmeformate bleiben erhalten;
+keine Konfigurationsmigration oder neue Anlagenbefehle. Es gibt keine neue
+Protokollzuordnung oder allgemeine Heiz-/Kühl-/Abtau-Erkennung. Home Assistant
+ab 2026.9. Nach dem HACS-Update Home Assistant neu starten; benötigte flüchtige
+Aufnahmen vorher herunterladen. Rückweg: Version 0.16.3 über HACS wieder
+installieren und Home Assistant neu starten.
+
 ## 0.16.3 – Metadaten-Folgeseiten und Einheitenlisten offline prüfen
 
 - Die Offline-Inventarisierung unterstützt vorbereitete Metadaten-Folgeseiten

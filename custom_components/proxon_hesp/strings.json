@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up PROXON HESP",
-        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only connection test (up to 20 seconds) using the observed HESP profile. See the [compatibility guide](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md) for tested hardware combinations and limits. Stop other TCP clients before testing.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -11,12 +11,12 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passive telemetry; optional manual device time alignment."
+          "profile": "Observed HESP profile, not automatic model detection. Check the documented hardware compatibility before selecting."
         }
       },
       "reconfigure": {
         "title": "Set up PROXON HESP",
-        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only test (up to 20 seconds). Supports the observed LT-ZIM V1.6 profile only. Programs other than Eco Summer have not been locally verified. Stop other TCP clients before testing.",
+        "description": "Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nReceive-only connection test (up to 20 seconds) using the observed HESP profile. See the [compatibility guide](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md) for tested hardware combinations and limits. Stop other TCP clients before testing.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -24,7 +24,7 @@
           "profile": "Installation profile"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passive telemetry; optional manual device time alignment."
+          "profile": "Observed HESP profile, not automatic model detection. Check the documented hardware compatibility before selecting."
         }
       }
     },

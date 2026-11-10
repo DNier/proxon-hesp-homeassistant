@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Fragen und Ideen
+    url: https://github.com/DNier/proxon-hesp-homeassistant/discussions
+    about: Unterstützung, Verständnisfragen und Vorschläge in den Discussions besprechen.
+  - name: Sicherheitslücke vertraulich melden
+    url: https://github.com/DNier/proxon-hesp-homeassistant/security/advisories/new
+    about: Vermutete Sicherheitslücken bitte nicht öffentlich als Issue melden.

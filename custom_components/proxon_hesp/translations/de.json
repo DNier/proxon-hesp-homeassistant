@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "PROXON HESP einrichten",
-        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Verbindungstest (bis zu 20 Sekunden) mit dem beobachteten HESP-Profil. Getestete Hardwarekombinationen und Grenzen stehen in der [Kompatibilitätsübersicht](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md). Andere TCP-Clients vor dem Test beenden.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -11,12 +11,12 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passives Auslesen; optionaler manueller Gerätezeitabgleich."
+          "profile": "Beobachtetes HESP-Profil, keine automatische Modellerkennung. Vor der Auswahl die dokumentierte Hardwarekompatibilität prüfen."
         }
       },
       "reconfigure": {
         "title": "PROXON HESP einrichten",
-        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Test (bis zu 20 Sekunden). Nur das beobachtete LT-ZIM-V1.6-Profil wird unterstützt. Andere Programme als Eco Sommer sind noch nicht lokal abgeglichen. Andere TCP-Clients vor dem Test beenden.",
+        "description": "Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.\n\nRein lesender Verbindungstest (bis zu 20 Sekunden) mit dem beobachteten HESP-Profil. Getestete Hardwarekombinationen und Grenzen stehen in der [Kompatibilitätsübersicht](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md). Andere TCP-Clients vor dem Test beenden.",
         "data": {
           "host": "Host",
           "port": "Port",
@@ -24,7 +24,7 @@
           "profile": "Anlagenprofil"
         },
         "data_description": {
-          "profile": "LT-ZIM V1.6: passives Auslesen; optionaler manueller Gerätezeitabgleich."
+          "profile": "Beobachtetes HESP-Profil, keine automatische Modellerkennung. Vor der Auswahl die dokumentierte Hardwarekompatibilität prüfen."
         }
       }
     },

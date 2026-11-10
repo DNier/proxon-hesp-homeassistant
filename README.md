@@ -66,8 +66,8 @@ Heizen, Kühlen und Abtauen sind nicht enthalten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
    PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
 
-**Stabile Version: 0.16.2.** Die Installation erfordert keine Freigabe von
-Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
+Die [aktuelle stabile Version](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest)
+erfordert keine Freigabe von Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
 
 HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
 Home Assistant gepusht. Bei Bedarf in HACS **Informationen aktualisieren** verwenden.
@@ -114,11 +114,21 @@ bleiben als optionale Diagnose erhalten. Zuordnungen und genaue Bedingungen:
 
 ## Austausch und Mithilfe
 
+Fragen und Ideen gehören in die [GitHub-Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions).
+Für Fehler und Kompatibilitätsberichte stehen [Meldeformulare](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
+bereit. Unbekannte Hardwareangaben sind in Ordnung; Belege sind freiwillig und
+müssen vor dem Teilen bereinigt werden.
+
+Beiträge richten sich nach [Contributing (Englisch)](CONTRIBUTING.md) und dem
+[Code of Conduct (Englisch)](CODE_OF_CONDUCT.md). Vermutete Sicherheitslücken
+bitte [vertraulich melden](SECURITY.md).
+
 Im [Home-Assistant-Forum: PROXON P-series via HESP](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
 stehen die Anbindung und Möglichkeiten zur Mithilfe auf Englisch. Berichte anderer
 PROXON-Besitzer mit Platinenrevision, BDE-Version und Vergleich zur Geräteanzeige
-helfen, die Kompatibilität zu prüfen. Diagnosedaten bitte vor dem Teilen auf
-private Angaben prüfen; Details unter [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
+helfen, die Kompatibilität zu prüfen. Vollständige Diagnoseexporte und
+Originalaufnahmen privat aufbewahren; nur benötigte bereinigte Auszüge freiwillig
+teilen. Details unter [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
 
 ## Dokumentation
 
