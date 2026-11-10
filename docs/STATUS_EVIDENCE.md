@@ -108,22 +108,30 @@ Bedienhinweis ergänzt am 4. Oktober 2026 auf Grundlage der Beobachtung an der
 Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
 [Bedienverhalten und passende Versuchsbedingungen](REFERENCE_TESTS.md).
 
-## Begrenzte BDE-Betriebsanzeige ab 0.16.0
+## Begrenzte BDE-Betriebsanzeige
 
-Vier unabhängige Fotoreferenzen zeigen Heizbetrieb im exakten Kontext Eco Winter,
-`0208=0x82001312`, `006C=0x27` und positive Verdichterdrehzahl. Die sichtbaren
-Geräteminuten liegen vollständig im passenden Rohkontext. Seit 0.16.2 ist
-zusätzlich das vollständige Statuswort `0x8200131A` mit denselben übrigen
-Bedingungen zugelassen. Zwei getrennte, über die sichtbare Geräteminute
-abgesicherte Aufnahmeepisoden zeigen dazu Luftstufe 3 und Heizbetrieb.
-Die übrigen Statusbits werden nicht maskiert oder verallgemeinert. Nach mindestens
-15 Sekunden stabilen Empfangs zeigt die neue optionale Diagnoseentität diesen
-BDE-Text; jede Quelle muss innerhalb von sechs Sekunden frisch sein. Andere
-Kontexte bleiben nicht verfügbar, einschließlich anderer Heizphasen. Es gibt
-keinen allgemeinen Heiz-/Kühl-/Abtauklassifikator und keine Aus-Ableitung.
+Die bestehende optionale Diagnoseentität zeigt **Heizbetrieb** bei Eco Winter,
+vollständigem `0208=0x82001312` oder `0x8200131A`, `006C=0x27` und positiver
+Verdichterdrehzahl. Die bisherigen zeitgesicherten Heizreferenzen bleiben
+unverändert gültig.
 
-Die zunächst betrachteten Bit-28-Erweiterungen werden wegen ihrer engeren
-Zeitbeleggrenzen nicht aufgenommen. Die PTC-Gegenfälle wurden anhand unabhängiger
-numerischer Nachbaranzeigen beziehungsweise Geräteuhr-/Videozeiten erneut geprüft;
-eine falsche zeitliche Zuordnung erklärt sie nicht. Daraus folgt weiterhin keine
-allgemeine PTC-Anzeige. [Genauer Belegumfang (Englisch)](BDE_DISPLAY_EVIDENCE.md).
+Ab 0.16.5 ergänzt dieselbe Entität **Betriebsfeld leer** ausschließlich bei
+Eco Winter, vollständigem `0208=0x8000100A`, `006C=0x25` und gültiger
+Verdichterdrehzahl null. Zwei unabhängige Originalepisoden zeigen das leere
+Betriebsfeld über vollständig passende Geräte-Minutenklammern. Ein weiterer
+kompatibler Grenzfall zählt wegen einer kurzen Qualifikationslücke nicht als
+dritte vollständig zeitgesicherte Referenz. Ein späteres Leerfoto beschriftet
+keine frühere Nachlaufphase.
+
+Alle vier Quellen müssen höchstens sechs Sekunden alt sein; jede vollständige
+Kombination muss mindestens 15 Sekunden durch echten Empfang stabil bleiben.
+Bei jedem Kontextwechsel beginnt diese Bestätigung erneut. Andere Kontexte
+bleiben nicht verfügbar. „Betriebsfeld leer“ bezeichnet ausschließlich die
+sichtbare BDE-Beschriftung, keine allgemeine Anlagenbetriebsart und keine
+Aussage „Heizung aus“ oder „keine Wärmeabgabe“.
+
+Die Bit-28-Erweiterungen bleiben wegen ihrer Zeitbeleggrenzen ausgeschlossen.
+Die unabhängig zeitgeprüften PTC-Ein/000-Gegenfälle gelten weiterhin; die neue
+Anzeige ergänzt keinen PTC-, Kühl- oder Abtauzustand. Entitäts-ID und
+Aktivierungseinstellung bleiben erhalten.
+[Genauer Beleg- und Testumfang (Englisch)](BDE_DISPLAY_EVIDENCE.md).

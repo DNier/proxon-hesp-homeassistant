@@ -52,7 +52,8 @@
       "bde_operating_display": {
         "name": "BDE operating display",
         "state": {
-          "heating": "Heating"
+          "heating": "Heating",
+          "blank": "Blank operating field"
         }
       },
       "operating_mode": {

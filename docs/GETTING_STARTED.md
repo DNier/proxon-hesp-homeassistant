@@ -69,7 +69,7 @@ Details und Quellenabgrenzung: [Herstellerangaben](MANUFACTURER_INFORMATION.md).
 | Aktuelle Zu-/Abluft-Ansteuerung | Prozentanzeige bei frischer passender Kennlinienstufe |
 | Regler-Luftstufe, ungeklärte Rohwerte und Hex-Datenpunkte | Optionale Diagnose |
 | BDE-Schaltzustände MV-Heizen/Kühlen und MV-Abtau | Optionale Diagnose; kein Nachweis aktiver Kühlung oder Abtauung |
-| Begrenzte BDE-Betriebsanzeige | Heizbetrieb nur in ausdrücklich belegten Winterkonstellationen |
+| Begrenzte BDE-Betriebsanzeige | Heizbetrieb oder Betriebsfeld leer nur in ausdrücklich belegten Winterkonstellationen |
 | Manuelle und automatische Mitschnitte | Passiv, zeitlich und im Speicher begrenzt |
 | Gerätedatum/-uhrzeit und manueller Zeitabgleich | Optional, ab 0.12.0b1 |
 | Heizräume mit vorhandenen HA-Entitäten | Herstellerunabhängige Überwachung, ab 0.12.0b1 |
@@ -87,9 +87,12 @@ keine separate Intensivlüftung. Diese Bedienerbeobachtung gilt zunächst für d
 Referenzanlage; [Details und Vergleichsbedingungen](REFERENCE_TESTS.md).
 
 Die optionale, standardmäßig deaktivierte **BDE-Betriebsanzeige** zeigt
-**Heizbetrieb** nur in den belegten Winterkonstellationen nach 15 Sekunden
-stabilen, frischen Empfangs. Andere Konstellationen, Anlauf und Stopp bleiben
-**nicht verfügbar**; das bedeutet nicht „Aus“. Die BDE-Schaltzustände
+**Heizbetrieb** in zwei belegten Winterkonstellationen. Ab 0.16.5 kommt
+**Betriebsfeld leer** für einen eigenen belegten Eco-Winter-Kontext bei
+Verdichterdrehzahl null hinzu. Jede vollständige Kombination benötigt
+15 Sekunden stabilen, frischen Empfangs. Andere Konstellationen bleiben
+**nicht verfügbar**. „Betriebsfeld leer“ beschreibt ausschließlich die sichtbare
+BDE-Beschriftung und bedeutet nicht „Heizung aus“. Die BDE-Schaltzustände
 **MV-Heizen/Kühlen** und **MV-Abtau** sind ebenfalls optionale Diagnoseanzeigen,
 keine Bestätigung tatsächlicher Kühlung oder Abtauaktivität.
 [Belege und Grenzen (Englisch)](BDE_DISPLAY_EVIDENCE.md).

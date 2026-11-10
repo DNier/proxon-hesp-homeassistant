@@ -147,9 +147,10 @@ are documented in [NOTICE.md](NOTICE.md).
 
 ## Bounded BDE operating display (0.16.0)
 
-The optional, disabled-by-default **BDE operating display** reports Heating only
-for two explicitly corroborated Eco Winter contexts after 15 seconds of stable,
-fresh source reception. Version 0.16.2 adds a recorded level-3 context. Other
-contexts are unavailable, including other heating
-phases, startup and stop; unavailable does not mean Off. This is not a general
-heating/cooling/defrost classifier. See [evidence and exact scope](docs/BDE_DISPLAY_EVIDENCE.md).
+The optional, disabled-by-default **BDE operating display** reports Heating for
+two explicitly corroborated Eco Winter contexts. Version 0.16.5 adds **Blank
+operating field** for one independently corroborated Eco Winter context with
+zero compressor speed. Each complete context requires fresh sources and 15
+seconds of actual stable source reception. Other contexts remain unavailable.
+Blank describes the visible display field, not stopped heating or absent heat
+output. This is not a general heating/cooling/defrost classifier. See [evidence and exact scope](docs/BDE_DISPLAY_EVIDENCE.md).

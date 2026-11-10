@@ -1,5 +1,7 @@
 """Bounded display indication from continuously fresh validated source frames."""
 
+import math
+
 from .hesp.decoder import Reading
 
 SOURCE_KEYS = {
@@ -15,9 +17,11 @@ HEATING_CONTEXTS = frozenset(
     {("eco_winter", 0x82001312, 0x27), ("eco_winter", 0x8200131A, 0x27)}
 )
 
+BLANK_CONTEXT = ("eco_winter", 0x8000100A, 0x25)
+
 
 class BdeDisplay:
-    """Fail closed outside a stable, coherent, observed heating context.
+    """Fail closed outside a stable, coherent, observed BDE context.
 
     Only the decoder's validated-frame observer advances this tracker. Entity
     property reads cannot turn an unchanged cached snapshot into an indication.
@@ -84,9 +88,9 @@ class BdeDisplay:
         status = self._sources["raw_0208"][0].value
         valves = self._sources["raw_006c"][0].value
         rpm = self._sources["compressor_rpm"][0].value
-        if not isinstance(mode, str) or not isinstance(rpm, (int, float)):
+        if not isinstance(mode, str) or type(rpm) not in (int, float):
             return None
-        if not 0 < rpm <= 10000:
+        if not 0 <= rpm <= 10000 or not math.isfinite(rpm):
             return None
         if not isinstance(status, str) or not isinstance(valves, str):
             return None
@@ -100,7 +104,9 @@ class BdeDisplay:
             )
         except ValueError:
             return None
-        return context if context in HEATING_CONTEXTS else None
+        if context in HEATING_CONTEXTS and rpm > 0:
+            return context
+        return context if context == BLANK_CONTEXT and rpm == 0 else None
 
     @property
     def expires_at(self) -> float | None:
@@ -112,7 +118,7 @@ class BdeDisplay:
     def value(self, now: float) -> str | None:
         """Recheck availability between expiry callbacks without advancing state."""
         if self._qualified and self._valid_context(now) == self._context:
-            return "heating"
+            return "blank" if self._context == BLANK_CONTEXT else "heating"
         return None
 
     def expire(self, now: float) -> bool:

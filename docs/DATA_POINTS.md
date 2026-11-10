@@ -492,14 +492,18 @@ physical start time. Heating/cooling/defrost classification remains unimplemente
 
 ## Bounded BDE operating-display indication (0.16.0)
 
-The optional diagnostic enum `bde_operating_display` reports `heating` only for
-Eco Winter with full `224000/0208/4=0x82001312` or, from 0.16.2,
-`0x8200131A`, full `224000/006C/4=0x27` and fresh positive
-`224000/051C/4` compressor speed. The additional complete word has two independent
-device-minute-backed display references; other level-3 words remain unavailable. All four sources must meet the
-six-second freshness/coherency bound and the combination must remain valid for
-15 seconds of actual receptions. Elsewhere the entity is unavailable; there is
-no Off, cooling, defrost or last-known-value fallback. Existing general telemetry
-freshness and all other interpretations remain unchanged. This bounded display
-reference does not change the unimplemented physical-activity interpretations
-above. [Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).
+The optional diagnostic enum `bde_operating_display` reports `heating` for
+Eco Winter with full `224000/0208/4=0x82001312` or `0x8200131A`, full
+`224000/006C/4=0x27` and fresh positive `224000/051C/4` compressor speed.
+From 0.16.5 the same entity additionally reports `blank` only for Eco Winter,
+full `0208=0x8000100A`, full `006C=0x25` and finite compressor speed exactly zero.
+Two independent device-minute-backed references support this blank-label
+context. It describes the absent visible BDE operating label, not absent heat
+output, a PTC state or a general idle state.
+
+All four sources must meet the six-second freshness/coherency bound and each
+complete combination must remain valid for 15 seconds of actual receptions.
+Every context change, including heating to blank or the reverse, starts a new
+qualification window. Elsewhere the entity is unavailable; there is no Off,
+cooling, defrost or last-known-value fallback. Existing entity identity,
+activation settings and general telemetry freshness remain unchanged. [Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).
