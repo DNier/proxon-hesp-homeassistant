@@ -3,6 +3,28 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.5 – Leeres BDE-Betriebsfeld gezielt anzeigen
+
+- Die bestehende optionale **BDE-Betriebsanzeige** erhält den zusätzlichen Wert
+  **Betriebsfeld leer**. Er gilt ausschließlich für eine durch zwei unabhängige,
+  zeitlich geprüfte Originalepisoden belegte Eco-Winter-Konstellation bei
+  Verdichterdrehzahl null. Die bisherigen Heizbetrieb-Kontexte bleiben erhalten.
+- Jede der vier Quellen muss frisch sein; die vollständige Kombination muss
+  mindestens 15 Sekunden durch echten Telegrammempfang stabil bleiben. Bei
+  Kontextwechsel, Datenlücke oder Neustart beginnt die Bestätigung erneut.
+- Ein leeres Betriebsfeld beschreibt die sichtbare BDE-Beschriftung. Es bedeutet
+  weder „Heizung aus“ noch fehlende Wärmeabgabe. Andere Kontexte bleiben nicht
+  verfügbar; es gibt keine neue allgemeine Heiz-/Kühl-/Abtau- oder PTC-Zuordnung.
+  [Belege und genauer Umfang (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
+Bestehende Entitäts-IDs, Aktivierungseinstellungen und Aufnahmeformate bleiben
+erhalten; keine Konfigurationsmigration und keine zusätzliche Entität. Die
+Diagnoseentität bleibt standardmäßig deaktiviert. Nach dem HACS-Update Home
+Assistant neu starten und die vorhandene BDE-Betriebsanzeige bei Bedarf
+aktivieren. Benötigte flüchtige Aufnahmen vorher herunterladen. Home Assistant
+ab 2026.9. Rückweg: Version 0.16.4 über HACS wieder installieren und HA neu
+starten; damit entfällt nur der zusätzliche Leerzustand. Der Empfang bleibt passiv.
+
 ## 0.16.4 – Community-Meldungen und aktuelle Einrichtungshinweise
 
 - Deutsche Formulare erleichtern Fehler- und Kompatibilitätsberichte. Unbekannte

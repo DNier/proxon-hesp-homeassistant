@@ -52,7 +52,8 @@
       "bde_operating_display": {
         "name": "BDE-Betriebsanzeige",
         "state": {
-          "heating": "Heizbetrieb"
+          "heating": "Heizbetrieb",
+          "blank": "Betriebsfeld leer"
         }
       },
       "operating_mode": {

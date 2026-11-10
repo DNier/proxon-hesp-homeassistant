@@ -44,13 +44,15 @@ erläutern den Geltungsbereich und die Grenzen.
 Ab Version 0.13.1 ergänzt **MV-Abtau** die optionalen BDE-Schaltzustände.
 Er zeigt keine tatsächliche Abtauaktivität an.
 
-Ab Version 0.16.0 gibt es die optionale **BDE-Betriebsanzeige**. Sie zeigt
-**Heizbetrieb** nur in ausdrücklich belegten Winterkonstellationen nach 15 Sekunden
-stabilen, frischen Empfangs. Version 0.16.2 ergänzt einen weiteren belegten
-Kontext mit Luftstufe 3. In anderen Heizphasen, beim Anlauf oder Stopp bleibt
-sie **nicht verfügbar**; daraus folgt keine Aussage „Aus“. Die Entität ist
-standardmäßig deaktiviert und unterscheidet noch nicht allgemein zwischen
-Heizen, Kühlen und Abtauen. [Belege und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+Die optionale **BDE-Betriebsanzeige** zeigt **Heizbetrieb** in zwei ausdrücklich
+belegten Winterkonstellationen. Ab Version 0.16.5 ergänzt sie **Betriebsfeld leer**
+für einen gesondert belegten Eco-Winter-Kontext bei Verdichterdrehzahl null.
+Alle Quellen müssen frisch sein und die vollständige Kombination muss durch
+echten Empfang mindestens 15 Sekunden stabil bleiben. Andere Kontexte bleiben
+**nicht verfügbar**. Ein leeres Betriebsfeld beschreibt die sichtbare
+BDE-Beschriftung; daraus folgt keine Aussage „Heizung aus“. Die bestehende
+Entität bleibt standardmäßig deaktiviert und unterscheidet nicht allgemein
+zwischen Heizen, Kühlen und Abtauen. [Belege und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
 
 Die vorhandene Anlagensteuerung und deine Thermostate bleiben verantwortlich.
 Nur der ausdrücklich ausgelöste Gerätezeitabgleich schreibt einen Kalenderwert.

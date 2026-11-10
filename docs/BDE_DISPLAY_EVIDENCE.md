@@ -1,10 +1,11 @@
 # Bounded BDE operating-display indication
 
-The optional diagnostic enum sensor **BDE operating display** reports only
-`heating` for the two exact source combinations below. The German state is
-**Heizbetrieb**. It is disabled by default. This mirrors a corroborated display
-label on the reference installation; it does not identify physical heat output,
-PTC activity, cooling or defrost activity.
+The optional diagnostic enum sensor **BDE operating display** reports `heating`
+(German: **Heizbetrieb**) for two exact source combinations and, from 0.16.5,
+`blank` (German: **Betriebsfeld leer**) for a separate exact source combination.
+It remains the same disabled-by-default entity. These states mirror
+corroborated display labels on the reference installation; they do not identify
+physical heat output, PTC activity, cooling, defrost activity or general idle.
 
 ## Admitted source combinations
 
@@ -12,23 +13,21 @@ All identities, lengths and original checksums are validated by the existing
 receiver. The combination is intentionally finite; no individual status bit is
 promoted to a heating flag.
 
-| Source | Required value |
-| --- | --- |
-| `118000/020A/2` | Operating mode `2` / Eco Winter |
-| `224000/0208/4` | Complete little-endian word `0x82001312`, payload `12130082`; or, from 0.16.2, `0x8200131A`, payload `1a130082` |
-| `224000/006C/4` | Complete little-endian word `0x27`, payload `27000000` |
-| `224000/051C/4` | Finite, validated compressor speed above zero |
+| State | `118000/020A/2` | Complete `224000/0208/4` | Complete `224000/006C/4` | `224000/051C/4` |
+| --- | --- | --- | --- | --- |
+| `heating` | `2` / Eco Winter | `0x82001312` (`12130082`) or `0x8200131A` (`1a130082`) | `0x27` (`27000000`) | Finite, validated speed above zero |
+| `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero |
 
 Each source must be fresh within six seconds and receipts must form a coherent
 context. The combination must persist for at least 15 seconds of actual received
 source observations. Reading an unchanged cached property cannot create new
 proof. Changes outside the admitted mode/status/valve context, source gaps,
 invalid numeric/mode values, disconnects and restarts invalidate the derived display; a later valid combination must qualify
-again. A transition between the two admitted complete contexts also starts a
-new 15-second proof window. The existing general telemetry freshness remains unchanged.
+again. Any transition between admitted complete contexts, including heating
+to blank and the reverse, starts a new 15-second proof window. The existing general telemetry freshness remains unchanged.
 
-Other combinations are unavailable, including other complete level-3 status words, startup, stop
-and the longer bit-28 phases. Unavailable never means that the BDE display is
+Other combinations are unavailable, including other complete level-3 status
+words, uncorroborated startup/stop contexts and the longer bit-28 phases. Unavailable never means that the BDE display is
 blank, that the heat pump is off or that heating has stopped. There is no fallback
 to the last label, operating mode alone, a valve bit or warm supply air. No
 `off`, `cooling` or `defrost` enum option is inferred.
@@ -80,6 +79,30 @@ The two independent recorded episodes were replayed separately against the
 production decoder and tracker; their original wire bytes and received intervals
 were retained in private evidence rather than added to the public fixture.
 
+## Blank-field evidence
+
+Two independent original photo episodes show Eco Winter, level 1 and an absent
+operating label. Their complete conservative device-minute brackets lie inside
+the exact blank context, after the actual 15-second source-driven qualification
+and with all four sources continuously fresh. Device-calendar responses bound
+the visible minute; no fixed device-to-host clock offset is assumed. A third
+compatible episode has a short qualification gap at the earliest possible
+photo time and is not counted as a third fully qualified reference.
+
+The later blank photo does not label the preceding short compressor-stop phase.
+That phase has a different complete status word. The production decoder and
+tracker are replayed against the original retained windows and time-bound
+heating, cooling and blank counterexamples. Existing heating qualifications
+remain unchanged; no reviewed heating/cooling photo bracket is labelled blank.
+Overlapping captures and repeated use of the same photo are not independent
+episodes. Original photos, device times and household recordings remain private.
+
+Public regression tests reuse previously published wire frames with explicitly
+synthetic timing. Those sequences exercise qualification, transitions and HA
+availability; they are not additional recorded display references. Zero speed
+alone, Eco Winter alone, or a photo taken after a trigger cannot establish blank.
+The blank state makes no statement about PTC, valve position or remaining heat.
+
 ## PTC counterexamples remain separate
 
 The reviewed PTC-Wohnen-on examples with all three candidate bits clear were
@@ -97,9 +120,9 @@ new positive mapping. The bounded BDE display adds no PTC state or permission.
 
 ## Integration and upgrade behaviour
 
-The new entity has a separate stable unique ID, no unit and no statistics class.
-Existing entity identities, enabled settings, recording formats and configuration
-entries are preserved. The receiver still owns one passive TCP connection;
+The existing entity keeps its stable unique ID, no unit and no statistics class.
+Version 0.16.5 adds only the `blank` enum option. Existing entity identities,
+enabled settings, recording formats and configuration entries are preserved. The receiver still owns one passive TCP connection;
 observing the display creates no query, control command, clock write or additional
 connection. On other hardware or firmware the exact context may remain
 unavailable; this does not extend the documented compatibility claims.
