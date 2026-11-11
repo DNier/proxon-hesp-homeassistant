@@ -3,6 +3,30 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.6 – Weitere belegte Luftstufe und passiver Fotozeit-Puffer
+
+- Die bestehende Luftstufenanzeige erkennt ein weiteres vollständig geprüftes
+  Statuswort als **Luftstufe 2**. Der zeitliche BDE-Vergleich beruht auf frischen
+  HA-Verlaufswerten; ein früherer Originalmitschnitt bestätigt das Telegrammformat.
+  Ähnliche unbekannte Wörter bleiben unverfügbar. Die Heiz-/Kühl-, PTC- und
+  BDE-Betriebsanzeigeregeln werden dadurch nicht erweitert.
+- Bei aktivierter Ereignisaufnahme lässt sich der bereits vorhandene begrenzte
+  Empfangspuffer zusätzlich lesend exportieren. Er enthält ursprüngliche
+  Empfangszeiten und TCP-Blöcke für bis zu drei Minuten, abhängig von den
+  Speichergrenzen. Das unterstützt externe Sicherungen bei späteren BDE-Fotos,
+  ohne eine Aufnahme zu starten oder Daten an die Anlage zu senden.
+- Der optionale Pufferexport bleibt von abgeschlossenen Ereignisaufnahmen
+  getrennt. Fehlende oder zeitlich nicht verlässlich zuordenbare Pufferdaten
+  werden nicht nachträglich rekonstruiert. Eine dauerhafte NAS-Sicherung ist
+  eine separate Installation und erfolgt durch dieses HA-Update allein nicht.
+
+Bestehende Entitäts-IDs, Einstellungen und Ereignisaufnahmen bleiben erhalten;
+keine Konfigurationsmigration oder zusätzliche Entität. Nach dem HACS-Update
+Home Assistant neu starten. Benötigte flüchtige Aufnahmen vorher herunterladen.
+Home Assistant ab 2026.9. Rückweg: Version 0.16.5 über HACS wieder installieren
+und HA neu starten; damit entfallen die zusätzliche Luftstufenzuordnung und der
+optionale Pufferexport. Der Empfang bleibt passiv.
+
 ## 0.16.5 – Leeres BDE-Betriebsfeld gezielt anzeigen
 
 - Die bestehende optionale **BDE-Betriebsanzeige** erhält den zusätzlichen Wert

@@ -327,6 +327,7 @@ class ProxonRuntime:
             },
             "event_capture": {
                 **self.event_capture.export(),
+                "passive_capture": self.event_capture.export_recent_received(),
                 "integration_version": self.integration_version,
                 "profile": self.profile,
             },

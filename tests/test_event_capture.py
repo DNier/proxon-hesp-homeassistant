@@ -96,7 +96,7 @@ async def test_ring_time_byte_chunk_and_event_bounds():
         e.feed(b"old")
         clock.return_value = 181
         e.feed(b"new")
-        assert list(e.ring) == [(181, b"new")]
+        assert [(stamp, part) for stamp, part, *_ in e.ring] == [(181, b"new")]
         e.feed(b"x" * 100)
         assert e.ring_size == 10
         e.feed(b"a")

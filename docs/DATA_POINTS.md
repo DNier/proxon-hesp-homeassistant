@@ -36,7 +36,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Thirteen display-backed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fourteen display-backed words; other bits and words are not interpreted; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -157,7 +157,7 @@ Controller fan level accepts only these complete status words:
 | Level | Status words |
 |---|---|
 | 1 | `8000100A` |
-| 2 | `80001012`, `82001312` |
+| 2 | `80001012`, `80001312`, `82001312` |
 | 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A`, `8200111A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
 
@@ -199,10 +199,26 @@ The identical wire frame `2240000802000008121300820001`, including its recorded
 checksum, occurs in both captures and is replayed at every TCP split in tests.
 This is a manually corroborated complete-word mapping, not an automatic finding
 under the stricter five-second matching rule used by the private observer.
-Neither bit 25 nor bit 28 is masked to extend this result. `80001312`,
+Neither bit 25 nor bit 28 is masked to extend this result.
 `82001212`, `92001312` and `9200131A` remain unassigned; in particular the
 bit-28 main-page photo showing level 2 overlaps a raw-word change in its
 displayed device minute and cannot validate either adjacent word.
+
+Version 0.16.6 adds only `80001312` (payload `12130080`, identity
+`224000/0208/4`) as level 2. A BDE main-page reference shows Eco Winter and
+level 2. Received device-calendar observations independently bound the visible
+clock minute; validated Recorder reception attributes retain this exact word
+across the entire bracket with gaps below six seconds. The device clock is not
+assumed synchronized to the host clock, and the later photo does not label the
+earlier compressor-start edge.
+
+A separately retained earlier capture contains the complete frame
+`22400008020000081213008079a2`, including its original checksum. That capture
+ends before the photo: the display comparison uses Recorder reception values,
+not retained TCP bytes at photo time. Tests replay only this minimal recorded
+frame, including its checksum, at every TCP split. This single-episode reference
+adds no heating, blank-field, PTC or valve interpretation; the other complete
+words remain subject to their own display comparisons.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
