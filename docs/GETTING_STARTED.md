@@ -79,6 +79,11 @@ verfügbar; bei Verbindungsabbruch sofort. Fehlende Daten bedeuten nicht null,
 „aus“ oder „störungsfrei“. Die angeforderte Luftstufe kann von der Reglerstufe
 abweichen. Ein gemeldeter Schaltzustand ist keine Messung der mechanischen Position.
 
+Die optionale **Regler-Luftstufe** verwendet nur einzeln belegte vollständige
+Statuswörter. Ab 0.16.6 gehört `80001312` zusätzlich zu Stufe 2. Diese
+Luftstufenanzeige erweitert keine Heiz-, Leerfeld- oder PTC-Zuordnung.
+[Belegte Wörter und Grenzen (Englisch)](DATA_POINTS.md#optional-diagnostics).
+
 An der Referenzanlage sind **Eco Sommer, Eco Winter, Komfort, Ofenbetrieb und Aus**
 vorhanden. In Eco ist eine feste Luftstufe 1–4 oder Auto nach Nutzerzeitplan
 wählbar. In Komfort und Ofenbetrieb bestimmt die Steuerung die Stufe;
@@ -96,6 +101,13 @@ BDE-Beschriftung und bedeutet nicht „Heizung aus“. Die BDE-Schaltzustände
 **MV-Heizen/Kühlen** und **MV-Abtau** sind ebenfalls optionale Diagnoseanzeigen,
 keine Bestätigung tatsächlicher Kühlung oder Abtauaktivität.
 [Belege und Grenzen (Englisch)](BDE_DISPLAY_EVIDENCE.md).
+
+Bei aktivierten automatischen Mitschnitten enthält die Diagnose ab 0.16.6
+zusätzlich einen rein lesenden Auszug des vorhandenen Empfangspuffers: höchstens
+drei Minuten, 512 KiB und 8.192 TCP-Blöcke mit ihren ursprünglichen
+UTC-Empfangszeiten. Der Auszug startet keine Aufnahme und ist kein vollständiges
+Ereignisfenster. Ohne passende gepufferte Daten oder bei einer erkannten
+Uhrzeitabweichung wird kein zeitlich zugeordneter Auszug geliefert.
 
 Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keine allgemeine
 Unterscheidung aktiver Heizung, Kühlung und Abtauung, keinen Fehlertextsensor,

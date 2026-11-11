@@ -71,10 +71,21 @@ Das identische Telegramm einschließlich aufgezeichneter Prüfsumme ist in beide
 Mitschnitten enthalten. Die Zuordnung beruht auf einer getrennten Sichtprüfung
 und dem Zeitkontext; die strengere automatische Fünfsekundenregel des privaten
 Beobachters wurde dafür nicht als erfüllt behandelt. Die benachbarten Wörter
-`80001312`, `82001212`, `92001312` und `9200131A` bleiben ungeklärt.
+`82001212`, `92001312` und `9200131A` bleiben ungeklärt.
 Weitere natürliche Winteranläufe wiederholen den längeren Bit-28-Zeitraum um
 MV-Abtau; sie liefern ohne neue BDE-Fotos keine zusätzliche Heiz-, Abtau- oder
 PTC-Zuordnung. Die Basiskorpuszahlen oben bleiben unverändert.
+
+Ab 0.16.6 ergänzt ausschließlich das vollständige Wort `80001312`
+(Payload `12130080`, `224000/0208/4`) die Luftstufe 2. Eine Hauptseitenreferenz
+zeigt Eco Winter und Stufe 2; unabhängig empfangene Gerätekalenderwerte begrenzen
+die sichtbare Minute. Validierte Recorder-Empfangszeiten belegen das unveränderte
+Wort über die gesamte Zeitklammer bei Empfangsabständen unter sechs Sekunden.
+Ein früherer Mitschnitt enthält das vollständige Telegramm samt Originalprüfsumme,
+endet jedoch vor der Fotozeit. Die zeitliche Bildzuordnung beruht deshalb auf
+Recorderwerten, nicht auf nachträglich vorhandenen Rohbytes. Das Foto bestätigt
+keine frühere Verdichterflanke. Die Luftstufenergänzung erweitert keine Heiz-,
+Leerfeld-, Ventil- oder PTC-Regel und ist keine allgemeine Bitmaske.
 
 Alle übrigen ungeprüften vollständigen Wörter bleiben unverfügbar. Negative Temperaturen
 werden anhand des Messblocks und einer ausdrücklichen negativen BDE-Anzeige

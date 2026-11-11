@@ -16,6 +16,9 @@ from custom_components.proxon_hesp.hesp.decoder import Decoder
 # 2026-10-20/21: identical captured wire frame; two independent BDE level-2
 # references lie inside stable complete-word intervals. This CRC is recorded.
 WINTER_LEVEL_TWO_FRAME = "2240000802000008121300820001"
+# Recorded CRC; the display comparison is separately time-bound by validated
+# Recorder receipts. The retained wire capture ends before the photo.
+LEVEL_TWO_80001312_FRAME = "22400008020000081213008079a2"
 
 # Fixed recorded frames/checksums with display-validated controller levels.
 LEVELS = [
@@ -28,6 +31,7 @@ LEVELS = [
     # 2026-10-09: fixed captured CRC, independently displayed controller level 3.
     ("22400008020000081a130082a028", 3),
     (WINTER_LEVEL_TWO_FRAME, 2),
+    (LEVEL_TWO_80001312_FRAME, 2),
     ("224000080200000822100080d200", 4),
     ("22400008020000081210008012f5", 2),
     ("22400008020000081a92008089d8", 3),
@@ -107,10 +111,13 @@ def test_display_observed_winter_payload_at_every_stream_split():
         assert decoder.stats.checksum_rejected == 0
 
 
-@pytest.mark.parametrize("raw", [LEVELS[0][0], CONTROLS[0][0], WINTER_LEVEL_TWO_FRAME])
+@pytest.mark.parametrize(
+    "raw",
+    [LEVELS[0][0], CONTROLS[0][0], WINTER_LEVEL_TWO_FRAME, LEVEL_TWO_80001312_FRAME],
+)
 def test_invalid_identity_and_crc_rejected_with_recovery(raw):
     frame = bytes.fromhex(raw)
-    for index, value in ((0, 0x11), (1, 0x41), (2, 1), (5, 1), (7, 0)):
+    for index, value in ((0, 0x11), (1, 0x41), (2, 1), (3, 0x09), (5, 1), (7, 0)):
         body = bytearray(frame[:-2])
         body[index] = value
         assert Decoder().feed(checked(body)) == []
@@ -134,7 +141,9 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x80009322,
         0x8080121A,
         0x8000135A,
-        0x80001312,
+        0x80001112,
+        0x80001212,
+        0x90001312,
         0x9200131A,
         0x92001312,
         0x8200101A,
@@ -146,6 +155,21 @@ def test_unknown_status_is_not_a_guessed_level(status):
     header = bytes.fromhex(LEVELS[0][0])[:8]
     readings = Decoder().feed(checked(header + struct.pack("<I", status)))
     assert [r.key for r in readings] == ["experimental_status_0208", "raw_0208"]
+
+
+@pytest.mark.parametrize("stopped", (False, True))
+def test_additional_level_two_word_does_not_extend_bde_display(stopped):
+    from custom_components.proxon_hesp.bde_display import BdeDisplay
+    from tests.test_bde_display import MODE, RPM, STOPPED, VALVES
+
+    display = BdeDisplay()
+    decoder = Decoder(lambda source, readings: display.observe(source, readings, now))
+    stream = MODE + bytes.fromhex(LEVEL_TWO_80001312_FRAME) + VALVES
+    stream += STOPPED if stopped else RPM
+    for now in (0, 5, 10, 15, 20):
+        readings = decoder.feed(stream)
+        assert [r.value for r in readings if r.key == "controller_fan_level"] == [2]
+        assert display.value(now) is None
 
 
 @pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -1.0, 10001.0])
@@ -214,6 +238,7 @@ async def test_enabled_diagnostics_missing_expiry_recovery_disconnect(hass, fram
             *LEVELS[-2:],
             (checked(WINTER_RUNOUT_BODY).hex(), 3),
             (WINTER_LEVEL_TWO_FRAME, 2),
+            (LEVEL_TWO_80001312_FRAME, 2),
         ]:
             reader.feed_data(bytes.fromhex(raw))
             await hass.async_block_till_done()

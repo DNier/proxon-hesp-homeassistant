@@ -21,6 +21,7 @@ RAW_BIT_TRIGGERS = {
 }
 RING_BYTES = 524_288
 RING_CHUNKS = 8192
+MAX_CLOCK_SKEW_SECONDS = 1.0
 MAX_CAPTURES = 4
 MAX_EVENTS = 32
 EVENT_STATUSES = ("disabled", "waiting", "recording", "ready")
@@ -94,7 +95,7 @@ class EventCapture:
         self.capture.feed(data)
         now = time.monotonic()
         part = bytes(data[-RING_BYTES:])
-        self.ring.append((now, part))
+        self.ring.append((now, part, datetime.now(UTC), len(data)))
         self.ring_size += len(part)
         while self.ring and (
             now - self.ring[0][0] > PRE_SECONDS
@@ -102,6 +103,70 @@ class EventCapture:
             or len(self.ring) > RING_CHUNKS
         ):
             self.ring_size -= len(self.ring.popleft()[1])
+
+    def export_recent_received(self) -> dict | None:
+        """Copy the opt-in receive suffix with original UTC; never start a capture.
+
+        This partial snapshot is separate from event windows and can start in the
+        middle of a frame. Clock discontinuities cannot be repaired by projecting
+        the export clock backwards onto received bytes.
+        """
+        if not self.enabled:
+            return None
+        now, exported = time.monotonic(), datetime.now(UTC)
+        recent = [row for row in self.ring if 0 <= now - row[0] <= PRE_SECONDS]
+        if not recent or any(len(row) != 4 for row in recent):
+            return None
+        start, _, first_utc, _ = recent[0]
+        previous, previous_utc = start, first_utc
+        for stamp, _, received, _ in recent:
+            if (
+                not isinstance(received, datetime)
+                or received.tzinfo is None
+                or received.utcoffset() != timedelta(0)
+                or not isinstance(first_utc, datetime)
+                or first_utc.tzinfo is None
+                or stamp < previous
+                or received < previous_utc
+                or received > exported
+                or abs((received - first_utc).total_seconds() - (stamp - start))
+                > MAX_CLOCK_SKEW_SECONDS
+            ):
+                return None
+            previous, previous_utc = stamp, received
+        last, _, last_utc, _ = recent[-1]
+        if (
+            abs((exported - last_utc).total_seconds() - (now - last))
+            > MAX_CLOCK_SKEW_SECONDS
+        ):
+            return None
+        return {
+            "format_version": 1,
+            "source_kind": "passive_received_snapshot",
+            "status": "partial",
+            "completion_reason": "passive_snapshot",
+            "timestamp_basis": "original_received_utc_and_monotonic_elapsed",
+            "started_utc": first_utc.isoformat(),
+            "received_until_utc": last_utc.isoformat(),
+            "exported_at_utc": exported.isoformat(),
+            "chunks": [
+                {
+                    "elapsed_ms": round((stamp - start) * 1000),
+                    "received_utc": received.isoformat(),
+                    "hex": part.hex(),
+                }
+                for stamp, part, received, _ in recent
+            ],
+            "bytes": sum(len(part) for _, part, _, _ in recent),
+            "chunk_count": len(recent),
+            "max_age_seconds": PRE_SECONDS,
+            "max_bytes": RING_BYTES,
+            "max_chunks": RING_CHUNKS,
+            "prefix_bytes_omitted": sum(
+                size - len(part) for _, part, _, size in recent
+            ),
+            "clock_skew_tolerance_seconds": MAX_CLOCK_SKEW_SECONDS,
+        }
 
     def observe_rpm(self, rpm):
         """Called only for checksum-, identity- and range-validated readings."""
@@ -217,7 +282,7 @@ class EventCapture:
             self.first_event_time = now
             self.post_seconds = POST_SECONDS
             # on_data already buffered the chunk containing this transition.
-            before = [(t, p) for t, p in self.ring if now - t <= PRE_SECONDS]
+            before = [(t, p) for t, p, *_ in self.ring if now - t <= PRE_SECONDS]
             start = before[0][0] if before else now
             self.pre_seconds = now - start
             self.capture.start()

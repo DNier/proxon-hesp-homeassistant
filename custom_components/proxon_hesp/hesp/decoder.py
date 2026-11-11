@@ -18,6 +18,7 @@ MODES = {0: "off", 1: "eco_summer", 2: "eco_winter", 3: "comfort", 4: "stove"}
 CONTROLLER_FAN_LEVELS = {
     0x8000100A: 1,
     0x80001012: 2,
+    0x80001312: 2,
     0x8000101A: 3,
     0x80001022: 4,
     0x80001122: 4,

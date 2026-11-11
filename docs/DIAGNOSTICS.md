@@ -147,6 +147,45 @@ nicht einem genauen elektrischen Schaltzeitpunkt. Pufferränder können Telegram
 teilen; der vorhandene Parser synchronisiert sich erneut. Für unbekannte Bits
 kann weiterhin eine unabhängige Displaybeobachtung erforderlich sein.
 
+## Passiven Empfangspuffer herunterladen ab 0.16.6
+
+Bei aktivierter automatischer Ereignisaufnahme enthält die Diagnose zusätzlich
+`event_capture.passive_capture`: einen rein lesenden Zwischenstand des bereits
+vorhandenen Empfangspuffers. Er startet oder verlängert keine Aufnahme, löst
+kein Ereignis aus und sendet keine Daten an die Anlage. Die bisherigen
+Aufnahmefelder, Formate und gespeicherten Ereignisfenster bleiben unverändert.
+
+Der Auszug umfasst höchstens **180 Sekunden, 512 KiB und 8.192 TCP-Blöcke**.
+Speichergrenzen, ein gerade erfolgter Verbindungsaufbau oder weniger empfangene
+Daten können den enthaltenen Zeitraum verkürzen. Er ist ausdrücklich eine
+**Teilaufnahme**, kein vollständiges Ereignisfenster. Pufferränder können ein
+Telegramm teilen. `prefix_bytes_omitted` zählt innerhalb der enthaltenen Blöcke
+abgeschnittene Anfangsbytes eines übergroßen Empfangsblocks; es ist kein Zähler
+aller zuvor aus dem Puffer entfernten Daten.
+
+Jeder Block enthält neben `hex` und monotonem `elapsed_ms` seine beim Empfang
+gespeicherte Originalzeit `received_utc`. `started_utc` und
+`received_until_utc` sind die Originalzeiten des ersten und letzten enthaltenen
+Blocks; `exported_at_utc` bezeichnet nur die spätere Exportzeit. Die Originalzeiten
+werden nicht aus der Exportzeit zurückgerechnet. Sie stammen von der HA-Uhr
+und bestätigen keine Synchronisierung mit der sichtbaren BDE-Uhr. Der Auszug
+ist als `source_kind=passive_received_snapshot`, `status=partial` und
+`completion_reason=passive_snapshot` gekennzeichnet; seine eigene
+`format_version=1` ändert kein bestehendes Aufnahmeformat.
+
+Ohne eingeschaltete Ereignisaufnahme, passende gepufferte Daten oder gültige
+Originalzeiten ist das Feld `null`. Auch rückwärts laufende Empfangszeiten oder
+eine Abweichung zwischen UTC und monotoner Zeit von mehr als einer Sekunde
+verhindern den zeitlich zugeordneten Export. In älteren Integrationsversionen
+fehlt das optionale Feld. Beides bedeutet fehlenden Auszug, keine bestätigte
+Abwesenheit von Busverkehr oder Anlagenaktivität.
+
+Ein mehr als drei Minuten altes Foto ist damit nicht automatisch abgesichert.
+Benötigte Daten herunterladen, solange sie noch gepuffert sind. Löschen,
+Deaktivieren, Verbindungsabbruch und Neustart verwerfen den Vorlaufpuffer wie
+bisher. Der Download archiviert nichts automatisch auf einem NAS und rüstet
+keine bereits laufende Home-Assistant-Installation nach.
+
 ## Ereignisaufnahme gezielt auslösen
 
 Ab **0.13.2** ergänzt **PROXON HESP: Diagnose-Ereignisaufnahme auslösen**

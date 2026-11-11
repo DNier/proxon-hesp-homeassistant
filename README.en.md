@@ -51,6 +51,16 @@ Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
 
+Version 0.16.6 adds fan level 2 for one previously unknown complete status word,
+corroborated by a time-aligned BDE photo and fresh HA Recorder payload receipts.
+Existing entity IDs and settings are preserved; restart Home Assistant after
+installation. See [fan-level evidence](docs/DATA_POINTS.md#optional-diagnostics).
+
+When event capture is enabled, the existing bounded three-minute reception
+buffer can also be exported read-only. External archival tools can preserve
+original telegrams around a photo's readout time; durable storage remains a
+separate setup. See [recording boundaries](docs/DIAGNOSTICS.md).
+
 Version 0.15.4 adds passive captures for three unmapped raw-bit transitions when
 event capture is enabled, with a longer post-event window for BDE photos.
 This does not establish new PTC or heating/cooling sensors. Existing entity IDs

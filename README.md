@@ -80,6 +80,16 @@ Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
 
+**Update auf 0.16.6:** Ein weiterer zeitlich geprüfter BDE-Fotovergleich ergänzt
+Luftstufe 2 für ein bisher unbekanntes vollständiges Statuswort. Bestehende
+Entitäts-IDs und Einstellungen bleiben erhalten; Home Assistant nach der
+Installation neu starten. [Belege und Grenzen (Englisch)](docs/DATA_POINTS.md#optional-diagnostics).
+
+Bei aktivierter Ereignisaufnahme ist auch der vorhandene, begrenzte
+Drei-Minuten-Empfangspuffer lesend exportierbar. Externe Sicherungen können damit
+Originaltelegramme zur Fotozeit erhalten; die dauerhafte Ablage bleibt eine
+separate Einrichtung. [Aufnahmen und Grenzen](docs/DIAGNOSTICS.md).
+
 **Update auf 0.15.4:** Bei aktivierter Ereignisaufnahme lösen drei ungeklärte
 Rohbitwechsel zusätzliche passive Aufnahmen mit längerem Nachlauf für BDE-Fotos
 aus. Daraus werden keine neuen PTC- oder Heiz-/Kühlsensoren abgeleitet.
