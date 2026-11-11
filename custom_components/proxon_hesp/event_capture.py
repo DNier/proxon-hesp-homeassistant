@@ -129,6 +129,8 @@ class EventCapture:
                 or stamp < previous
                 or received < previous_utc
                 or received > exported
+                or abs((received - previous_utc).total_seconds() - (stamp - previous))
+                > MAX_CLOCK_SKEW_SECONDS
                 or abs((received - first_utc).total_seconds() - (stamp - start))
                 > MAX_CLOCK_SKEW_SECONDS
             ):
@@ -136,7 +138,9 @@ class EventCapture:
             previous, previous_utc = stamp, received
         last, _, last_utc, _ = recent[-1]
         if (
-            abs((exported - last_utc).total_seconds() - (now - last))
+            abs((exported - first_utc).total_seconds() - (now - start))
+            > MAX_CLOCK_SKEW_SECONDS
+            or abs((exported - last_utc).total_seconds() - (now - last))
             > MAX_CLOCK_SKEW_SECONDS
         ):
             return None

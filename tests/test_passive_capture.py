@@ -142,6 +142,28 @@ def test_clock_jumps_fail_closed_without_changing_received_data(
     assert list(capture.ring) == before
 
 
+@pytest.mark.parametrize("phase", ("between_receipts", "before_export"))
+def test_accumulated_small_offsets_cannot_hide_a_larger_clock_jump(
+    receive_clock, phase
+):
+    capture = EventCapture(True)
+    capture.feed(b"first")
+    receive_clock.advance(5, 0.9)
+    capture.feed(b"second")
+    if phase == "between_receipts":
+        # Both endpoints remain within 0.9 s of the first anchor, but this
+        # adjacent pair contains a 1.8 s backwards clock step.
+        receive_clock.advance(10, -0.9)
+        capture.feed(b"third")
+    else:
+        # The last-to-export delta alone is within 0.9 s; the full original
+        # receive-to-export span contains a cumulative 1.8 s clock change.
+        receive_clock.advance(10, 1.8)
+    before = list(capture.ring)
+    assert capture.export_recent_received() is None
+    assert list(capture.ring) == before
+
+
 def test_even_small_backwards_receive_times_are_not_reordered(receive_clock):
     capture = EventCapture(True)
     capture.feed(b"first")
