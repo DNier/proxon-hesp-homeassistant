@@ -51,6 +51,9 @@ Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
 
+Version 0.16.9 adds fan level 2 and a bounded Eco Winter heating indication for
+the complete word `0x82009312`. See [the display evidence](docs/BDE_DISPLAY_EVIDENCE.md).
+
 Version 0.16.8 adds an optional **Compressor control output** diagnostic in
 percent, verified on the P2 reference. It replaces `raw_0120` and carries over
 existing opt-in. Update any dashboard and automation references to use the new
@@ -163,7 +166,7 @@ are documented in [NOTICE.md](NOTICE.md).
 ## Bounded BDE operating display (0.16.0)
 
 The optional, disabled-by-default **BDE operating display** reports Heating for
-two explicitly corroborated Eco Winter contexts. Version 0.16.5 adds **Blank
+three corroborated Eco Winter contexts as of 0.16.9. Version 0.16.5 adds **Blank
 operating field** for one independently corroborated Eco Winter context with
 zero compressor speed. Each complete context requires fresh sources and 15
 seconds of actual stable source reception. Other contexts remain unavailable.

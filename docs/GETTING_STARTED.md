@@ -87,8 +87,8 @@ Die Entität findest du unter **Diagnose** am PROXON-Gerät. Sie ist standardmä
 deaktiviert. [Datenpunkt und Entitätswechsel (Englisch)](DATA_POINTS.md#compressor-control-output-0168).
 
 Die optionale **Regler-Luftstufe** verwendet nur einzeln belegte vollständige
-Statuswörter. Ab 0.16.6 gehört `80001312` zusätzlich zu Stufe 2. Diese
-Luftstufenanzeige erweitert keine Heiz-, Leerfeld- oder PTC-Zuordnung.
+Statuswörter. Ab 0.16.6 gehört `80001312` zusätzlich zu Stufe 2, ab 0.16.9
+auch `82009312`. Die Betriebsanzeige prüft dafür eine eigene Kombination.
 [Belegte Wörter und Grenzen (Englisch)](DATA_POINTS.md#optional-diagnostics).
 
 An der Referenzanlage sind **Eco Sommer, Eco Winter, Komfort, Ofenbetrieb und Aus**
@@ -99,7 +99,7 @@ keine separate Intensivlüftung. Diese Bedienerbeobachtung gilt zunächst für d
 Referenzanlage; [Details und Vergleichsbedingungen](REFERENCE_TESTS.md).
 
 Die optionale, standardmäßig deaktivierte **BDE-Betriebsanzeige** zeigt
-**Heizbetrieb** in zwei belegten Winterkonstellationen. Ab 0.16.5 kommt
+**Heizbetrieb** ab 0.16.9 in drei belegten Winterkonstellationen. Ab 0.16.5 kommt
 **Betriebsfeld leer** für einen eigenen belegten Eco-Winter-Kontext bei
 Verdichterdrehzahl null hinzu. Jede vollständige Kombination benötigt
 15 Sekunden stabilen, frischen Empfangs. Andere Konstellationen bleiben

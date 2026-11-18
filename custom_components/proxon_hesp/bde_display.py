@@ -14,7 +14,11 @@ MAX_SOURCE_AGE = 6.0
 STABILITY_SECONDS = 15.0
 # Only complete, independently display-backed contexts belong here.
 HEATING_CONTEXTS = frozenset(
-    {("eco_winter", 0x82001312, 0x27), ("eco_winter", 0x8200131A, 0x27)}
+    {
+        ("eco_winter", 0x82001312, 0x27),
+        ("eco_winter", 0x8200131A, 0x27),
+        ("eco_winter", 0x82009312, 0x27),
+    }
 )
 
 BLANK_CONTEXT = ("eco_winter", 0x8000100A, 0x25)

@@ -1,7 +1,8 @@
 # Bounded BDE operating-display indication
 
 The optional diagnostic enum sensor **BDE operating display** reports `heating`
-(German: **Heizbetrieb**) for two exact source combinations and, from 0.16.5,
+(German: **Heizbetrieb**) for three exact source combinations as of 0.16.9 and,
+from 0.16.5,
 `blank` (German: **Betriebsfeld leer**) for a separate exact source combination.
 It remains the same disabled-by-default entity. These states mirror
 corroborated display labels on the reference installation; they do not identify
@@ -15,7 +16,7 @@ promoted to a heating flag.
 
 | State | `118000/020A/2` | Complete `224000/0208/4` | Complete `224000/006C/4` | `224000/051C/4` |
 | --- | --- | --- | --- | --- |
-| `heating` | `2` / Eco Winter | `0x82001312` (`12130082`) or `0x8200131A` (`1a130082`) | `0x27` (`27000000`) | Finite, validated speed above zero |
+| `heating` | `2` / Eco Winter | `0x82001312` (`12130082`), `0x8200131A` (`1a130082`), or `0x82009312` (`12930082`, since 0.16.9) | `0x27` (`27000000`) | Finite, validated speed above zero |
 | `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero |
 
 Each source must be fresh within six seconds and receipts must form a coherent
@@ -51,9 +52,9 @@ A later point from the same recording is not an additional time-safe reference:
 its displayed-minute bracket also contains `0x8200111A`. That word remains
 unadmitted even though a separate fan-level mapping exists for it.
 
-The unchanged production decoder and display tracker were replayed across 533
-terminal archived windows and 60 deduplicated historical diagnostic windows.
-The extension preserves all four earlier qualifying current photo references and
+The 0.16.2 extension was replayed across 533 terminal archived windows and 60
+deduplicated historical diagnostic windows. It preserves all four earlier
+qualifying current photo references and
 adds one current photo plus two nominal historical points. Only one of those
 historical points supplies the additional time-safe episode described above.
 No opposing qualified label was found among the known retained labelled points. Three additional historical raw matches
@@ -78,6 +79,20 @@ tests. Those synthetic sequences are not additional recorded display references.
 The two independent recorded episodes were replayed separately against the
 production decoder and tracker; their original wire bytes and received intervals
 were retained in private evidence rather than added to the public fixture.
+
+### Additional level 2 heating context (0.16.9)
+
+One original BDE photo shows Eco Winter, level 2 and Heizbetrieb. Received
+device-calendar responses bound the displayed minute. The complete status word
+`0x82009312`, valve word `0x27` and mode remain stable across that bracket,
+with positive compressor speed and source gaps below six seconds.
+
+The start of the photo bracket precedes the tracker's 15-second qualification.
+In the original replay, qualification starts only after 15 seconds of coherent
+reception with positive speed. The public regression tests use one minimal
+recorded status frame and synthetic combinations with the existing vectors.
+The difference from `0x82001312` establishes this complete word only. The
+neighboring words remain subject to their own display evidence.
 
 ## Blank-field evidence
 

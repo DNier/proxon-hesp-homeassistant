@@ -53,6 +53,10 @@ BLANK_SOURCES = (
 )
 A7 = bytes.fromhex("2240006c00000008a70000004738")
 STATUS_9200131A = bytes.fromhex("22400008020000081a130092bd31")
+# Only this minimal recorded status frame is new; the other frames and all
+# combined replay timing below are synthetic reuse of existing public vectors.
+STATUS_82009312 = bytes.fromhex("224000080200000812930082069f")
+FAN2_BIT15_SOURCES = (MODE, STATUS_82009312, VALVES, RPM)
 
 
 def checked(body):
@@ -63,14 +67,22 @@ def checked(body):
 STATUS_8200111A = checked(STATUS[:8] + bytes.fromhex("1a110082"))
 
 
-@pytest.fixture(params=(SOURCES, FAN3_SOURCES), ids=("fan-level-2", "fan-level-3"))
+@pytest.fixture(
+    params=(SOURCES, FAN3_SOURCES, FAN2_BIT15_SOURCES),
+    ids=("fan-level-2", "fan-level-3", "fan-level-2-bit15"),
+)
 def heating_sources(request):
     return request.param
 
 
 @pytest.fixture(
-    params=((SOURCES, "heating"), (FAN3_SOURCES, "heating"), (BLANK_SOURCES, "blank")),
-    ids=("fan-level-2", "fan-level-3", "blank-field"),
+    params=(
+        (SOURCES, "heating"),
+        (FAN3_SOURCES, "heating"),
+        (FAN2_BIT15_SOURCES, "heating"),
+        (BLANK_SOURCES, "blank"),
+    ),
+    ids=("fan-level-2", "fan-level-3", "fan-level-2-bit15", "blank-field"),
 )
 def display_context(request):
     return request.param
@@ -143,7 +155,8 @@ def test_public_fan3_vectors_qualify_only_after_fresh_15_seconds(
 
 
 @pytest.mark.parametrize(
-    "frame", tuple(dict.fromkeys(SOURCES + FAN3_SOURCES + BLANK_SOURCES))
+    "frame",
+    tuple(dict.fromkeys(SOURCES + FAN3_SOURCES + FAN2_BIT15_SOURCES + BLANK_SOURCES)),
 )
 def test_recorded_sources_at_every_stream_split(frame):
     expected = Decoder().feed(frame)
@@ -301,6 +314,12 @@ def test_9200131a_context_remains_unavailable_with_either_valve_word(
         (FAN3_SOURCES, BLANK_SOURCES),
         (BLANK_SOURCES, SOURCES),
         (BLANK_SOURCES, FAN3_SOURCES),
+        (SOURCES, FAN2_BIT15_SOURCES),
+        (FAN2_BIT15_SOURCES, SOURCES),
+        (FAN3_SOURCES, FAN2_BIT15_SOURCES),
+        (FAN2_BIT15_SOURCES, FAN3_SOURCES),
+        (BLANK_SOURCES, FAN2_BIT15_SOURCES),
+        (FAN2_BIT15_SOURCES, BLANK_SOURCES),
     ),
     ids=(
         "fan-level-2-to-3",
@@ -309,6 +328,12 @@ def test_9200131a_context_remains_unavailable_with_either_valve_word(
         "heating-3-to-blank",
         "blank-to-heating-2",
         "blank-to-heating-3",
+        "heating-2-to-bit15",
+        "bit15-to-heating-2",
+        "heating-3-to-bit15",
+        "bit15-to-heating-3",
+        "blank-to-bit15",
+        "bit15-to-blank",
     ),
 )
 def test_switching_allowed_full_context_restarts_15_second_proof(
@@ -335,6 +360,49 @@ def test_neighboring_full_word_stays_unknown_despite_fan_level_three_mapping(
     for now in (0, 5, 10, 15, 20):
         feed(mode + STATUS_8200111A + valves + rpm, now)
         assert display.value(now) is None
+
+
+@pytest.mark.parametrize("mode", (0, 1, 3, 4))
+@pytest.mark.parametrize("valves", (VALVES, A7))
+def test_new_level_two_word_does_not_infer_heating_outside_eco_winter(
+    display_stream, mode, valves
+):
+    display, feed, _ = display_stream
+    other_mode = checked(MODE[:8] + mode.to_bytes(2, "little"))
+    stream = other_mode + STATUS_82009312 + valves + RPM
+    for now in (0, 5, 10, 15, 20):
+        readings = feed(stream, now)
+        assert [r.value for r in readings if r.key == "controller_fan_level"] == [2]
+        assert display.value(now) is None
+
+
+@pytest.mark.parametrize("valves", (VALVES, A7, BLANK_SOURCES[2]))
+def test_new_level_two_word_with_zero_speed_is_neither_heating_nor_blank(
+    display_stream, valves
+):
+    display, feed, _ = display_stream
+    stream = MODE + STATUS_82009312 + valves + STOPPED
+    for now in (0, 5, 10, 15, 20):
+        feed(stream, now)
+        assert display.value(now) is None
+
+
+def test_new_level_two_word_before_compressor_start_needs_new_15_second_proof(
+    display_stream,
+):
+    display, feed, _ = display_stream
+    stopped = MODE + STATUS_82009312 + VALVES + STOPPED
+    for now in (0, 5, 10, 15, 20):
+        feed(stopped, now)
+        assert display.value(now) is None
+    feed(RPM, 21)
+    running = b"".join(FAN2_BIT15_SOURCES)
+    for now in (26, 31, 35.999):
+        feed(running, now)
+        assert display.value(now) is None
+    assert display.value(36) is None
+    feed(RPM, 36)
+    assert display.value(36) == "heating"
 
 
 def test_invalid_then_valid_mode_in_one_chunk_restarts_proof(

@@ -45,7 +45,7 @@ erläutern den Geltungsbereich und die Grenzen.
 Ab Version 0.13.1 ergänzt **MV-Abtau** die optionalen BDE-Schaltzustände.
 Er zeigt keine tatsächliche Abtauaktivität an.
 
-Die optionale **BDE-Betriebsanzeige** zeigt **Heizbetrieb** in zwei ausdrücklich
+Die optionale **BDE-Betriebsanzeige** zeigt **Heizbetrieb** ab 0.16.9 in drei
 belegten Winterkonstellationen. Ab Version 0.16.5 ergänzt sie **Betriebsfeld leer**
 für einen gesondert belegten Eco-Winter-Kontext bei Verdichterdrehzahl null.
 Alle Quellen müssen frisch sein und die vollständige Kombination muss durch

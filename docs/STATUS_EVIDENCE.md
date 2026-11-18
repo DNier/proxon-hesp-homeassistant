@@ -122,9 +122,16 @@ Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
 ## Begrenzte BDE-Betriebsanzeige
 
 Die bestehende optionale Diagnoseentität zeigt **Heizbetrieb** bei Eco Winter,
-vollständigem `0208=0x82001312` oder `0x8200131A`, `006C=0x27` und positiver
+vollständigem `0208=0x82001312`, `0x8200131A` oder ab 0.16.9 `0x82009312`,
+`006C=0x27` und positiver
 Verdichterdrehzahl. Die bisherigen zeitgesicherten Heizreferenzen bleiben
 unverändert gültig.
+
+Für `0x82009312` zeigt eine Originalepisode Eco Winter, Luftstufe 2 und
+Heizbetrieb. Empfangene Kalendertelegramme grenzen die sichtbare Minute ein.
+Status, Schaltwort und Modus sind darin stabil, die Drehzahl ist positiv. Die
+15-Sekunden-Qualifikation kann erst nach Beginn der möglichen Fotozeit erfüllt
+sein. [Zeitabgleich und Bedingungen (Englisch)](BDE_DISPLAY_EVIDENCE.md#additional-level-2-heating-context-0169).
 
 Ab 0.16.5 ergänzt dieselbe Entität **Betriebsfeld leer** ausschließlich bei
 Eco Winter, vollständigem `0208=0x8000100A`, `006C=0x25` und gültiger

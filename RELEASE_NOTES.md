@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.9 – Weitere belegte Luftstufe 2 und BDE-Heizanzeige
+
+- Die optionale **Regler-Luftstufe** zeigt **Stufe 2** für das vollständige
+  Statuswort `0x82009312`. Der Vergleich stützt sich auf eine Originalaufnahme
+  mit zeitlich zugeordnetem BDE-Foto.
+- Die optionale **BDE-Betriebsanzeige** zeigt für dieses Wort zusätzlich
+  **Heizbetrieb** in Eco Winter, wenn das Schaltwort `0x27` und positive
+  Verdichterdrehzahl vorliegen. Alle vier Quellen müssen frisch sein und die
+  Kombination muss mindestens 15 Sekunden durchgehend empfangen werden.
+  [Belege und genaue Bedingungen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
+Bestehende Entitäten und Aktivierungseinstellungen werden weiterverwendet.
+Nach der Installation über HACS Home Assistant neu starten. Benötigte
+flüchtige Aufnahmen vorher herunterladen. Home Assistant ab 2026.9. Rückweg
+über die erneute Installation von 0.16.8 und einen HA-Neustart.
+
 ## 0.16.8 – Verdichter-Stellgröße in Prozent
 
 - Die optionale **Verdichter-Stellgröße** zeigt den aktuellen Ausgabewert der

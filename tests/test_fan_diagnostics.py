@@ -19,6 +19,9 @@ WINTER_LEVEL_TWO_FRAME = "2240000802000008121300820001"
 # Recorded CRC; the display comparison is separately time-bound by validated
 # Recorder receipts. The retained wire capture ends before the photo.
 LEVEL_TWO_80001312_FRAME = "22400008020000081213008079a2"
+# Minimal recorded frame; its complete word has an independently time-bound
+# main-page comparison. No general bit-15 rule follows from this reference.
+LEVEL_TWO_82009312_FRAME = "224000080200000812930082069f"
 
 # Fixed recorded frames/checksums with display-validated controller levels.
 LEVELS = [
@@ -32,6 +35,7 @@ LEVELS = [
     ("22400008020000081a130082a028", 3),
     (WINTER_LEVEL_TWO_FRAME, 2),
     (LEVEL_TWO_80001312_FRAME, 2),
+    (LEVEL_TWO_82009312_FRAME, 2),
     ("224000080200000822100080d200", 4),
     ("22400008020000081210008012f5", 2),
     ("22400008020000081a92008089d8", 3),
@@ -113,7 +117,13 @@ def test_display_observed_winter_payload_at_every_stream_split():
 
 @pytest.mark.parametrize(
     "raw",
-    [LEVELS[0][0], CONTROLS[0][0], WINTER_LEVEL_TWO_FRAME, LEVEL_TWO_80001312_FRAME],
+    [
+        LEVELS[0][0],
+        CONTROLS[0][0],
+        WINTER_LEVEL_TWO_FRAME,
+        LEVEL_TWO_80001312_FRAME,
+        LEVEL_TWO_82009312_FRAME,
+    ],
 )
 def test_invalid_identity_and_crc_rejected_with_recovery(raw):
     frame = bytes.fromhex(raw)
@@ -149,6 +159,9 @@ def test_invalid_identity_and_crc_rejected_with_recovery(raw):
         0x8200101A,
         0x8200121A,
         0x82001212,
+        0x82009212,
+        0x8200931A,
+        0x82009322,
     ],
 )
 def test_unknown_status_is_not_a_guessed_level(status):
