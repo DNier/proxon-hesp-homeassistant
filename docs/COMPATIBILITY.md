@@ -68,6 +68,17 @@ Verdrahtungsvorgabe für die FWT. Eine PTC-Platinenrevision wurde nicht angegebe
 Quelle: [Community-Testbericht und Rückmeldungen, Diskussion #2](https://github.com/DNier/proxon-hesp-homeassistant/discussions/2).
 Modell und Versionsangaben stammen vom Nutzer, nicht aus automatischer Erkennung.
 
+## Offline ausgewertet: FWT 2-R
+
+Der passive Fünf-Minuten-Mitschnitt von Martin Kneppes **FWT 2-R** mit
+BDE Comfort V03.6.07A0 enthält 5.999 prüfsummengültige Telegramme. In dieser
+Konfiguration reicht das zentrale Bedienteil über `0229` die Isttemperatur
+der Nebenzone vom Raummodul 13 an das Lüftungsgerät weiter. Das ist ein
+Protokollbeleg für diese Anlage. Die Verfügbarkeit einer Nebenzone auf der
+P2-Referenz und ein Live-Test der FWT 2-R in Home Assistant sind weiterhin offen.
+[Telegrammvergleich (Englisch)](DATA_POINTS.md#fwt-2-r-secondary-zone-temperature-0229)
+· [Community-Beitrag](https://github.com/DNier/proxon-hesp-homeassistant/discussions/2#discussioncomment-19689972)
+
 ## Herstellerangaben für diese Generation
 
 Laut der dem Projekt am 29.09.2026 mitgeteilten Herstellerantwort besitzt die

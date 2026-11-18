@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.8 – Verdichter-Stellgröße in Prozent
+
+- Die optionale **Verdichter-Stellgröße** zeigt den aktuellen Ausgabewert der
+  Steuerung in Prozent. Geprüft an der P2-Referenz mit dem Profil
+  `lt_zim_16_observed`. Auch bei 0 U/min wurden 30 % beobachtet. Für den
+  tatsächlichen Verdichterlauf ist die Drehzahl maßgeblich.
+- Die standardmäßig deaktivierte Diagnoseentität ersetzt `raw_0120`. Eine
+  bestehende Aktivierung wird übernommen, sofern nur die Integration den Ersatz
+  deaktiviert hat. Eigene Dashboards und Automationen auf die neue Entität mit
+  Prozentwert umstellen. Sie beginnt einen eigenen Verlauf. Diagnosemitschnitte
+  enthalten weiterhin die ursprünglichen Telegramme.
+
+Nach der Installation über HACS Home Assistant neu starten und die Entität bei
+Bedarf am PROXON-Gerät unter **Diagnose** aktivieren. Benötigte flüchtige Aufnahmen
+vor dem Neustart herunterladen. [Datenpunkt und Entitätswechsel (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#compressor-control-output-0168).
+
 ## 0.16.6 – Weitere belegte Luftstufe und passiver Fotozeit-Puffer
 
 - Die bestehende Luftstufenanzeige erkennt ein weiteres vollständig geprüftes

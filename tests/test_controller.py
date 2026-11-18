@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from custom_components.proxon_hesp.hesp.checksum import checksum
 from custom_components.proxon_hesp.hesp.decoder import Decoder
 
 FRAMES = {
@@ -32,6 +33,7 @@ def test_recorded_controller_values_and_every_split():
         "fan_extract_control": 5200.0,
         "bypass_status": True,
         "compressor_rpm": 0.0,
+        "compressor_command_percent": 0,
         "fan_supply_rpm": pytest.approx(1788.05444),
         "fan_extract_rpm": pytest.approx(1754.57190),
         "temperature_supply": 22.8,
@@ -63,6 +65,39 @@ def test_recorded_controller_values_and_every_split():
             r.key: r.value for r in readings if not r.key.startswith("raw_")
         } == expected
         assert next(r.value for r in readings if r.key == "raw_0116") == "64005a00"
+
+
+@pytest.mark.parametrize(
+    "wire, percent",
+    [
+        ("22400020010000041e004d60", 30),
+        ("22400020010000042f0069fd", 47),
+        ("224000200100000464007854", 100),
+    ],
+)
+def test_recorded_compressor_command(wire, percent):
+    readings = Decoder().feed(bytes.fromhex(wire))
+    assert {r.key: r.value for r in readings} == {
+        "raw_0120": wire[16:20],
+        "compressor_command_percent": percent,
+    }
+
+
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        ("22400020010000046500", {"raw_0120": "6500"}),
+        ("2240002001000004ffff", {"raw_0120": "ffff"}),
+        ("22800020010000041e00", {}),
+        ("22400720010000041e00", {}),
+        ("22400020010100041e00", {}),
+        ("22400020010000081e000000", {}),
+    ],
+)
+def test_compressor_command_rejects_invalid_values_and_frame_context(body, expected):
+    data = bytes.fromhex(body)
+    frame = data + checksum(data).to_bytes(2, "little")
+    assert {r.key: r.value for r in Decoder().feed(frame)} == expected
 
 
 @pytest.mark.parametrize("index,value", [(0, 0x11), (1, 0x41), (2, 7), (5, 1), (7, 4)])

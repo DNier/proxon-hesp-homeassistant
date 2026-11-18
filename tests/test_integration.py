@@ -78,6 +78,7 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
             "device_datetime",
             "device_date",
             "controller_fan_level",
+            "compressor_command_percent",
             "fan_supply_control_percent",
             "fan_extract_control_percent",
             "raw_118000_01f8",
