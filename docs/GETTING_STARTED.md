@@ -63,6 +63,7 @@ Details und Quellenabgrenzung: [Herstellerangaben](MANUFACTURER_INFORMATION.md).
 |---|---|
 | Betriebsart, angeforderte Luftstufe, Raum- und Solltemperatur | Lesend |
 | Zehn Anlagentemperaturen sowie Lüfter- und Verdichterdrehzahlen | Lesend |
+| Verdichter-Stellgröße (`0120`) | Lesende optionale Diagnose in Prozent, ab 0.16.8 an der P2-Referenz belegt |
 | Verdichter läuft, Bypass-Schaltzustand, Intensivlüftung | Lesend; kein Nachweis von Heiz-/Kühlbetrieb |
 | Filterrestlaufzeit und acht Betriebsstundenzähler | Lesend |
 | Kühlschwelle, maximale Heiz-/Kühlleistung und Lüfterkennlinien | Lesende optionale Diagnose |
@@ -78,6 +79,12 @@ Nach 30 Sekunden ohne gültige Aktualisierung wird der jeweilige Messwert nicht
 verfügbar; bei Verbindungsabbruch sofort. Fehlende Daten bedeuten nicht null,
 „aus“ oder „störungsfrei“. Die angeforderte Luftstufe kann von der Reglerstufe
 abweichen. Ein gemeldeter Schaltzustand ist keine Messung der mechanischen Position.
+
+Die **Verdichter-Stellgröße** zeigt den aktuellen Ausgabewert der Steuerung in
+Prozent. In den P2-Mitschnitten wurden auch bei stehendem Verdichter 30 %
+gemeldet. Für die tatsächliche Rotation ist die Verdichterdrehzahl maßgeblich.
+Die Entität findest du unter **Diagnose** am PROXON-Gerät. Sie ist standardmäßig
+deaktiviert. [Datenpunkt und Entitätswechsel (Englisch)](DATA_POINTS.md#compressor-control-output-0168).
 
 Die optionale **Regler-Luftstufe** verwendet nur einzeln belegte vollständige
 Statuswörter. Ab 0.16.6 gehört `80001312` zusätzlich zu Stufe 2. Diese

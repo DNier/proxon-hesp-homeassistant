@@ -121,6 +121,15 @@ DESCRIPTIONS = (
         for key in ("fan_supply_rpm", "fan_extract_rpm", "compressor_rpm")
     ),
     SensorEntityDescription(
+        key="compressor_command_percent",
+        translation_key="compressor_command_percent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        icon="mdi:engine",
+    ),
+    SensorEntityDescription(
         key="device_date",
         translation_key="device_date",
         device_class=SensorDeviceClass.DATE,

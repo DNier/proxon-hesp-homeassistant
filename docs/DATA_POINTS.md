@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.16.0.
+This table describes the published data-point mappings in version 0.16.8.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -32,6 +32,7 @@ little-endian order unless stated otherwise.
 | Target temperature | 0227 / P / 4 | float32 / °C | Display comparisons; receive guard 15–30 °C is not a writable range |
 | Ten temperatures | 03B7 / C / 22 | int16 × 0.1 / °C | Positive channel mapping and negative T6 display reference; receive guard −50…150 °C; ambiguous FFFF remains unavailable; [evidence](TEMPERATURE_EVIDENCE.md) |
 | Supply/extract fan speeds | 00C9 / C / 8 | Two float32 / rpm | Display comparisons; finite values from 0 to 10000 |
+| Compressor control output | 0120 / C / 2 | uint16 / % | Controller output corroborated on the P2 reference. 30 % can occur at 0 rpm. Disabled by default. [Evidence and migration](#compressor-control-output-0168) |
 | Compressor speed | 051C / C / 4 | float32 / rpm | Compared during heating, cooling and standstill; raw decoding retained internally |
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
@@ -46,7 +47,7 @@ little-endian order unless stated otherwise.
 | Device date and time (local) | 032E / C / 4 | Local ISO text, minute resolution | Display-matched calendar edits; validated date and weekday; disabled by default |
 | Device date | 032E / C / 4 | HA date | Date portion of the validated device calendar; shares its freshness; disabled by default |
 | Device clock | 0330 / C / 4 | Local HH:MM:SS text | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
-| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | 18 partly or fully uninterpreted payloads; disabled by default |
+| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | 17 partly or fully uninterpreted payloads; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13
 in that order. Its eleventh slot is not published. Values use signed little-endian
@@ -60,6 +61,28 @@ to update. Normal freshness and disconnect rules remain in force. See
 Counter mappings are: `02D0–02D3` fan levels 1–4, `02D4` heat pump heating,
 `02D5` heat pump cooling, `02D7` controller, `02D9` preheating.
 The value `FFFFFFFF` is rejected for counters and filter days.
+
+## Compressor control output (0.16.8)
+
+`compressor_command_percent` reports the controller's current compressor control
+output for the manually selected `lt_zim_16_observed` profile. The verified
+hardware is the P2 reference. Its captures contain `0`, values from `30` through
+`90`, and `100`. The ServiceApp shows `WpAktLeistung` as a percentage and describes
+it as the current compressor control output. [ServiceApp field](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/2b4294cfb15cede4b145421037703990fd9958a8/Screenshots/ServiceApp_W%C3%A4rmepumpe.jpg)
+
+The decoder accepts checksum-valid `22 40 00` responses with data point `0120`
+and exactly two payload bytes. It reads a little-endian unsigned integer
+as a whole percentage. The receive range is 0–100. Out-of-range values do not
+refresh the typed reading. Availability expires after 30 seconds without a
+valid value or when disconnected. Recorded 30 % samples include standstill at
+0 rpm. Use `compressor_rpm` for actual rotation. Electrical or thermal power
+requires a separate measurement.
+
+The read-only diagnostic is disabled by default. Setup replaces the legacy
+`raw_0120` entity with `compressor_command_percent`, preserving existing opt-in
+through the entity migration rules below. Update old dashboard and automation
+references to the new entity and its numeric state. The new percent sensor has
+its own history. Diagnostic captures retain the original telegrams.
 
 ## Readable telemetry and entity migration (0.15.0)
 
@@ -225,18 +248,18 @@ control percentages have separate validation based on fresh same-direction
 configured stages, as described below. Their availability does not depend on
 this controller-level allowlist and they have no statistics class.
 
-Fourteen optional controller raw sensors retain payload byte order and leading
+Thirteen optional controller raw sensors retain payload byte order and leading
 zeros. Together with the four exact-identity observations below, they form the
-18 partly or fully uninterpreted raw entities remaining in 0.15.0:
+17 partly or fully uninterpreted raw entities in 0.16.8:
 
 | Payload bytes | Data points |
 |---|---|
 | 1 | 0168 |
-| 2 | 0120, 0206, 0519, 0123, 020F |
+| 2 | 0206, 0519, 0123, 020F |
 | 4 | 051E, 006C, 00EE, 01F5, 0105, 0115, 011C, 051D |
 
-The raw entities for `0110`, `0116`, `051C` and `0330` are retired; their raw
-decoding and diagnostic exports remain internal. The retained hexadecimal
+The raw entities for `0110`, `0116`, `0120`, `051C` and `0330` are retired. Raw
+decoding and diagnostic captures still include those points. The retained hexadecimal
 states are complete payloads, not physical measurements or complete actuator
 interpretations. For example, selected `006C` valve bits are mapped below,
 while other bits and unreviewed complete words remain uninterpreted.
@@ -339,6 +362,25 @@ Temperatures and measured speeds use measurement statistics where configured.
 Counters do not claim a reset model or total-increasing statistics. The seven
 retired identities follow the migration described above; all other unique IDs
 and user-selected enabled/disabled settings are preserved on upgrade.
+
+## FWT 2-R secondary-zone temperature (0229)
+
+In Martin Kneppe's passive FWT 2-R capture with BDE Comfort V03.6.07A0, the
+central panel sends `0x0229` to the main controller (`11 80 00`, SET 1→2, four
+payload bytes). As a little-endian float32, it ranges from approximately 20.314
+to 20.340 °C. In 27 of the 28 SETs, the four bytes match exactly the latest
+`0x01F4` RESPONSE from room module 13 to the panel (`D2 40 00`). The panel SET
+is received approximately 3.56–3.59 seconds after that room reply. The first
+SET has no preceding room-13 reply in the excerpt. This establishes `0229` as
+the forwarded secondary-zone temperature in this configuration. Room address
+13 is specific to this recording. [Pinned capture](https://gist.github.com/mkneppe/4484c55c6c50f860e8b49a85bc16c666/8124e56a26b22be6e717a863e380123812fad382)
+· [Room-module display comparison](https://github.com/DNier/proxon-hesp-homeassistant/discussions/2#discussioncomment-19689972)
+
+`022A` stays at 20.0 °C, consistent with a secondary-zone target. Two room
+modules report that target, so the excerpt cannot resolve its source. The
+P2 reference recordings show `0229` and `022A` fixed at 21.0 °C. A live
+secondary-zone measurement on P2 still needs corroboration. The FWT 2-R
+finding is documented as offline evidence.
 
 ## Unimplemented interpretations
 

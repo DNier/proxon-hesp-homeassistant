@@ -268,6 +268,10 @@ class Decoder:
             )
         if key == "intensive_ventilation":
             readings.append(Reading("raw_118000_01f8", payload.hex()))
+        if key == "raw_0120":
+            command = int.from_bytes(payload, "little")
+            if command <= 100:
+                readings.append(Reading("compressor_command_percent", command))
         if key == "raw_051c":
             # Preserve internal raw evidence, even for invalid numeric data.
             rpm = struct.unpack("<f", payload)[0]

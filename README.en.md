@@ -51,6 +51,11 @@ Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
 do not enable Modbus conversion. Stop competing TCP clients before setup.
 There is no universal wiring guide: connector pinouts vary by board revision.
 
+Version 0.16.8 adds an optional **Compressor control output** diagnostic in
+percent, verified on the P2 reference. It replaces `raw_0120` and carries over
+existing opt-in. Update any dashboard and automation references to use the new
+entity and numeric state. [Evidence and migration](docs/DATA_POINTS.md#compressor-control-output-0168).
+
 Version 0.16.6 adds fan level 2 for one previously unknown complete status word,
 corroborated by a time-aligned BDE photo and fresh HA Recorder payload receipts.
 Existing entity IDs and settings are preserved; restart Home Assistant after

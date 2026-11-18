@@ -138,9 +138,6 @@
       "raw_0168": {
         "name": "DP 0x0168 (Hex)"
       },
-      "raw_0120": {
-        "name": "DP 0x0120 (Hex)"
-      },
       "raw_01f5": {
         "name": "DP 0x01F5 (Hex)"
       },
@@ -209,6 +206,9 @@
       },
       "compressor_rpm": {
         "name": "Compressor speed"
+      },
+      "compressor_command_percent": {
+        "name": "Compressor control output"
       },
       "controller_fan_level": {
         "name": "Controller fan level"

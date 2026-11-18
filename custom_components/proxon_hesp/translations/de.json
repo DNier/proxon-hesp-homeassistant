@@ -138,9 +138,6 @@
       "raw_0168": {
         "name": "DP 0x0168 (Hex)"
       },
-      "raw_0120": {
-        "name": "DP 0x0120 (Hex)"
-      },
       "raw_01f5": {
         "name": "DP 0x01F5 (Hex)"
       },
@@ -209,6 +206,9 @@
       },
       "compressor_rpm": {
         "name": "Verdichterdrehzahl"
+      },
+      "compressor_command_percent": {
+        "name": "Verdichter-Stellgröße"
       },
       "controller_fan_level": {
         "name": "Luftstufe laut Steuerung"

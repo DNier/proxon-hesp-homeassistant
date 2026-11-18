@@ -34,6 +34,7 @@ erläutern den Geltungsbereich und die Grenzen.
 - Lesende Service-Einstellungen und aktuelle Zu-/Abluft-Ansteuerung in Prozent,
   wenn sie zu einer frisch empfangenen Kennlinienstufe passt.
 - Verdichterrotation, Bypass-Schaltzustand und Intensivlüftung.
+- Optionale **Verdichter-Stellgröße** in Prozent für die geprüfte P2-Konfiguration.
 - Passive Diagnoseaufnahmen bei Bedarf oder bei Verdichterstarts und -stopps.
 - Zeitmarkierte BDE-Beobachtungen für gezielte Vergleiche, ab 0.13.0.
 - Gezielt ausgelöste Ereignisaufnahmen mit Vor- und Nachlauf, ab 0.13.2.
@@ -80,6 +81,12 @@ Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
 Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
 ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
 
+Ab **0.16.8** ersetzt die standardmäßig deaktivierte **Verdichter-Stellgröße**
+den Rohsensor `raw_0120`. Eine bisherige Aktivierung wird übernommen, sofern
+nur die Integration den Ersatz deaktiviert hat. Eigene Dashboards und
+Automationen auf die neue Entität und ihren numerischen Prozentwert umstellen.
+[Umfang und Entitätswechsel (Englisch)](docs/DATA_POINTS.md#compressor-control-output-0168).
+
 **Update auf 0.16.6:** Ein weiterer zeitlich geprüfter BDE-Fotovergleich ergänzt
 Luftstufe 2 für ein bisher unbekanntes vollständiges Statuswort. Bestehende
 Entitäts-IDs und Einstellungen bleiben erhalten; Home Assistant nach der
@@ -120,9 +127,9 @@ die Ersatzsensoren umgestellt werden. Die Prozentanzeigen erhalten neue IDs;
 historische Rohwerte wie 5200 werden nicht nachträglich in 52 % umgerechnet.
 Die Zu-/Abluft-Ansteuerung zeigt die passende empfangene Kennlinienstufe, keine
 gemessene Spannung oder Luftmenge. Ohne frischen passenden Wert bleibt sie
-„Nicht verfügbar“. 18 noch teilweise oder vollständig ungeklärte Rohanzeigen
-bleiben als optionale Diagnose erhalten. Zuordnungen und genaue Bedingungen:
-[Entitätswechsel und Prozentanzeige](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+„Nicht verfügbar“. Seit 0.16.8 sind 17 teilweise oder vollständig ungeklärte
+Rohanzeigen als optionale Diagnose verfügbar.
+[Entitätswechsel und Prozentanzeige (Englisch)](docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
 
 ## Austausch und Mithilfe
 

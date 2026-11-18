@@ -3,11 +3,16 @@
 import asyncio
 import json
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
 from custom_components.proxon_hesp.telemetry_migration import RAW_SENSOR_REPLACEMENTS
@@ -35,7 +40,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         # Both a user-disabled default sensor and a user-enabled raw sensor.
         if item["key"] == "temperature_supply":
             disabled = er.RegistryEntryDisabler.USER
-        elif item["key"] == "raw_0116":
+        elif item["key"] in {"raw_0116", "raw_0120"}:
             disabled = None
         saved = registry.async_get_or_create(
             item["domain"],
@@ -60,7 +65,9 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
     @asynccontextmanager
     async def receiver(*args):
         reader = asyncio.StreamReader()
-        reader.feed_data(b"".join(frames.values()))
+        reader.feed_data(
+            b"".join(frames.values()) + bytes.fromhex("22400020010000041e004d60")
+        )
         yield reader
 
     with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
@@ -104,6 +111,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             if e.unique_id not in baseline
         }
         assert set(new) == {
+            "compressor_command_percent",
             "bde_operating_display",
             "cooling_threshold",
             "fan_supply_control_percent",
@@ -142,6 +150,20 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         # Enabled raw_0116 carries visibility to both meaningful limit sensors.
         assert new["max_heating_output"].disabled_by is None
         assert new["max_cooling_output"].disabled_by is None
+        command = new["compressor_command_percent"]
+        assert command.disabled_by is None
+        # HA reloads the entry after the registry enables its replacement.
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
+        command_state = hass.states.get(command.entity_id)
+        assert command_state.state == "30"
+        assert command_state.attributes["unit_of_measurement"] == "%"
+        assert "state_class" not in command_state.attributes
+        runtime = entry.runtime_data
+        reading, received_at = runtime.values["compressor_command_percent"]
+        runtime.values["compressor_command_percent"] = (reading, received_at - 31)
+        runtime._notify()
+        assert hass.states.get(command.entity_id).state == "unavailable"
         assert new["device_date"].disabled_by is None
         for key in (
             "bde_operating_display",
