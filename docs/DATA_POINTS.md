@@ -2,7 +2,7 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.16.8.
+This table describes the published data-point mappings in version 0.16.9.
 Seven legacy raw/numeric entities are retired in favour of readable values;
 see [entity migration](#readable-telemetry-and-entity-migration-0150).
 The following counts describe earlier releases at the time of their additions,
@@ -37,7 +37,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fourteen display-backed words; other bits and words are not interpreted; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fifteen display-backed words; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -180,7 +180,7 @@ Controller fan level accepts only these complete status words:
 | Level | Status words |
 |---|---|
 | 1 | `8000100A` |
-| 2 | `80001012`, `80001312`, `82001312` |
+| 2 | `80001012`, `80001312`, `82001312`, `82009312` |
 | 3 | `8000101A`, `8000131A`, `8000921A`, `8000931A`, `8200131A`, `8200111A` |
 | 4 | `80001022`, `80001122`, `80001422`, `80001522` |
 
@@ -242,6 +242,11 @@ not retained TCP bytes at photo time. Tests replay only this minimal recorded
 frame, including its checksum, at every TCP split. This single-episode reference
 adds no heating, blank-field, PTC or valve interpretation; the other complete
 words remain subject to their own display comparisons.
+
+Version 0.16.9 adds `82009312` (payload `12930082`, identity `224000/0208/4`)
+as level 2. A BDE main-page photo shows level 2 in Eco Winter. The exact
+word remains fresh throughout the displayed-minute bracket in the original
+capture. The same episode supports the separate [bounded heating context](BDE_DISPLAY_EVIDENCE.md#additional-level-2-heating-context-0169).
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
@@ -551,8 +556,9 @@ physical start time. Heating/cooling/defrost classification remains unimplemente
 ## Bounded BDE operating-display indication (0.16.0)
 
 The optional diagnostic enum `bde_operating_display` reports `heating` for
-Eco Winter with full `224000/0208/4=0x82001312` or `0x8200131A`, full
-`224000/006C/4=0x27` and fresh positive `224000/051C/4` compressor speed.
+Eco Winter with full `224000/0208/4=0x82001312`, `0x8200131A` or, from 0.16.9,
+`0x82009312`. Each requires full `224000/006C/4=0x27` and fresh positive
+`224000/051C/4` compressor speed.
 From 0.16.5 the same entity additionally reports `blank` only for Eco Winter,
 full `0208=0x8000100A`, full `006C=0x25` and finite compressor speed exactly zero.
 Two independent device-minute-backed references support this blank-label
