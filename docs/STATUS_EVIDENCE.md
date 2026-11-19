@@ -1,26 +1,11 @@
 # Freigabestand der Schaltzustände
 
-Stand: 23. Oktober 2026. Basis ist die Offline-Inventarisierung vom 3. Oktober
-mit 41 unterschiedlichen Aufnahmefenstern der Referenzanlage:
-183.780 prüfsummengültige Frames, keine
-unaufgelösten Bytes. Identische Startzeit/Chunk-Folgen sind dedupliziert;
-überlappende Fenster bleiben enthalten. Die Anzahl ist kein Maß unabhängiger
-Schaltvorgänge. Frühere zeitgleiche Fotovergleiche wurden erneut gegen die
-Rohdaten geprüft. Community-Daten ergänzen den Vergleich, ersetzen aber keine
-BDE-Gegenprobe eines Schaltzustands.
-
-Ergänzend wurden ein gefilmter Heizungsstart und ein Sollwertwechsel bei
-unverändertem Eco Winter gegen die vollständigen Rohaufnahmen geprüft. Die
-oben genannten Korpuszahlen beziehen sich auf die Basisauswertung. MV-Abtau
-hat jetzt einen unverdeckten fallenden Anzeigewechsel; die neue optionale
-Entität ist ab Version 0.13.1 verfügbar.
-
-Ein zusätzlicher gefilmter Sollwertwechsel bei unverändertem Komfort während
-einer bestätigten Kühlphase reproduziert den PTC-Gegenfall: Das BDE zeigt
-PTC-Wohnen Ein, während alle drei Kandidaten wiederholt null melden. Erst im
-späteren Anlauf steigen die Kandidaten; danach ist PTC-Wohnen erneut als Ein
-sichtbar. Die Anzeige ist zwischen diesen Belegen zeitweise verdeckt.
-Die Basiskorpuszahlen oben enthalten diesen zusätzlichen Vergleich nicht.
+Die Tabelle fasst die mit der BDE-Anzeige abgeglichenen Zuordnungen und
+Kandidaten zusammen. Die geprüfte Basis umfasst 41 Aufnahmefenster mit 183.780
+prüfsummengültigen Frames und vollständiger Abdeckung der empfangenen Bytes.
+Identische Fenster sind dedupliziert. Überlappende Fenster können denselben
+Schaltvorgang enthalten. Separate BDE-Vergleiche belegen unter anderem den
+unverdeckten Ein→Aus-Wechsel von MV-Abtau.
 
 Bitnummern zählen ab 0 im Little-Endian-Wort. Die vollständige Telegrammidentität
 und Payloadlänge bleiben Teil jeder Zuordnung.
@@ -36,98 +21,48 @@ und Payloadlänge bleiben Teil jeder Zuordnung.
 
 ## Ergänzende Belege aus natürlichem Winterbetrieb
 
-Eine zusätzlich geprüfte passive Startaufnahme reproduziert die vorbereitende
-Statusfolge: `03B6` und `0191` Bit 0 steigen vor der ersten positiven
-Verdichterdrehzahl. Das ist kein neuer PTC-Wohnen-Nachweis; die Bit-1-Kandidaten
-bleiben im Startfenster null. In einer späteren Phase wechseln sie zusammen
-mit `01F8` Bit 11, ohne zeitgleiche BDE-PTC-Referenz. Der zusätzliche Beleg ist
-in den Basiskorpuszahlen oben nicht enthalten.
+Passive Winteraufnahmen zeigen `03B6` und `0191` Bit 0 vor der ersten positiven
+Verdichterdrehzahl. Die PTC-Bit-1-Kandidaten bleiben im beobachteten Startfenster
+null. Für ihren späteren Anstieg mit `01F8` Bit 11 fehlt eine zeitgleiche
+PTC-Anzeige.
 
-Ein kurzer Referenzclip zeigt auf getrennten BDE-Seiten Heizbetrieb, grüne LED,
-warme Zuluft und positive Verdichterdrehzahl; die Schaltzustandsseite zeigt
-alle fünf Zustände Aus. Diese Seiten wurden kurz nacheinander, nicht gleichzeitig
-abgelesen. Der Vergleich ergänzt die Gegenbelege zu MV-Heizen/Kühlen als
-allgemeinem Heizsignal. PTC-Wohnen Aus im späteren Clip bestätigt nicht
-rückwirkend die Start- oder Bit-28-Phasen. Bit 25 bleibt semantisch ungeklärt.
+Ein BDE-Vergleich zeigt Heizbetrieb mit positiver Verdichterdrehzahl. Auf der
+anschließend abgelesenen Schaltzustandsseite steht MV-Heizen/Kühlen auf Aus.
+Die zeitlich getrennten Anzeigeseiten begrenzen die Aussage auf ihre jeweiligen
+Beobachtungszeitpunkte. Bit 25 bleibt semantisch ungeklärt.
 
-Eine gesonderte Phase bei durchgehend positiver Drehzahl zeigt ein längeres
-Bit-28-Fenster als das darin enthaltene MV-Abtau-Ein-Fenster. Temperaturverlauf
-und veränderte Lüfteransteuerung passen zu Abtauen, bestätigen aber ohne
-zeitgleiche BDE-Referenz keine neue Anzeige aktiven Abtauens. Bit 28 und
-MV-Abtau dürfen nicht gleichgesetzt werden.
+In einer weiteren Phase mit positiver Drehzahl überdauert Bit 28 das
+MV-Abtau-Ein-Fenster. Auch die begleitenden Temperatur- und Lüfteränderungen
+reichen ohne zeitgleiche BDE-Referenz nur für eine Gegenprobe gegen die direkte
+Gleichsetzung beider Zustände.
 
-Der stabile vollständige Status `8200131A` ist separat mit BDE-Luftstufe 3
-abgeglichen und ab 0.15.1 für diese Anzeige freigegeben. Ab 0.15.2 ergänzt
-`8200111A` ausschließlich diese Luftstufenanzeige: Eine neue BDE-Hauptseitenreferenz
-zeigt Stufe 3 innerhalb eines stabilen Recorder-Fensters dieses vollständigen
-Worts. Die ungefähre Telegram-Fotozeit ersetzt keine genaue Anzeige-Flanke;
-die Referenz ist keine neue verlustfreie Rohaufnahme. Herkunft und Testgrenzen
-stehen unter [Luftstufenbelegen (Englisch)](DATA_POINTS.md#optional-diagnostics).
+Die [Luftstufen-Freigabeliste](DATA_POINTS.md#optional-diagnostics) hält die
+einzelnen vollständigen Wörter und ihre Belege fest. Die Zuordnung basiert
+je nach Quelle auf vollständigen Rohintervallen oder auf Recorderwerten mit
+validiertem Empfangszeitpunkt. Die abgelesene Geräteminute wird über empfangene
+Kalenderwerte eingegrenzt. Für spätere Fotos gelten die beobachteten Zustände
+ausschließlich zur sichtbaren Zeit. Deren Übertragung auf frühere
+Verdichterflanken bleibt unbelegt.
 
-Ab 0.15.3 ergänzt `82001312` ausschließlich Stufe 2. Zwei
-unabhängige Originalfotos vom 20. und 21. Oktober zeigen diese Stufe; die jeweils
-angezeigte Geräteminute liegt vollständig in einem stabilen Rohwortfenster.
-Das identische Telegramm einschließlich aufgezeichneter Prüfsumme ist in beiden
-Mitschnitten enthalten. Die Zuordnung beruht auf einer getrennten Sichtprüfung
-und dem Zeitkontext; die strengere automatische Fünfsekundenregel des privaten
-Beobachters wurde dafür nicht als erfüllt behandelt. Die benachbarten Wörter
-`82001212`, `92001312` und `9200131A` bleiben ungeklärt.
-Weitere natürliche Winteranläufe wiederholen den längeren Bit-28-Zeitraum um
-MV-Abtau; sie liefern ohne neue BDE-Fotos keine zusätzliche Heiz-, Abtau- oder
-PTC-Zuordnung. Die Basiskorpuszahlen oben bleiben unverändert.
+Bei der Rückkehr zum ursprünglichen Sollwert fallen die drei PTC-Kandidaten
+vor dem Verlust der HA-Erreichbarkeit externer Raumaktoren. Die Beobachtung
+trennt den Kandidatenwechsel vom Ende der HA-Verfügbarkeit. Ob die elektrische
+Freigabe früher endete, lässt sich ohne unabhängige Spannungs- oder Leistungsmessung
+nicht ablesen.
 
-Ab 0.16.6 ergänzt ausschließlich das vollständige Wort `80001312`
-(Payload `12130080`, `224000/0208/4`) die Luftstufe 2. Eine Hauptseitenreferenz
-zeigt Eco Winter und Stufe 2; unabhängig empfangene Gerätekalenderwerte begrenzen
-die sichtbare Minute. Validierte Recorder-Empfangszeiten belegen das unveränderte
-Wort über die gesamte Zeitklammer bei Empfangsabständen unter sechs Sekunden.
-Ein früherer Mitschnitt enthält das vollständige Telegramm samt Originalprüfsumme,
-endet jedoch vor der Fotozeit. Die zeitliche Bildzuordnung beruht deshalb auf
-Recorderwerten, nicht auf nachträglich vorhandenen Rohbytes. Das Foto bestätigt
-keine frühere Verdichterflanke. Die Luftstufenergänzung erweitert keine Heiz-,
-Leerfeld-, Ventil- oder PTC-Regel und ist keine allgemeine Bitmaske.
-
-Alle übrigen ungeprüften vollständigen Wörter bleiben unverfügbar. Negative Temperaturen
-werden anhand des Messblocks und einer ausdrücklichen negativen BDE-Anzeige
-geprüft; [Codierung und Grenzen](TEMPERATURE_EVIDENCE.md) (Englisch).
-
-Für eine spätere Freigabe sind positive und negative BDE-Referenzen einschließlich
-Übergang, unverdeckter Anzeige und zeitgleicher vollständiger Rohaufnahme nötig.
-Bekannte Gegenbeispiele müssen weiterhin bestanden werden. Eine passende
-Temperatur oder ein gesetztes Anforderungsbit allein belegt keinen laufenden
-Heiz- oder Kühlprozess. Fehlende oder veraltete Daten bleiben unbekannt.
-
-Die Erreichbarkeit externer Raumaktoren ist eine zusätzliche Referenz der
-betreffenden Installation, keine HESP-Freigabebestätigung. Bei der späteren
-Rückstellung fallen die drei Kandidaten bereits mit dem Sollwert, während HA
-die Aktoren noch mehrere Minuten als erreichbar meldet. Einschaltverzögerung,
-Nachlauf und mögliche Erreichbarkeits-Timeouts bleiben getrennt zu prüfen;
-deren elektrische Schaltzeiten sind nicht gemessen. Eine allgemeine
-Freigabeentität wird daraus nicht abgeleitet.
-
-Die zusätzliche MV-Abtau-Entität beschreibt ausschließlich den angezeigten
-Magnetventilzustand auf der Referenzanlage. Unbekannte vollständige Statuswörter
-und veraltete Daten ergeben nicht verfügbar. PTC-Wohnen, MV-Vorwärme und aktive
-Heiz-/Kühl-/Abtauzustände erhalten keine neue Zuordnung. Die vorhandenen
-experimentellen Bits bleiben ausdrücklich als Rohbits bezeichnet. Die
-Integration sendete für diese Prüfungen keine Anlagenbefehle.
-
-Siehe [Bedienfolgen](CONTROL_EVIDENCE.md), [Community-Auswertung](COMMUNITY_EXPORT_ANALYSIS.md)
-und [FWT-Kompatibilitätsgrenzen](COMPATIBILITY.md).
-
-Bedienhinweis ergänzt am 4. Oktober 2026 auf Grundlage der Beobachtung an der
-Referenzanlage. Der oben genannte Offline-Korpus wurde dafür nicht erweitert.
-[Bedienverhalten und passende Versuchsbedingungen](REFERENCE_TESTS.md).
+Die Zuordnung weiterer Schaltzustände erfordert unabhängige positive und
+negative BDE-Referenzen mit Rohkontext der vollständigen Identitäten.
+[Passiv zu BDE-Belegen beitragen](REFERENCE_TESTS.md)
 
 ## Begrenzte BDE-Betriebsanzeige
 
 Die bestehende optionale Diagnoseentität zeigt **Heizbetrieb** bei Eco Winter,
 vollständigem `0208=0x82001312`, `0x8200131A` oder ab 0.16.9 `0x82009312`,
 `006C=0x27` und positiver
-Verdichterdrehzahl. Die bisherigen zeitgesicherten Heizreferenzen bleiben
-unverändert gültig.
+Verdichterdrehzahl. Die einzelnen Zuordnungen beruhen auf
+zeitlich eingegrenzten BDE-Belegen.
 
-Für `0x82009312` zeigt eine Originalepisode Eco Winter, Luftstufe 2 und
+Für `0x82009312` zeigt eine unabhängige BDE-Referenz Eco Winter, Luftstufe 2 und
 Heizbetrieb. Empfangene Kalendertelegramme grenzen die sichtbare Minute ein.
 Status, Schaltwort und Modus sind darin stabil, die Drehzahl ist positiv. Die
 15-Sekunden-Qualifikation kann erst nach Beginn der möglichen Fotozeit erfüllt
@@ -138,8 +73,8 @@ Eco Winter, vollständigem `0208=0x8000100A`, `006C=0x25` und gültiger
 Verdichterdrehzahl null. Zwei unabhängige Originalepisoden zeigen das leere
 Betriebsfeld über vollständig passende Geräte-Minutenklammern. Ein weiterer
 kompatibler Grenzfall zählt wegen einer kurzen Qualifikationslücke nicht als
-dritte vollständig zeitgesicherte Referenz. Ein späteres Leerfoto beschriftet
-keine frühere Nachlaufphase.
+dritte vollständig zeitgesicherte Referenz. Eine frühere Nachlaufphase erfordert eine eigene
+zeitgleiche Referenz.
 
 Alle vier Quellen müssen höchstens sechs Sekunden alt sein; jede vollständige
 Kombination muss mindestens 15 Sekunden durch echten Empfang stabil bleiben.

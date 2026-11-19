@@ -1,175 +1,74 @@
-# PROXON with Home Assistant – HESP integration without a Modbus module
+# PROXON HESP for Home Assistant
 
-Independent community project for PROXON systems. Not an official integration of Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
+PROXON HESP connects a ventilation and heating system to Home Assistant over its
+existing HESP bus. It receives local telemetry through a transparent RS485-to-TCP
+gateway. The existing system controller and thermostats continue to regulate
+the system.
 
-[Deutsche Hauptdokumentation](README.md)
-
-**PROXON HESP** is a local Home Assistant custom integration for a **PROXON P2**
-ventilation and heating system, using its existing HESP bus and a transparent
-RS485-to-TCP gateway. No Modbus module, MQTT broker, cloud service or separate
-application is required. It can be installed through HACS as a custom repository.
-The P2 reference configuration is **LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort**.
-A **FWT 2-L with LT-ZIM V1.3 and BDE Comfort V03.7.9B00** is also community-tested
-with unmodified version 0.12.0 and profile `lt_zim_16_observed`. Display comparisons
-cover temperatures, Eco Summer/Comfort modes, fan level and speeds, bypass, counters
-and filter time. Active heat-pump operation, valve mappings and clock writes remain
-unverified on that configuration. See [compatibility and evidence](docs/COMPATIBILITY.md#community-getestet-fwt-2-l).
-Other revisions are not automatically supported. Model and firmware are not automatically detected.
-
-The reference installation uses a **Waveshare RS232/485/422 TO POE ETH (B)**
-gateway in transparent TCP mode at **19200 baud, 8N1**. This specific model is
-not required; alternative gateways must support the same transparent serial
-transport without Modbus conversion.
+This is an independent community project. [Deutsche Hauptdokumentation](README.md)
 
 ## Manufacturer information
 
-In correspondence shared with the project on 29 September 2026, Zimmermann
-states that the queried P-series generation has no Modbus interface or retrofit
-option; the historical module was intended only for FWT 1.0. External HESP
-analysis is not supported, and internal protocol details will not be provided.
-The T300-to-FWT connection is not evidence of third-party T300 support here.
-
-The manufacturer describes date/time loss after complete power interruption as
-normal for this generation: check and correct the clock after an interruption.
-The integration's time alignment remains manual. Keep the BDE connected: a
-supervised disconnection experiment yielded no received bytes and reported red
-blinking; telemetry returned after reconnection. No control command was sent,
-so control without the BDE remains untested. See the scoped
-[manufacturer information and observation report (German)](docs/MANUFACTURER_INFORMATION.md).
+The integration uses HESP directly and requires no Modbus module, MQTT broker or
+cloud service. Zimmermann does not support external HESP analysis. The
+[manufacturer information](docs/MANUFACTURER_INFORMATION.md) describes the scope
+for the reference P-series generation and the evidence for keeping the BDE
+control panel connected.
 
 ## Install
 
 [![Open repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-Home Assistant **2026.9 or later** is required. Install the
-[latest stable release](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest).
-Add this repository to HACS as a custom repository, category
-**Integration**, install PROXON HESP and restart HA. Then use
-**Settings → Devices & services → Add integration → PROXON HESP**.
-Enter the gateway host, TCP port (default 4196), name and supported profile.
-Configure the gateway separately for transparent TCP, **19200 baud, 8N1**;
-do not enable Modbus conversion. Stop competing TCP clients before setup.
-There is no universal wiring guide: connector pinouts vary by board revision.
+Use **Home Assistant 2026.9 or later**. The reference installation is a
+**PROXON P2** with LT-ZIM V1.6, PTC 4× V1.2 and BDE Comfort. The community-tested
+**FWT 2-L** has verified read-only coverage for a subset of values. Compare your
+boards, panel and bus segment with the [compatibility guide](docs/COMPATIBILITY.md).
 
-Version 0.16.9 adds fan level 2 and a bounded Eco Winter heating indication for
-the complete word `0x82009312`. See [the display evidence](docs/BDE_DISPLAY_EVIDENCE.md).
+1. Configure the gateway for transparent TCP at **19200 baud, 8N1**. Keep the
+   BDE connected and close other clients that use the gateway's TCP port.
+2. Add this repository to HACS as a custom **Integration**, download the
+   [latest stable release](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest)
+   and restart Home Assistant.
+3. Open **Settings → Devices & services → Add integration → PROXON HESP**.
+   Enter the gateway host, TCP port (default `4196`), name and documented profile.
 
-Version 0.16.8 adds an optional **Compressor control output** diagnostic in
-percent, verified on the P2 reference. It replaces `raw_0120` and carries over
-existing opt-in. Update any dashboard and automation references to use the new
-entity and numeric state. [Evidence and migration](docs/DATA_POINTS.md#compressor-control-output-0168).
+Before an update, export recordings you want to keep and consult the
+[upgrade instructions](docs/GETTING_STARTED.md#updates-und-bestehende-installationen).
+Keep the existing integration entry.
 
-Version 0.16.6 adds fan level 2 for one previously unknown complete status word,
-corroborated by a time-aligned BDE photo and fresh HA Recorder payload receipts.
-Existing entity IDs and settings are preserved; restart Home Assistant after
-installation. See [fan-level evidence](docs/DATA_POINTS.md#optional-diagnostics).
-
-When event capture is enabled, the existing bounded three-minute reception
-buffer can also be exported read-only. External archival tools can preserve
-original telegrams around a photo's readout time; durable storage remains a
-separate setup. See [recording boundaries](docs/DIAGNOSTICS.md).
-
-Version 0.15.4 adds passive captures for three unmapped raw-bit transitions when
-event capture is enabled, with a longer post-event window for BDE photos.
-This does not establish new PTC or heating/cooling sensors. Existing entity IDs
-and settings are preserved; restart Home Assistant after installation.
-See [capture windows and limits](docs/DIAGNOSTICS.md#rohbitwechsel-mit-längerem-fotofenster-ab-0154).
-
-Since version 0.15.3, one complete controller word provides fan level 2 during winter
-operation, corroborated by two independent BDE photo comparisons and stable raw
-captures. Existing entity IDs and settings are preserved; restart Home Assistant
-after installation. Fan level 3 during the observed heating run-out remains
-supported since 0.15.2. See [fan-level evidence](docs/DATA_POINTS.md#optional-diagnostics).
-
-Signed temperatures in the existing block remain supported since 0.15.1.
-The ambiguous temperature word `FFFF` remains unavailable; see
-[temperature evidence](docs/TEMPERATURE_EVIDENCE.md).
-
-Version 0.15.0 replaces seven confirmed raw sensor entities with readable values,
-including current fan control percentages. Update references to retired entities
-in dashboards and automations; see the [migration mapping](docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+<a name="bounded-bde-operating-display-0160"></a>
 
 ## Features and boundaries
 
-The integration reads temperatures, fan/compressor speeds, requested mode and
-fan level, bypass/intensive ventilation, filter time and operating hours.
-It supports passive manual and compressor-event recordings. Version 0.13.2 adds
-an explicit passive action to save the pre-buffer and post-event traffic for
-locally chosen triggers, including automations. Missing telemetry
-is unavailable, never assumed zero or off. Compressor rotation does not identify
-heating, cooling, defrost or PTC activity. General climate/fan control is unsupported.
-
-Version 0.12.0 adds optional heating-room monitoring using existing switches, power
-sensors and optional thermostat/temperature/humidity references. Existing
-thermostats retain control. Missing or stale power measurements leave heating
-activity unknown; availability alone does not prove central heating permission.
-The device-time button and the opt-in
-[daylight saving switch](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
-use the same calendar correction over HESP. Corrected time can change which
-existing time-program period is active. Setup and capture stay passive.
-
-Back up HA before upgrading from a version before 0.12.0b3: the migrated
-configuration format cannot be loaded by those older versions. Downgrading requires the previous backup. Keep the existing
-entry to preserve identities and preferences. Download recordings before restarting;
-they exist only in memory. Version 0.12.0 groups technical telemetry under Diagnostics and makes detailed
-readings optional on new installations. Existing activation preferences remain unchanged.
-
-Optional diagnostic entities expose experimental status bits and the observed
-BDE heating/cooling solenoid-valve indication. The valve can remain on after
-compressor stop and does not establish active cooling. Stable release status
-does not extend the documented hardware compatibility or confirm unknown bits.
-
-Version 0.13.1 adds the optional **Defrost solenoid valve** indication
-(**MV-Abtau**). It mirrors the reviewed BDE switching state rather than active
-defrost.
+- Read temperatures, fan levels, rotational speeds, filter life and operating
+  hours. **Compressor running** describes rotation. The optional
+  [BDE operating display](docs/BDE_DISPLAY_EVIDENCE.md) reports **Heating** or
+  **Blank operating field** only for specific verified Eco Winter conditions.
+- Capture [diagnostic recordings](docs/DIAGNOSTICS.md) over the existing
+  connection or monitor [heating rooms](docs/ROOMS.md) with existing HA entities.
+- Align the [device clock](docs/CLOCK_SYNC.md) using the optional button or the
+  daylight saving switch, which defaults to off. Turning the switch on can
+  correct the clock immediately when fresh device time shows a difference.
+  An enabled switch checks again on daylight saving transitions.
 
 ## Community discussion
 
 Use [GitHub Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions)
-for questions and ideas, or the [issue forms](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
-for bugs and compatibility reports. Unknown hardware details are acceptable;
-supporting evidence is optional and must be sanitized before sharing.
-Contributions follow [Contributing](CONTRIBUTING.md) and the
-[Code of Conduct](CODE_OF_CONDUCT.md). Report suspected vulnerabilities
-[privately (German guidance)](SECURITY.md).
-
-Join the [Home Assistant forum topic](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
-for a connection overview, compatibility reports and ways to contribute.
-Reports from other owners are most useful with board revisions, BDE software
-version and a matching display observation. Keep full diagnostic exports and
-original recordings private; share only necessary sanitized excerpts voluntarily.
+or the [Home Assistant forum topic](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
+for questions and ideas. Use the [issue forms](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
+for bugs and compatibility reports. Keep full diagnostic exports, recordings
+and photos private. Share a small sanitized excerpt if it helps explain a
+report. Report suspected vulnerabilities [privately](SECURITY.md).
 
 ## Documentation and contributing
 
-German is the maintained language for user guides and release notes. This page
-is a short entry point, not a second complete manual. The HA UI supports German
-and English. Development references remain in English:
+The maintained [user guides](README.md#dokumentation) and [release notes](RELEASE_NOTES.md)
+are in German. The Home Assistant UI supports German and English.
 
-- [Development, tests and contribution requirements](CONTRIBUTING.md)
-- [Data points and limitations](docs/DATA_POINTS.md)
+- [Development and contribution guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Data points and validation boundaries](docs/DATA_POINTS.md)
 - [Offline capture analysis](docs/OFFLINE_ANALYSIS.md)
 - [Control evidence](docs/CONTROL_EVIDENCE.md)
 - [Checksum derivation](docs/CHECKSUM_ALGORITHM.md)
 
-Version 0.13.0 adds passive user observation markers to running manual captures.
-Use the **Mark diagnostic observation** action in HA's Developer Tools to record
-an indicator and its observed state. Markers are unverified user references,
-not decoded device values. See [capture diagnostics](docs/DIAGNOSTICS.md) and
-[repeatable BDE comparisons](docs/REFERENCE_TESTS.md).
-
-For installation, room configuration, diagnostics and upgrades, see the
-[German documentation index](README.md#dokumentation) and [release notes](RELEASE_NOTES.md).
-Original code is [MIT licensed](LICENSE); protocol attribution and exclusions
-are documented in [NOTICE.md](NOTICE.md).
-
-[Experimental status-bit comparison guide (German)](docs/EXPERIMENTAL.md).
-
-## Bounded BDE operating display (0.16.0)
-
-The optional, disabled-by-default **BDE operating display** reports Heating for
-three corroborated Eco Winter contexts as of 0.16.9. Version 0.16.5 adds **Blank
-operating field** for one independently corroborated Eco Winter context with
-zero compressor speed. Each complete context requires fresh sources and 15
-seconds of actual stable source reception. Other contexts remain unavailable.
-Blank describes the visible display field, not stopped heating or absent heat
-output. This is not a general heating/cooling/defrost classifier. See [evidence and exact scope](docs/BDE_DISPLAY_EVIDENCE.md).
+[MIT license for project code](LICENSE) · [Protocol attribution and rights](NOTICE.md)

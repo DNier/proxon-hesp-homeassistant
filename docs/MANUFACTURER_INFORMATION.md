@@ -2,12 +2,9 @@
 
 ## Quellen und Geltungsbereich
 
-Die folgenden Herstellerangaben fassen eine private Antwort von Zimmermann
-zusammen, die dem Projekt am **29. September 2026** mitgeteilt wurde. Das ist das
-Datum der Mitteilung an das Projekt, nicht ein belegtes Versanddatum des Herstellers.
-Die Korrespondenz wird nicht vollständig veröffentlicht. Sie bezieht sich auf die
-angefragte P-Serie der [Referenzgeneration](COMPATIBILITY.md), nicht pauschal auf
-alle heutigen oder zukünftigen PROXON-Produkte.
+Die folgenden Angaben fassen eine Antwort von Zimmermann an das Projekt zusammen.
+Sie beziehen sich auf die angefragte P-Serie der [Referenzgeneration](COMPATIBILITY.md).
+Die Reichweite der Antwort ist auf diese Gerätegeneration begrenzt.
 
 ## Aussagen des Herstellers
 
@@ -50,29 +47,22 @@ benötigt für ihren passiven Empfang den bestehenden Busverkehr. Für Modell,
 Firmware, T300, PTC- und Ventilzustände gelten weiterhin die jeweils dokumentierten
 [Validierungsgrenzen](DATA_POINTS.md).
 
-Der [manuelle Gerätezeitabgleich](CLOCK_SYNC.md) korrigiert die aktuelle Einstellung;
-er verhindert keinen erneuten Zeitverlust nach einer Spannungsunterbrechung.
-Es gibt keine automatische Synchronisation beim Start. Zusätzliche Stromunterbrechungen
-allein zur Protokollsuche sind nicht Teil der normalen Einrichtung.
+Der optionale [Gerätezeitabgleich](CLOCK_SYNC.md) korrigiert die Geräteuhr bei
+laufender Verbindung. Nach einer vollständigen Spannungsunterbrechung kann die
+Geräteuhr erneut zurückgesetzt werden. Beim Start löst Home Assistant keinen
+Abgleich aus.
 
-## Eigene Beobachtung: Betrieb ohne BDE am 23. September 2026
+<a name="eigene-beobachtung-betrieb-ohne-bde-am-23-september-2026"></a>
 
-Dies ist ein Ergebnisbericht eines abgeschlossenen Versuchs an der Referenzanlage,
-keine Anleitung zum Betrieb ohne BDE und keine Herstellerfreigabe.
+## Unterstützter Betrieb mit BDE
 
-| Abschnitt | Beobachtung |
-|---|---|
-| Mit BDE | 60 Sekunden passive Aufnahme am PTC-X2–Hauptplatine-X5-Abgriff: 1.200 gültige Telegramme, 98 Kennung/Datenpunkt/Längen-Kombinationen, keine unzugeordneten Bytes. Eco Sommer, Auto am BDE, angeforderte und gemeldete Luftstufe 1, Verdichter 0 rpm. |
-| Nach Trennen des BDE und Neustart | Die TCP-Verbindung zum Gateway war offen, es wurden keine Datenbytes empfangen. Die gesamte Aufnahme dauerte etwa 82 Sekunden und begann bereits vor dem Einschalten; das ist nicht die gemessene Anlagenlaufzeit. Der Betreiber meldete laufende Lüfter und rotes Blinken. Ort und Fehlerbedeutung des Blinkens wurden nicht bestimmt. |
-| Abbruch | Wegen fehlender Rückmeldungen und des gemeldeten Blinkens beendet. Keine aktiven Abfragen und kein Steuerbefehl gesendet. |
-| Wiederherstellung | BDE wieder angeschlossen, Anlage neu gestartet, HA-Integration wieder aktiviert. Aktuelle BDE-/Reglerwerte kamen zurück. Der Betreiber bestätigte verschwundenes Blinken und Auto-Auswahl; die zurückgesetzte Gerätezeit wurde von ihm korrigiert. |
+Bei der Referenzanlage lieferte der PTC-X2–Hauptplatine-X5-Abgriff mit
+angeschlossenem BDE in 60 Sekunden 1.200 gültige Telegramme mit 98 verschiedenen
+Kombinationen aus Kennung, Datenpunkt und Länge. Bei einem passiven Vergleich
+ohne BDE blieb die TCP-Verbindung zum Gateway offen, aber der Abgriff lieferte
+keine Daten. Der Empfang mit BDE ließ sich wiederherstellen.
 
-Das Ergebnis passt zur Hypothese, dass das BDE die zyklische Kommunikation
-anstößt. Es beweist weder die genaue Rolle aller Teilnehmer noch die Ursache des
-Blinkens. Neustart und BDE-Trennung änderten zwei Bedingungen zugleich. Eine
-TCP-Verbindung belegt keine fehlerfreie elektrische Buskommunikation; laufende
-Lüfter belegen keinen sicheren Ersatzbetrieb.
-
-**Steuerbarkeit ohne BDE wurde weder bestätigt noch widerlegt**, da kein Befehl
-gesendet wurde. Der unterstützte Integrationsbetrieb bleibt mit angeschlossenem
-BDE. Weitere Kontrollversuche sind durch diesen Bericht nicht freigegeben.
+Der Vergleich stützt die Bedeutung des BDE für den Empfang. BDE-Trennung und
+Neustart änderten gleichzeitig zwei Bedingungen. Die genaue Rolle des BDE
+beim Sendetakt sowie die Steuerbarkeit ohne BDE bleiben offen. Die Installation
+setzt ein angeschlossenes BDE voraus.

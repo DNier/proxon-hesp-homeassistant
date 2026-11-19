@@ -129,7 +129,7 @@ The production decoder does not publish them as additional counters.
 
 The [Community SQL export](COMMUNITY_EXPORT_ANALYSIS.md#sammelantwort-02df-gleichheit-im-untersuchten-export)
 contains equal bulk and individual values. Comparison with original diagnosis
-captures on 5 October 2026 rejects a universal alias mapping:
+captures rules out a universal alias mapping:
 
 | Recorded comparison | Individual `02D4` versus fifth `02DF` slot | `02D6` versus last 20 `02DF` slots |
 | --- | --- | --- |
@@ -157,8 +157,9 @@ For the little-endian uint32, bits 0–5 hold minutes, 6–10 hours, 11–13 the
 weekday (Sunday = 0), 14–20 the year offset from 2000, 21–24 the month,
 and 25–29 the day. Bits 30–31 have no established meaning and must be zero.
 
-The optional `device_datetime` sensor returns local text such as
-`2026-09-23T12:50`. It has no timestamp device class, timezone, unit or statistics
+The optional `device_datetime` sensor returns local text, for example the
+synthetic value
+`2026-01-15T12:00`. It has no timestamp device class, timezone, unit or statistics
 class: the protocol does not establish a UTC offset or daylight-saving rule.
 It does not combine separately received date and second fields. The
 `device_date` and `device_clock` sensors provide separate readable values.
@@ -167,11 +168,11 @@ available for calendar validation, time alignment and diagnostic exports.
 
 Invalid field ranges, impossible calendar dates and inconsistent weekdays do
 not refresh the interpreted sensor. An observed initial state reported Sunday
-for 1 January 2011, which was a Saturday; this is rejected. A correctly encoded
-2011 date is not rejected merely because of its year. Validation does not prove
-that the device clock matches real time. The optional [time-alignment button](CLOCK_SYNC.md) can explicitly correct
-these fields; no automatic synchronization takes place. Normal 30-second freshness and disconnect rules apply;
-raw calendar evidence remains available internally.
+for 1 January 2011, which was a Saturday. A correctly encoded 2011 date remains
+valid. The checks establish calendar consistency. The [device-time
+feature](CLOCK_SYNC.md) can correct a mismatch with Home Assistant when
+explicitly requested or enabled. Normal 30-second freshness and disconnect
+rules apply. Raw calendar evidence remains available internally.
 
 ## Optional diagnostics
 
@@ -196,36 +197,21 @@ Bit 25 is not assigned a meaning and is not masked off for other words. The
 transition word `82001212` and bit-28 words `9200131A`/`92001312`
 remain uninterpreted as levels without their own display references.
 
-Version 0.15.2 adds only `8200111A` (payload `1a110082`, identity
-`224000/0208/4`). A new BDE main-page reference shows level 3 during a stable
-roughly 91-second Recorder interval with that complete word. The reference uses
-existing checksum-validated raw sensors and an approximate Telegram photo time;
-it is not a new lossless wire capture or an exact display-transition timestamp.
-The regression replays the observed payload with synthetic framing and checksum,
-separately from recorded wire-checksum fixtures. Other words, including
-`8200101A`, `8200121A` and `9200131A`, remain unassigned.
+The complete word `8200111A` (payload `1a110082`, identity
+`224000/0208/4`) is supported for level 3 by a BDE reading within a stable
+Recorder interval of about 91 seconds. The interval comes from checksum-validated
+sensor values. Tests reproduce the observed payload with synthetic framing and
+checksum. Words including `8200101A`, `8200121A` and `9200131A` remain
+unassigned.
 
-Version 0.15.3 adds `82001312` (payload `12130082`, identity
-`224000/0208/4`) as level 2. Two independent BDE main-page photos from
-20 and 21 October 2026 show Eco Winter, level 2 and the heating label. Each
-displayed device-clock minute lies wholly inside a stable interval of this
-complete word in its corresponding raw capture. The approximate Telegram send
-time is not an exact photo or display-transition timestamp; the independent
-review uses both clock-minute context and the stable raw intervals:
-
-| Date (CEST) | Stable raw-word interval | Device minute shown |
-|---|---|---|
-| 20 October 2026 | 10:43:23.775–10:47:07.987 | 10:44 |
-| 21 October 2026 | 14:33:02.600–14:36:40.414 | 14:34 |
-
-The identical wire frame `2240000802000008121300820001`, including its recorded
-checksum, occurs in both captures and is replayed at every TCP split in tests.
-This is a manually corroborated complete-word mapping, not an automatic finding
-under the stricter five-second matching rule used by the private observer.
-Neither bit 25 nor bit 28 is masked to extend this result.
-`82001212`, `92001312` and `9200131A` remain unassigned; in particular the
-bit-28 main-page photo showing level 2 overlaps a raw-word change in its
-displayed device minute and cannot validate either adjacent word.
+Two independent Eco Winter display readings place level 2 within stable raw
+intervals of the complete word `82001312` (payload `12130082`). Each
+displayed device minute is fully contained in its matching interval. Both
+captures contain frame `2240000802000008121300820001` with its recorded checksum.
+Tests replay that frame at every TCP split. The mapping applies to that complete
+word. `82001212`, `92001312` and `9200131A` remain unassigned. The bit-28
+display reference overlaps a word change and cannot distinguish the adjacent
+words.
 
 Version 0.16.6 adds only `80001312` (payload `12130080`, identity
 `224000/0208/4`) as level 2. A BDE main-page reference shows Eco Winter and
@@ -308,7 +294,7 @@ to configured stages 25/40/52/100; asymmetric community/FWT comparisons and
 service-app percentage labels extend that evidence. Level 4 also occurs with
 10000/7000 while both requested and reported levels remain 4. These examples
 do not establish a fixed global mapping from a raw value to a fan-level number.
-See [fan-curve evidence](FAN_CURVE_EVIDENCE.md) for the unchanged historical tables.
+See [fan-curve evidence](FAN_CURVE_EVIDENCE.md) for the recorded comparisons.
 
 In 0.15.0, each finite `00D7` control value in 0–10000 is divided by 100 and
 compared only with fresh valid configured stages of its own direction:
@@ -338,8 +324,7 @@ separate. Do not infer heating or cooling from a fan-level change.
 
 ### Fan selection depends on operating mode
 
-An operator observation on the reference installation, shared on 4 October 2026,
-identifies five available modes: Off, Eco Summer, Eco Winter, Comfort and Stove.
+The reference BDE offers five modes: Off, Eco Summer, Eco Winter, Comfort and Stove.
 Comfort and Stove let the controller determine the fan level; manual level
 selection is unavailable. Intensive ventilation is a timed switch to level 4
 available in those two modes. Eco Summer and Eco Winter offer a fixed level
@@ -463,12 +448,11 @@ header/data-point/length identities already observed on the PTC-to-controller
 connection. Opening measurement and switching-state pages exposed no additional
 identities in that recording. This does not establish electrical equivalence,
 a universal BDE baud rate or compatibility with other board revisions.
-A single externally injected fan-level request produced no observable change
-in the BDE display or subsequent telemetry; reliable control is not established.
-A separate one-shot calendar SET at the original tap was reflected in controller
-responses and confirmed on the BDE, without reversion during 65 seconds of
-observation. Only this calendar action is exposed as an optional button.
-This does not establish general control support or persistence across power loss.
+A one-shot fan-level message at this tap had no observable effect. At the
+original PTC-to-controller tap, a one-shot calendar correction was confirmed by
+the controller responses and the BDE display. The optional [device-time
+feature](CLOCK_SYNC.md) uses this confirmed calendar path. Support for a general
+control interface or persistence after power loss has not been established.
 
 For known SET messages, external-write evidence and limits of automated testing,
 see [control evidence](CONTROL_EVIDENCE.md).

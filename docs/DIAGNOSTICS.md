@@ -1,24 +1,25 @@
 # Diagnose und Aufnahmen
 
-Seit 0.9.0 sind Aufnahmedauer und Aufnahmestatus verfügbar. In 0.8.0 beträgt die
-Dauer fest 120 Sekunden; eine Statusentität fehlt dort. Ältere Exporte werden
-von den Offline-Werkzeugen weiterhin unterstützt.
+Home Assistant kann den vorhandenen HESP-Empfang für die Fehlersuche und den
+Vergleich mit dem Bedienteil (BDE) aufzeichnen. Die laufenden und fertigen
+Aufnahmen lassen sich mit der Integration-Diagnose herunterladen.
 
 ## Diagnosedaten herunterladen
 
-Die HA-Diagnose enthält Verbindungs- und Decoderzähler, Angaben zur Aktualität
-und gegebenenfalls Mitschnitte. Seit 0.9.0 gehören auch Integrationsversion,
-ausgewähltes Hardwareprofil und Zeitpunkt des letzten gültigen unterstützten
-Messwerts dazu. Konfigurierte Netzwerkadressen und Identifikatoren werden von
-der Integration ausgelassen. Den gesamten Export vor dem Teilen trotzdem prüfen:
-HA-Metadaten und Busdaten können Angaben zur eigenen Anlage enthalten.
+Unter **Einstellungen → Geräte & Dienste → PROXON HESP** das Menü des
+Integrationseintrags öffnen und **Diagnosedaten herunterladen** wählen. Der
+Export enthält Verbindungs- und Decoderzähler, Integrationsversion,
+Hardwareprofil, letzten gültigen Empfang und vorhandene Mitschnitte.
+Konfigurierte Netzwerkadressen und Identifikatoren lässt die Integration aus.
+Metadaten, Nutzermarkierungen und Busdaten trotzdem vor dem Teilen prüfen.
 
-`application_bytes_sent` zählt die seit dem Laden der Integration an den TCP-
-Schreiber übergebenen Bytes. Ohne notwendigen manuellen Zeitabgleich bleibt der
-Wert null; er beweist keine physische Zustellung. `clock_sync_status` meldet
-`idle`, `waiting`, `confirmed`, `already_current` oder `unconfirmed`.
-`clock_sync_target` enthält die zuletzt angeforderte lokale Kalenderzeit.
-Details: [Gerätezeit abgleichen](CLOCK_SYNC.md).
+`application_bytes_sent` zählt die seit dem Laden der Integration zur
+Übertragung übergebenen Bytes. Eine erforderliche Kalenderkorrektur per
+Schaltfläche oder Sommer-/Winterzeit-Schalter erhöht den Zähler. Für die
+Bestätigung der Kalenderkorrektur ist `clock_sync_status` maßgeblich. Mögliche
+Werte sind `idle`, `waiting`, `confirmed`, `already_current` und
+`unconfirmed`. `clock_sync_target` enthält die zuletzt angeforderte lokale
+Kalenderzeit. [Gerätezeit abgleichen](CLOCK_SYNC.md)
 
 ## Manuelle Aufnahme
 
@@ -44,7 +45,7 @@ oder Neustart benötigte Aufnahmen herunterladen.
 
 ## Beobachtungen während einer Aufnahme markieren
 
-Ab **0.13.0** speichert die Aktion **PROXON HESP: Diagnosebeobachtung markieren**
+Die Aktion **PROXON HESP: Diagnosebeobachtung markieren**
 (`proxon_hesp.mark_observation`) eine abgelesene BDE-Anzeige in der **laufenden
 manuellen Aufnahme**. Aufrufen unter **Entwicklerwerkzeuge → Aktionen**:
 
@@ -79,30 +80,21 @@ unter `capture.observations`; ohne Markierungen ist die Liste leer. Die Aktion
 bleibt auch bei einem entladenen Eintrag registriert und zeigt dann einen
 verständlichen Fehler. Sie erfordert immer einen expliziten Integrationseintrag.
 
-Die [gezielten BDE-Vergleiche](REFERENCE_TESTS.md) beschreiben PTC-Wohnen als
-aktuellen Einstieg und den optionalen Zeitplanvergleich ausschließlich in Eco. Die [Offline-Auswertung](OFFLINE_ANALYSIS.md)
-arbeitet anschließend mit diesen Angaben, ohne Gerätezugriff.
+Die [gezielten BDE-Vergleiche](REFERENCE_TESTS.md) beschreiben geeignete
+Anzeige- und Zeitplanvergleiche. Die [Offline-Auswertung (Englisch)](OFFLINE_ANALYSIS.md)
+verarbeitet diese Angaben aus den gespeicherten Aufnahmen.
 
 ## Automatische Ereignisaufnahmen
 
-Seit **0.12.0b7** lösen zusätzlich beide Zustandswechsel des experimentellen
-Bits 28 aus `0x0208` eine Aufnahme aus. Das Bit wird dabei ausdrücklich nicht als
-bestätigtes Abtausignal bezeichnet. Die Diagnose arbeitet auch dann, wenn die
-experimentelle Bit-Entität deaktiviert ist. Die bestehende Aktivierungseinstellung
-gilt weiterhin; Verdichterstart und -stopp bleiben als Auslöser erhalten.
-Alle Auslöser teilen dieselben vier Speicherplätze. Verdichter- und Bit-28-Wechsel
-innerhalb eines laufenden Fensters werden nur markiert. Ein späterer Wechsel
-kann ein neues Fenster mit überlappender Vorgeschichte starten. Die
-[Rohbit-Auslöser ab 0.15.4](#rohbitwechsel-mit-längerem-fotofenster-ab-0154)
-können den Nachlauf eines Fensters verlängern.
-Im Export heißt das Ereignis `status_0208_bit_28_changed`; `active` enthält den
-neuen Bitzustand und `raw` die vier Statusbytes in Telegrammreihenfolge.
-
-Seit 0.10.0 kann unter **Konfigurieren** die automatische Ereignisaufnahme
-aktiviert werden. Sie ist zunächst deaktiviert, bleibt vollständig passiv und
-benötigt keinen manuellen Start im Moment eines Verdichterwechsels.
-
-Seit **0.11.0** gilt:
+Am Integrationseintrag unter **Konfigurieren** die automatische Ereignisaufnahme
+aktivieren. Sie ist standardmäßig aus. Ist sie eingeschaltet, zeichnet sie
+passiv bei Verdichterstart und -stopp, bei beiden Wechseln des experimentellen
+Bits 28 aus `0x0208` sowie bei den unten beschriebenen
+[Rohbitwechseln](#rohbitwechsel-mit-längerem-fotofenster-ab-0154) auf.
+Die Diagnose arbeitet unabhängig von der Aktivierung der experimentellen
+Bit-Entität. Die Bedeutung von Bit 28 bleibt offen. Der Export nennt die
+Änderung `status_0208_bit_28_changed`. `active` enthält den neuen Bitzustand
+und `raw` die vier Statusbytes in Telegrammreihenfolge.
 
 - Ein fortlaufender Puffer hält bis zu **180 Sekunden Vorgeschichte**, begrenzt
   auf 512 KiB und 8.192 Empfangsblöcke.
@@ -114,12 +106,13 @@ Seit **0.11.0** gilt:
   bereit sinngemäß in der HA-Oberflächensprache. Sobald eine Aufnahme bereit ist,
   die gewöhnlichen Diagnosedaten herunterladen. Während der Aufnahme ist der
   Export nur ein Zwischenstand.
-- Bis zu **vier Aufnahmen einschließlich einer laufenden** bleiben erhalten.
-  Eine fünfte ersetzt die älteste; `overwritten_captures` zählt Ersetzungen.
-  Weitere Verdichter- und Bit-28-Übergänge innerhalb eines laufenden Fensters
-  werden als Ereignisse vermerkt, ohne es zu verlängern. Maximal 32 Ereignisse
-  werden einzeln gespeichert; weitere werden gezählt. „Bereit“ bedeutet nicht,
-  dass die Automatik angehalten ist.
+- Alle Auslöser teilen sich **vier Speicherplätze einschließlich einer
+  laufenden Aufnahme**. Eine fünfte Aufnahme ersetzt die älteste.
+  `overwritten_captures` zählt Ersetzungen. Verdichter- und Bit-28-Wechsel
+  innerhalb des laufenden Fensters werden vermerkt. Die dokumentierten
+  Rohbitwechsel können den Nachlauf verlängern. Weitere Auslöser können ein
+  neues Fenster mit überlappender Vorgeschichte starten. Pro Fenster werden bis
+  zu 32 Ereignisse einzeln gespeichert. Weitere Ereignisse werden gezählt.
 - **Ereignisaufnahmen löschen** entfernt alle gespeicherten Ereignisaufnahmen.
   Die nächste gültige Zustandsänderung kann erneut eine Aufnahme auslösen.
 - Die jüngste Aufnahme steht in `event_capture.chunks` und `events`.
@@ -180,16 +173,15 @@ verhindern den zeitlich zugeordneten Export. In älteren Integrationsversionen
 fehlt das optionale Feld. Beides bedeutet fehlenden Auszug, keine bestätigte
 Abwesenheit von Busverkehr oder Anlagenaktivität.
 
-Ein mehr als drei Minuten altes Foto ist damit nicht automatisch abgesichert.
-Benötigte Daten herunterladen, solange sie noch gepuffert sind. Löschen,
-Deaktivieren, Verbindungsabbruch und Neustart verwerfen den Vorlaufpuffer wie
-bisher. Der Download archiviert nichts automatisch auf einem NAS und rüstet
-keine bereits laufende Home-Assistant-Installation nach.
+Benötigte Daten herunterladen, solange sie noch gepuffert sind. Ob ein Foto
+zum Export passt, hängt vom tatsächlich enthaltenen Empfangszeitraum ab.
+Löschen, Deaktivieren, Verbindungsabbruch und Neustart verwerfen den
+Vorlaufpuffer. Die dauerhafte Aufbewahrung erfolgt außerhalb dieser Integration.
 
 ## Ereignisaufnahme gezielt auslösen
 
-Ab **0.13.2** ergänzt **PROXON HESP: Diagnose-Ereignisaufnahme auslösen**
-(`proxon_hesp.start_event_capture`) die bisherigen automatischen Auslöser.
+Mit **PROXON HESP: Diagnose-Ereignisaufnahme auslösen**
+(`proxon_hesp.start_event_capture`) lässt sich ein Aufnahmefenster gezielt starten.
 Die Aktion sichert den vorhandenen Puffer und startet bis zu **180 Sekunden
 Nachlauf**. So kann auch eine eigene Automation eine Aufnahme auslösen, wenn
 ein interessanter Rohwert wechselt, ohne zuerst auf einen Verdichterwechsel
@@ -331,11 +323,9 @@ manuellen Aufnahmestatus auf Leerlauf zurück.
 
 ## Hinweise zum Update
 
-Beim damaligen Update 0.8.0 → 0.9.0 blieben 54 Entitätsidentitäten, eigene Namen
-und Aktivierungseinstellungen erhalten; drei Diagnosen kamen hinzu (57 insgesamt).
-Ohne gesetzte Option gilt eine Aufnahmedauer von 120 Sekunden. Dafür war keine
-Konfigurationsmigration oder zusätzliche Verbindung nötig. Für aktuelle Versionen
-und die spätere Beta-Migration gelten die [Versionshinweise](../RELEASE_NOTES.md).
+Lade benötigte Rohaufnahmen vor einem Update oder Neustart herunter. Die
+[Upgradehinweise](GETTING_STARTED.md#updates-und-bestehende-installationen)
+beschreiben Änderungen an Entitäts-IDs und Konfigurationen.
 
 ## Auswertung und Fehlermeldungen
 

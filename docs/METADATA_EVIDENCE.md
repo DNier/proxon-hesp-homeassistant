@@ -1,22 +1,17 @@
 # Metadatenlisten: belegte Telegramme und offene Bedeutung
 
-Original recorded evidence: 27 September 2026. Offline page preparation: 9 November 2026.
-
 ## Herkunft und Prüfung
 
-Grundlage ist der öffentlich bereitgestellte [SQL-Export von Mannheim68199](https://github.com/user-attachments/files/32697336/Proxon.sql)
-aus [Diskussion 1](https://github.com/DNier/proxon-hesp-homeassistant/discussions/1#discussioncomment-18622902).
-Der vollständige Export wird nicht ins Repository übernommen. Die Testdatei
-`tests/fixtures/metadata_replies.json` enthält ausschließlich die drei ausgewählten
-Protokollantworten ohne Zeitstempel, Datenbanknamen oder Anlagendaten außerhalb der Listen.
-Die Prüfsummen stammen unverändert aus der Aufzeichnung, nicht aus dem Testcode.
+Die Befunde beruhen auf der in [GitHub-Diskussion 1](https://github.com/DNier/proxon-hesp-homeassistant/discussions/1#discussioncomment-18622902)
+beschriebenen Aufzeichnung von Mannheim68199. Die Testdatei
+`tests/fixtures/metadata_replies.json` enthält drei ausgewählte
+Protokollantworten ohne Zeitstempel und Datenbankmetadaten. Die Beispiele
+enthalten die aufgezeichneten Prüfsummen.
 
-Die Datensätze 5930 und 26458 enthalten identische Antworten auf `0033`;
-26746 enthält `0034`, 26352 enthält `0038`. Sie stammen vom 18./19. September 2026
-laut Export; die Zeitzone der als Text gespeicherten Zeiten ist nicht unabhängig bestätigt.
-Die getrennten Felder `HEX` und `HEX2` werden für diese Datensätze zusammengesetzt.
-Bei 26458 und 26352 folgt nach dem 138-Byte-Telegramm noch eine 12-Byte-Abfrage.
-Diese gehört nicht zur Metadatenliste und wird nicht in die Fixture übernommen.
+Die Stichprobe enthält zwei identische Antworten auf `0033`, eine auf `0034`
+und eine auf `0038`. Die Auswertung setzt die getrennten Felder `HEX` und
+`HEX2` je Datensatz zusammen. Nach zwei Antworten folgt eine separate
+12-Byte-Abfrage, die bei der Begrenzung des Antwortframes separat bleibt.
 
 Alle vier Antworten haben nach genau 138 Bytes eine passende Prüfsumme nach
 unserer bestehenden Byte-Rekurrenz. Davon sind acht Bytes Header, 128 Bytes
@@ -114,15 +109,16 @@ Eine fehlende zyklische Einzelantwort macht einen Listeneintrag nicht ungültig.
 | 64 | `0x010D` | `0x0203` | `0x0055` |
 
 
-## Offline preparation for follow-up pages and units (9 November 2026)
+<a name="offline-preparation-for-follow-up-pages-and-units-9-november-2026"></a>
+
+## Offline support for follow-up pages and units
 
 Martin's [FWT 2-R report in discussion #6](https://github.com/DNier/proxon-hesp-homeassistant/discussions/6)
 proposes that the upper 16 bits of a metadata register ID select an **element
 offset**, with 64 uint16 entries in each reply. His adapter additionally reads
-`0039` as an array of unit codes. This is useful new candidate evidence; the
-complete original metadata export and its timed QUERY/RESPONSE recording have
-not yet been supplied to this project. The original public fixture above remains
-the recorded evidence for zero-offset `0033`, `0034` and `0038` only.
+`0039` as an array of unit codes. The recorded fixture validates zero-offset
+`0033`, `0034` and `0038`. The proposed page selectors and units remain
+unverified against recorded QUERY/RESPONSE pairs.
 
 The existing offline inventory is prepared for these narrowly bounded forms:
 
@@ -160,11 +156,10 @@ See [input formats and usage](OFFLINE_ANALYSIS.md#metadata-replies-and-follow-up
 
 ## Grenzen des Exports
 
-Der Export enthält 90.055 gefilterte Datensätze mit Text-Zeitstempeln vom
-16. bis 27. September 2026. Er ist kein lückenloser Mitschnitt.
-Der mitgelieferte [Node-RED-Code](https://github.com/user-attachments/files/32697463/Proxon.txt)
-vergleicht primär `value[0]`; Änderungen weiterer Elemente einer Sammelantwort
-können deshalb fehlen. Zudem wird der Vergleichswert bereits vor dem zusätzlichen
+Der Export enthält 90.055 gefilterte Datensätze mit Text-Zeitstempeln.
+Die Node-RED-Filterung vergleicht primär `value[0]`; Änderungen weiterer
+Elemente einer Sammelantwort können deshalb fehlen. Zudem wird der
+Vergleichswert bereits vor dem zusätzlichen
 Zeitfilter aktualisiert. Eine verworfene Änderung muss nicht später nachgetragen werden.
 Der Code filtert `00c9` und `0226` auf eine letzte Sekundenziffer von `0`, also
 Sekunden 00/10/20/30/40/50, nicht ausschließlich auf den Minutenanfang. Der Filter
@@ -175,11 +170,13 @@ abweichen, wie der Autor ausdrücklich beschreibt.
 verlässliche Quelle für negative Messwerte. Die Spalte `HEX` ist auf 200 Zeichen
 begrenzt und kann ein 138-Byte-Telegramm nicht allein aufnehmen. In den hier
 verwendeten älteren Datensätzen ist die Fortsetzung jedoch in `HEX2` vorhanden.
-Eine zukünftige Aufzeichnung sollte vollständige Originalnachrichten vor dem
-Zerlegen und Filtern erhalten. Der Export belegt weder präzise Buspausen noch
-zuverlässig, welcher Teilnehmer einen Sollwert geschrieben hat.
+Vollständige Originalnachrichten eignen sich zur Analyse der Framegrenzen.
+Für Buspausen und die Zuordnung eines SET zum sendenden Teilnehmer reicht der
+gefilterte Export nicht aus.
 
-## Reproduktion und nächste Prüfungen
+<a name="reproduktion-und-nächste-prüfungen"></a>
+
+## Reproduzierbare Prüfung
 
 ```sh
 uv run python -m tools.audit_metadata tests/fixtures/metadata_replies.json --output /tmp/metadata-audit.json
@@ -190,7 +187,6 @@ Die Tests prüfen Originalprüfsummen, jede einzelne Bitveränderung, alle Aufte
 auf zwei Empfangsblöcke, folgende Abfragen und leere Bestätigungen sowie das
 Zurückweisen abgeschnittener oder abweichender Frames. Die Auswertung bleibt offline.
 
-Vor einer semantischen Freigabe sind unabhängige Gegenproben für Typcodes und
-Masken nötig. Für Schreibtests bleibt ein vollständiger, ungefilterter Ablauf
-mit Bedienreferenz erforderlich. Die vorhandenen Metadaten beweisen keine
-zuverlässige Steuerung und werden nicht zur automatischen Geräteerkennung benutzt.
+Die fachliche Interpretation von Typcodes, Masken und Einheiten erfordert
+unabhängige Gegenbelege. Produktionsdekodierung und Geräteerkennung leiten aus
+den Listen keine neuen Zuordnungen ab.
