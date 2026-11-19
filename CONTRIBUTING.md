@@ -58,21 +58,55 @@ tools instead of introducing incompatible framing or checksum rules.
 
 ## Documentation and privacy
 
-Write user documentation in German and developer references in English, following
-the language policy below. Explain
-supported behaviour, reproducible evidence and limitations. Keep implementation
-history only when it helps migration or understanding a current design decision.
+Write user documentation in German and developer references in English. Keep the
+README and setup guide focused on current capabilities, setup and compatibility.
+Use release notes for version history and the technical references for evidence,
+reproduction and limitations. Include the hardware profile, protocol identifiers,
+relative timing and counterexamples where they affect the conclusion.
 
 Do not commit personal investigation diaries, service records, full diagnostic
 exports, photo/video filenames, private absolute paths, credentials or household
-operating histories. Store working notes outside the repository; `tmp/` and
-`captures/` are ignored for local analysis. Review staged changes, including new
-fixtures, before publishing. Ignore rules do not protect already tracked files.
+operating histories. Store experiment notes and exact timelines in a separate
+private location. Keep original recordings, complete exports, photos and videos
+in private storage outside Git. The local `tmp/` and `captures/` directories are
+ignored for analysis. Review staged changes, including new fixtures, before
+publishing. Ignore rules do not protect already tracked files.
 
 Prefer small sanitized test vectors and reproducible checks over publishing entire
 recordings. Keep source attribution in [NOTICE.md](NOTICE.md) when adapting
 reference material. Removing a file in a new commit does not remove it from
 existing Git history, tags or release assets.
+
+### Check public content before pushing
+
+For a clone using Git's default hooks directory, install the hook and checker
+once. The shared hooks directory also covers linked worktrees and older branches.
+
+```sh
+hooks_dir="$(git rev-parse --path-format=absolute --git-common-dir)/hooks"
+mkdir -p "$hooks_dir"
+install -m 644 tools/public_content_check.py "$hooks_dir/public_content_check.py"
+install -m 755 .githooks/pre-push "$hooks_dir/pre-push"
+```
+
+If a pre-push hook or custom `core.hooksPath` is already configured, integrate the
+checker into that hook while preserving its existing checks and the input ref
+list. Repeat the installation after updating the checker.
+
+Check staged changes before committing and review commits that are ready to push:
+
+```sh
+python3 tools/public_content_check.py --staged
+python3 tools/public_content_check.py --base origin/main --head HEAD
+```
+
+The hook checks the Git objects being pushed, including files added and then
+removed in the same push, commit messages and annotated tags. The pull request
+workflow also checks the proposed commits. Findings show the object and category
+while redacting the suspected private value. Resolve flagged material in the
+outgoing commits before pushing. Also review context
+that automation cannot classify, such as household timelines and provenance of
+test fixtures.
 
 ## Release preparation
 
@@ -83,7 +117,8 @@ Before a functional release:
    availability and diagnostic export. Report simulated checks and live acceptance
    separately.
 3. Update the manifest version, project version, lockfile and release notes.
-4. Review the public diff for private data and unresolved claims.
+4. Run the public-content check and review the public diff for private data and
+   unresolved claims.
 5. Publish the reviewed changes, then run **Publish release** on `main` to create
    the matching tag and GitHub release. The workflow extracts only the matching
    version section from `RELEASE_NOTES.md`; missing, empty or duplicate sections

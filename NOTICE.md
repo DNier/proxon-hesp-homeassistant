@@ -15,9 +15,10 @@ https://creativecommons.org/licenses/by/4.0/
 Changes: a fixed invertible byte transform and initial state were reconstructed
 from the published bit contributions and example query; independent recorded
 frames validate short and long messages. See docs/CHECKSUM_ALGORITHM.md.
-Stream extraction remains restricted and receive-only. This implementation is
-independent and is not endorsed by Markus Mauch or the equipment manufacturer.
-No active bus sender or general frame encoder is provided.
+Stream extraction and telemetry are passive. The optional device-time feature
+sends a calendar correction over the existing connection. It does not expose a
+general bus sender or frame encoder. This implementation is independent and is
+not endorsed by Markus Mauch or the equipment manufacturer.
 
 Original project code is licensed under the MIT License; see LICENSE.
 The adapted source material identified above remains subject to CC BY 4.0.
@@ -51,9 +52,8 @@ to identify the integration. It is not licensed under the project MIT License.
 All rights in the logo remain with its respective rights holders. Its use does
 not imply manufacturer endorsement of this independent integration.
 
-In private correspondence shared with the project on 29 September 2026,
-Zimmermann did not grant permission for use of the logo in GitHub, Home Assistant,
-HACS or comparable public projects. The absence of an explicit removal request
-is not represented as consent. This notice does not assert that the specific
-use is legally permitted or prohibited. See docs/MANUFACTURER_INFORMATION.md
-for the scope of the manufacturer's response.
+In correspondence with the project, Zimmermann did not grant permission for use
+of the logo in GitHub, Home Assistant, HACS or comparable public projects. The
+absence of an explicit removal request is not represented as consent. This
+notice does not take a position on whether the specific use is legally
+permitted. See docs/MANUFACTURER_INFORMATION.md for the scope of the response.

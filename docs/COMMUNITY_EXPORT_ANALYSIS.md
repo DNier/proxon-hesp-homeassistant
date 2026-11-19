@@ -1,18 +1,14 @@
 # Gegenprüfung eines Community-Exports
 
-Auswertung vom 27. September 2026. Grundlage sind der öffentliche
-[SQL-Export](https://github.com/user-attachments/files/32697336/Proxon.sql) und der
-[Node-RED-Code](https://github.com/user-attachments/files/32697463/Proxon.txt) von
-Mannheim68199 aus [Diskussion 1](https://github.com/DNier/proxon-hesp-homeassistant/discussions/1#discussioncomment-18622902).
-Die Befunde gelten für diesen Export und bestätigen keine allgemeine Kompatibilität
-weiterer Hardwareversionen.
+Grundlage sind die in [GitHub-Diskussion 1](https://github.com/DNier/proxon-hesp-homeassistant/discussions/1#discussioncomment-18622902)
+von Mannheim68199 beschriebenen SQL-Daten und die Node-RED-Filterung. Die
+veröffentlichten Testvektoren enthalten ausgewählte Telegramme. Die Befunde
+gelten für den untersuchten Export und seine Hardware.
 
 ## Vorgehen und Grenzen
 
-Die 90.055 SQL-Datensätze wurden ausschließlich als Text gelesen; SQL und
-Node-RED-Code wurden nicht ausgeführt. Die Text-Zeitstempel reichen vom
-16. September 2026, 17:46:37 bis zum 27. September 2026, 11:13:49. Die Zeitzone
-ist nicht unabhängig bestätigt. Zeitangaben besitzen nur Sekundenauflösung.
+Die Prüfung liest die 90.055 SQL-Datensätze und die Filterlogik als Text. Die
+Text-Zeitstempel haben Sekundenauflösung und eine unbekannte Zeitzone.
 
 Innerhalb jedes Datensatzes wurden hexadezimale Inhalte von `HEX` und `HEX2`
 zusammengesetzt. Nichthexadezimale Kennzeichnungen wie `Response` wurden nicht
@@ -67,14 +63,14 @@ Raumzuordnung noch Schreibberechtigung. Es werden keine neuen Entitäten angeleg
 
 ## Lüfterwerte sind anlagenspezifisch
 
-Am 24. September liegen folgende Änderungen in benachbarten gespeicherten
-Datensätzen vor. Zeiten bezeichnen Datenbankeinträge, keine elektrische Buszeit:
+Für die Zuordnung wurden zeitlich benachbarte Datenbankeinträge verglichen.
+Die Auflösung von einer Sekunde begrenzt die zeitliche Aussage.
 
-| Anforderung `00E1` | Zeitpunkt Anforderung | Stellwerte `00D7` | Zeitpunkt Stellwerte |
-| --- | --- | --- | --- |
-| Stufe 4 | 00:01:31 | 10000 / 10000 | 00:01:32 |
-| Stufe 3 | 06:11:32 | 7000 / 7000 | 06:11:32 |
-| Stufe 2 | 07:31:33 | 5000 / 5000 | 07:31:34 |
+| Anforderung `00E1` | Stellwerte `00D7` |
+| --- | --- |
+| Stufe 4 | 10000 / 10000 |
+| Stufe 3 | 7000 / 7000 |
+| Stufe 2 | 5000 / 5000 |
 
 Andere bereits untersuchte Aufnahmen zeigten häufig 5200/5200 bei Stufe 3 und
 4000/4000 bei Stufe 2. Eine globale feste Rückrechnung vom Rohstellwert auf die
@@ -84,8 +80,7 @@ Zusätzlich enthalten die konstanten Viererblöcke `00D2` und `00D3` als Float
 die Folgen 31/50/70/100 bzw. 25/50/70/100. Im Export kommen die Stellwertpaare
 3100/2500, 5000/5000, 7000/7000 und 10000/10000 vor. Das legt konfigurierte
 Lüfterkennlinien nahe. Einheit, Zuordnung und Sonderbetriebsfälle benötigen
-jedoch eine Anzeige- oder Dokumentationsreferenz; es wird daraus noch kein
-Prozent-Sensor oder allgemeiner Stufendecoder abgeleitet. Auch 10000/7000 kommt vor.
+jedoch unabhängige Anzeige- oder Dokumentationsbelege. Auch 10000/7000 kommt vor.
 
 Die anschließende [Gegenprüfung der Lüfterkennlinien](FAN_CURVE_EVIDENCE.md)
 vergleicht diese Listen mit der Referenzanlage und stellt eine reproduzierbare
@@ -147,29 +142,19 @@ bestätigte Messgröße oder gemeinsame Zählerbasis. Der Produktionsdecoder
 übernimmt die Sammelantwort nicht als zweite Aktualisierungsquelle für die
 vorhandenen Zähler.
 
-## Umsetzung und nächste Belege
+<a name="umsetzung-und-nächste-belege"></a>
 
-Die vorhandenen Entitäten und ihre Bedeutungen bleiben unverändert. Ausgewählte
-Originaltelegramme ohne Datenbank- und Zeitmetadaten sichern als Regressionstest
-ab, dass die bekannten Werte dekodiert und unbekannte Formen nicht automatisch
-freigegeben werden:
+## Reproduzierbare Prüfung
+
+Ausgewählte Originaltelegramme ohne Datenbank- und Zeitmetadaten sichern die
+bekannten Dekodierungen und Abgrenzungen als Regressionstest ab.
 
 ```sh
 uv run pytest -q tests/test_community_recordings.py tests/test_metadata_recordings.py
 ```
 
-Für die nächsten fachlichen Freigaben sind gezielte Belege sinnvoll:
-
-1. Unabhängige Belege für Einheit und Richtungszuordnung von `00D2`/`00D3`, etwa
-   Herstellerunterlagen oder zugängliche Einstellungen einer anderen Anlage.
-   Am Referenz-BDE gibt es laut Bediener keine solche Einstellungsseite. Der
-   ersatzweise durchgeführte [Betriebsabgleich für Stufen 1–4 und Intensivlüftung](FAN_CURVE_EVIDENCE.md)
-   ist abgeschlossen; eine weitere Menüsuche ist dort nicht erforderlich.
-2. Bedienreferenz für `0229`, `022A` und `022C`, ohne aus den Masken Schreibrechte
-   abzuleiten oder unbekannte Schreibbefehle zu versuchen.
-3. Vollständiger kurzer Mitschnitt einer normalen BDE-Sollwertänderung für die
-   Abfolge von Schreiben, Bestätigen und späterem Wert. Der vorhandene Export
-   unterscheidet den Sender eigener und regulärer SET-Nachrichten nicht zuverlässig.
-
-Eine neue Aufnahme an der Referenzanlage ist für diese abgeschlossene
-Offline-Auswertung nicht erforderlich.
+Konfigurierte Stufen und Ansteuerung sind separat in der
+[Lüfterkennlinien-Referenz](FAN_CURVE_EVIDENCE.md) beschrieben. Typcodes und
+Masken begründen keine Einheit, Bedienbedeutung oder Schreibberechtigung.
+Für die Abfolge von SET, Bestätigung und Rückmeldung braucht es einen
+vollständigen Mitschnitt mit unabhängiger Bedienreferenz.

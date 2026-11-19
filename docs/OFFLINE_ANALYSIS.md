@@ -174,8 +174,9 @@ comparison only; no input is modified. Each entry uses the same required
 ```
 
 The example times are illustrative. Convert an actual photo/read time to the
-recording's clock and document its uncertainty privately. Telegram send time is
-only an approximate read time; the BDE clock may differ from the host clock.
+recording's clock and document its uncertainty privately. A photo delivery time
+provides only an approximate observation time. The BDE clock may differ from
+the host clock.
 References remain point-in-time observations and are never extended until the
 next photo. Only changes within `--set-observation-window-ms` (default 5000)
 of the **observation** time are listed, with signed time differences. The earlier

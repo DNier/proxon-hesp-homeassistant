@@ -1,10 +1,12 @@
-# Control evidence and bounded test planning
+<a name="control-evidence-and-bounded-test-planning"></a>
+
+# Control evidence and interpretation limits
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This is an evidence inventory, not an additional transmission API. The only
-implemented write action is [device time alignment](CLOCK_SYNC.md). Captured SET
-traffic does not establish that an external controller can own the setting.
+This reference describes received SET traffic and evidence for write adoption.
+The integration limits its write feature to [device time alignment](CLOCK_SYNC.md).
+Captured SET traffic alone cannot establish ownership of a setting.
 
 ## Observed messages
 
@@ -17,7 +19,7 @@ controlled calendar and fan-level experiments.
 | 118000 / 032E / 4 | Packed local calendar | BDE edits, controller readback and a successful external correction | Confirmed on one installation: BDE display and 65 seconds of continued telemetry; calendar resets after full power interruption on the reference generation |
 | 118000 / 00E1 / 2 | Requested fan level | 954 SETs; levels 1–4 | At the original tap in Auto, a one-shot level-2 request briefly changed the controller status and fan rpm before level 1 returned; no persistent control. Earlier BDE-tap attempt had no observable effect |
 | 118000 / 0227 / 4 | Target room temperature, float32 | 942 SETs; observed values 18, 21, 21.5, 24, 26 and 30 °C | Earlier 22→22.5 °C test received an ACK, then 22 °C again after about 1.3 s; BDE remained at 22 °C |
-| 118000 / 020A / 2 | Operating mode | 939 SETs; Eco Summer, Comfort and Stove values observed | No demonstrated persistent external control; not a first automated test |
+| 118000 / 020A / 2 | Operating mode | 939 SETs; Eco Summer, Comfort and Stove values observed | Persistent external control remains unverified |
 | 118000 / 01F8 / 4 | Composite panel flags | 944 SETs; bit 6 is associated with intensive ventilation | Whole-word writing is not justified; other observed bits remain independent/unresolved |
 | 118000 / 0226 / 4 | Measured room temperature | 940 SETs; telemetry from the panel | Not a user setting; do not inject simulated measurements |
 | 118000 / 0229 / 4 | Unclassified float-shaped value | 942 SETs, constant payload in the reviewed corpus | Excluded: meaning unresolved |
@@ -59,116 +61,73 @@ window; it is not a demonstrated protocol for replacing the panel.
 
 ## What can be checked without video
 
-Use a timestamped TX record separate from RX and compare:
+Review timestamped transmission evidence separately from received data:
 
-1. Fresh baseline and the exact one-shot command.
-2. Subsequent controller responses, distinguished from SET echoes and ACKs.
-3. Persistence across multiple normal panel cycles.
-4. Relevant effects, such as controller fan level, control values and rpm.
-5. Return to the baseline, including the original automatic/manual selection.
+1. Identify the fresh baseline and the exact transmitted message.
+2. Distinguish an ACK or an echoed SET from a subsequent controller response.
+3. Check how long the controller response holds across normal panel cycles.
+4. Compare relevant feedback, such as reported fan level, control value or rpm.
+5. Verify the final state, including a separate BDE reference where the choice
+   between automatic and manual operation affects interpretation.
 
-HA entities and raw capture decode the same bus. They are useful views of the
-same evidence, not two independent confirmations. Target temperature currently
-comes from panel SET traffic, so a matching HA sensor alone cannot establish
-controller adoption. Requested fan level likewise must not be confused with the
-controller status or physical fan speed.
+HA entities and raw captures decode the same bus. Use the BDE or another
+independent source when the claim concerns the displayed setting or a physical
+effect. A target-temperature sensor reading from panel SET traffic provides
+evidence of the panel's reported value. Controller observations establish
+adoption separately.
 
-A video is unnecessary for checking whether raw telemetry changes or reverts.
-BDE confirmation is still needed when panel ownership, automatic/manual mode or
-an ambiguous physical effect cannot be resolved from telemetry. A short visual
-confirmation can suffice; full-length recordings are not always necessary.
+<a name="proposed-order-and-execution-contract"></a>
 
-## Proposed order and execution contract
+## Evidence for external setting adoption
 
-**Completed fan-level comparison at the original tap (Auto selected).** A single
-level-2 request produced a validated controller-level-2 response about 2.9 seconds
-later, followed by level 1 about 7.8 seconds after the request. Panel requests
-remained at level 1 throughout. Fan rpm rose briefly and returned near baseline;
-control-value polls all showed the original values. No restoration write was
-needed. This establishes a transient response, not durable control or a new
-BDE setting. Continuous competing writes are not an acceptable remedy.
+A recorded one-shot level-2 message at the PTC-to-controller tap produced a
+validated controller-level-2 response and a brief rpm rise. Level 1 returned
+while panel requests and sampled control values stayed at their initial values.
+The comparison establishes temporary response on the tested installation.
+A BDE-side comparison had no observed effect. The reason for that difference
+remains open. Compare the evidence in [data points](DATA_POINTS.md#passive-bde-connection-comparison).
 
-**Conditions for any further fan-level experiment.** The previous
-unsuccessful fan test and successful calendar test used different reported tap
-locations; this is a hypothesis to investigate, not proof that location caused
-the difference. Reassess the current operating condition first. For a suitable
-stable Eco Summer, compressor-off baseline, choose an adjacent observed level.
-Allow at least 15 seconds of baseline, then one command and 30–60 seconds of
-observation. Do not equate absence of an rpm change with command rejection alone.
-
-Before execution, agree the exact starting level, test level and recovery action.
-The raw requested level does not reliably identify automatic/manual selection.
-If that selection is unknown, obtain BDE confirmation before testing. Do not
-promise complete restoration merely because the old numeric level reappears.
-
-A target-temperature experiment has lower priority: the existing experiment
-already failed to demonstrate adoption. Repeat only to test a specific new
-hypothesis, with a small predefined change and a verified recovery path. Do not
-use the full observed temperature range as a permitted test sweep. Operating mode
-and composite flags are deferred; unknown actuator and measurement points are
-excluded.
-
-For any agreed test, use the existing connection, one active experiment, bounded
-observation and no automatic resend. Do not open a competing connection on a
-single-client gateway. Abort on stale data, unexpected operation, a manual change
-or communication loss. A normal planned restoration may be sent once when still
-appropriate; on uncertainty, stop automation and request manual BDE recovery.
-Never replay a stale baseline over a new user choice.
-
-Classify results as no observable effect, ACK only, temporary adoption, sustained
-telemetry adoption, or display-confirmed adoption. Record recovery separately.
-Only promote a control into the integration after both adoption and recovery are
-validated. This document does not authorize or execute those future experiments.
+Classify observed effects separately as ACK only, temporary response, sustained
+controller adoption or adoption confirmed at the display. Reliable control
+requires adoption and recovery evidence across the supported scope. The
+published integration exposes the confirmed calendar path only.
 
 ## Passive disconnection experiment and manufacturer scope
 
-On 23 September 2026, the reference installation was observed with the BDE
-removed after power isolation and a restart. The gateway TCP connection remained
-open, but no bytes were received during an approximately 82-second recording
-that also includes time before power-on. The operator reported running fans and
-red blinking, whose meaning was not established. The experiment was stopped;
-no query or control frame was transmitted. Traffic returned after reconnecting
-the BDE and restarting, and the operator confirmed Auto and disappearance of the
-blinking. HA was re-enabled; the operator corrected the reset clock.
+The reference P-series needs the BDE connected for supported operation. A
+passive comparison without the BDE returned no bytes despite an open TCP
+connection. Disconnecting the BDE and restarting changed two conditions at
+once. The comparison leaves bus initiation and controller behaviour in that
+configuration open. [Manufacturer scope and comparison](MANUFACTURER_INFORMATION.md)
 
-This supports, but does not prove, a role for the BDE in initiating traffic.
-It establishes neither control without the BDE nor a safe replacement strategy.
-Keep the BDE connected for supported operation. Manufacturer correspondence
-shared on 29 September confirms no HESP support or protocol disclosure and normal
-clock reset after full power loss for the queried P-series generation. See the
-[scoped source summary and completed observation report](MANUFACTURER_INFORMATION.md).
+<a name="offline-review-of-recorded-operating-sequences-3-october-2026"></a>
 
-## Offline review of recorded operating sequences (3 October 2026)
+## Recorded operating sequences
 
-The five latest reference exports contain eight distinct retained capture windows
-with 67,060 checksum-valid frames and no unparsed bytes. Deduplication uses capture
-start plus chunks; overlapping manual/event windows still count repeated traffic.
-The existing inventory and capture comparison tools were reused. Full reports
-remain private; this summary contains only protocol evidence.
+A comparison of eight distinct receive windows found 67,060 checksum-valid
+frames with full byte coverage. It deduplicates identical windows. Overlapping
+manual and event windows can include the same traffic.
 
-The target-temperature sequences at `118000/0227/4` are 21→25, 25→21,
-21→18 and 18→21→22 °C. Requested fan level `118000/00E1/2` and mode
-`118000/020A/2` stay at 3 and Comfort. All eleven SET identities were already
-known. `01F8` bit 11 follows the first target changes, while `03B6` and
-`118007/0191/2` show 0→3→1→0 across the corresponding windows. These are
+Comfort captures with requested level 3 show changes in target temperature
+`118000/0227/4` among eleven known SET identities. `01F8` bit 11 changes near
+target changes. `03B6` and `118007/0191/2` show the states 0, 1 and 3. These are
 correlations, not confirmed direct actuator commands. The documented PTC
 counterexample still contradicts that interpretation.
 
 The FWT sample adds a steady Comfort/fan-3 comparison, not an operating-mode
 transition. Its extra headers must not be merged with similarly numbered P-series
 points. The filtered P1 export cannot establish a full transmission cadence.
-None of these sources resolves persistent external command adoption or provides
-a confirmed Auto/manual field. A future passive Auto→fixed level→Auto capture
-would need a synchronized visible selection and complete traffic including the
-return; the same numeric fan level alone cannot distinguish the two choices.
+Persistent external command adoption and the Auto/manual field remain open.
+A synchronized BDE selection reference is required to distinguish Auto from
+a fixed selection at the same numeric level.
 
 See [candidate decisions](STATUS_EVIDENCE.md) and
 [installation-specific fan comparisons](FAN_CURVE_EVIDENCE.md).
 
 ## Mode-dependent fan selection: reference UI clarification
 
-Operator observation shared on 4 October 2026: manual fan-level selection is
-available only in Eco Summer and Eco Winter. Their Auto selection runs a
+On the reference BDE, manual fan-level selection is available only in Eco
+Summer and Eco Winter. Their Auto selection runs a
 user-defined weekday/time/fan-level schedule. Eco modes have no separate
 intensive-ventilation option; level 4 can be selected manually. Comfort and Stove
 instead let the controller choose the level and offer intensive ventilation as a
@@ -176,16 +135,14 @@ timed switch to level 4. Off is the fifth available operating mode; its output
 behaviour was not separately checked. A fan-level readback does not distinguish
 these UI conditions. This clarification does not establish controller algorithms,
 schedule payloads or external control.
-Future Auto→fixed level→Auto comparisons require a separately agreed Eco
-baseline without a scheduled transition during the comparison. Do not apply
-that sequence to Comfort or Stove. See [reference tests](REFERENCE_TESTS.md).
+[Passive reference guidance](REFERENCE_TESTS.md)
 
 ## Targeted offline review: Eco Auto and intensive-ventilation timing
 
-Six historical reference captures were rechecked with the existing inventory
-and production replay: 13,319 valid frames and no unparsed bytes. In the short
-Eco Summer comparison of fixed level 1 and Auto at effective level 1, both
-windows contain 98 complete identities. Of these, 93 have the same constant
+Inventory and production replay validate 13,319 frames with full byte coverage
+across six reference windows. Two short Eco Summer windows compare fixed level
+1 with Auto at effective level 1. Both contain 98 complete identities. Of these,
+93 have the same constant
 payload in both windows; the five differences are independently decoded room
 temperature, fan rpm, calendar, clock and temperature-block values. Query
 arguments remain constant. One complete query round per phase contains the same
@@ -196,9 +153,8 @@ The selection reference is an earlier written video evaluation; the original
 video was unavailable for renewed inspection. The fixed-level interval is short
 and a different manually selected level lies between it and Auto. Later traffic
 has no additional display reference. These limitations prevent treating this
-comparison as proof that Auto is never transmitted. A useful new comparison
-requires a retained, synchronized independent reference of repeated Auto/fixed
-changes at the same numeric level across multiple full cycles.
+comparison as proof that Auto is never transmitted. A positive assignment requires a synchronized independent reference covering
+the same numeric level in both selection modes over full query cycles.
 
 Different selected intensive-ventilation durations and start/end references
 likewise supply no identified duration or remaining-time field. A calendar

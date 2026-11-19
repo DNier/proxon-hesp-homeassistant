@@ -1,171 +1,76 @@
-# PROXON mit Home Assistant – HESP-Integration ohne Modbus-Modul
+# PROXON HESP für Home Assistant
 
-Unabhängiges Community-Projekt für PROXON-Anlagen. Keine offizielle Integration der Zimmermann Lüftungs- und Wärmesysteme GmbH & Co. KG.
+PROXON HESP bindet eine Lüftungs- und Heizungsanlage über ihren HESP-Bus lokal in
+Home Assistant ein. Die Integration empfängt die vorhandenen Daten über ein
+transparentes RS485-zu-TCP-Gateway. Die Anlage und vorhandene Thermostate regeln
+weiter wie gewohnt.
 
-Die Custom Integration **PROXON HESP** verbindet eine **PROXON P2-Lüftungsheizung**
-mit **Home Assistant** über den vorhandenen HESP-Bus und ein transparentes
-RS485-zu-TCP-Gateway. Ein Modbus-Modul, MQTT oder eine Cloud sind dafür nicht
-erforderlich. Die Installation erfolgt über HACS als benutzerdefiniertes Repository.
-Neben der P2-Referenz ist die **FWT 2-L mit LT-ZIM V1.3** für den dokumentierten
-lesenden Umfang Community-getestet. Andere Ausführungen sind nicht automatisch
-kompatibel.
-
-Für die angefragte P-Serie-Generation bestätigt Zimmermann: kein Modbus-Anschluss
-und keine Nachrüstmöglichkeit. Externe HESP-Auswertung wird nicht unterstützt.
-Die Integration nutzt unabhängig davon den vorhandenen HESP-Verkehr mit
-angeschlossenem BDE. [Herstellerangaben und eigene Beobachtungen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/MANUFACTURER_INFORMATION.md)
-erläutern den Geltungsbereich und die Grenzen.
+Das Projekt wird unabhängig von Zimmermann entwickelt. [English overview](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/README.en.md)
 
 ## Voraussetzungen
 
-- Home Assistant ab **2026.9**.
-- Geprüfte P2-Referenz: **LT-ZIM V1.6, PTC 4× V1.2, BDE Comfort**.
-- Community-getestet: **FWT 2-L, LT-ZIM V1.3, BDE Comfort V03.7.9B00**.
-  [Geprüfter Umfang und Grenzen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md#community-getestet-fwt-2-l).
-- Gateway im transparenten TCP-Modus mit **19200 Baud, 8N1**.
-- In der Referenzanlage eingesetzt: **Waveshare RS232/485/422 TO POE ETH (B)**
-  als RS485-zu-TCP-Gateway. Dieses Modell ist keine Voraussetzung; andere Gateways
-  müssen dieselbe transparente Übertragung unterstützen.
-- Andere Hardwarevarianten sind nicht automatisch unterstützt.
+- **Home Assistant ab 2026.9.**
+- **PROXON P2** mit LT-ZIM V1.6, PTC 4× V1.2 und BDE Comfort als geprüfte
+  Referenz. Für die **FWT 2-L** ist ein begrenzter lesender Umfang durch
+  Community-Vergleiche belegt. Vergleiche deine Ausstattung mit der
+  [Kompatibilitätsübersicht](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md).
+- **Transparentes RS485-zu-TCP-Gateway** am unterstützten Busabschnitt, eingestellt
+  auf **19200 Baud, 8N1**. Das Bedienteil (BDE) bleibt angeschlossen. HESP wird
+  direkt übertragen und benötigt kein Modbus-Modul, MQTT oder Cloud-Konto.
 
 ## Was die Integration bietet
 
 - Temperaturen, Luftstufen, Drehzahlen, Betriebsstunden und Filterrestlaufzeit.
-- Lesende Service-Einstellungen und aktuelle Zu-/Abluft-Ansteuerung in Prozent,
-  wenn sie zu einer frisch empfangenen Kennlinienstufe passt.
-- Verdichterrotation, Bypass-Schaltzustand und Intensivlüftung.
-- Optionale **Verdichter-Stellgröße** in Prozent für die geprüfte P2-Konfiguration.
-- Passive Diagnoseaufnahmen bei Bedarf oder bei Verdichterstarts und -stopps.
-- Zeitmarkierte BDE-Beobachtungen für gezielte Vergleiche, ab 0.13.0.
-- Gezielt ausgelöste Ereignisaufnahmen mit Vor- und Nachlauf, ab 0.13.2.
-- Raumüberwachung mit vorhandenen HA-Sensoren, manueller
-  Gerätezeitabgleich und optionale experimentelle Statusbits zum BDE-Vergleich.
-- Optionaler BDE-Schaltzustand **MV-Heizen/Kühlen**; keine Anzeige aktiver Kühlung.
-
-Ab Version 0.13.1 ergänzt **MV-Abtau** die optionalen BDE-Schaltzustände.
-Er zeigt keine tatsächliche Abtauaktivität an.
-
-Die optionale **BDE-Betriebsanzeige** zeigt **Heizbetrieb** ab 0.16.9 in drei
-belegten Winterkonstellationen. Ab Version 0.16.5 ergänzt sie **Betriebsfeld leer**
-für einen gesondert belegten Eco-Winter-Kontext bei Verdichterdrehzahl null.
-Alle Quellen müssen frisch sein und die vollständige Kombination muss durch
-echten Empfang mindestens 15 Sekunden stabil bleiben. Andere Kontexte bleiben
-**nicht verfügbar**. Ein leeres Betriebsfeld beschreibt die sichtbare
-BDE-Beschriftung; daraus folgt keine Aussage „Heizung aus“. Die bestehende
-Entität bleibt standardmäßig deaktiviert und unterscheidet nicht allgemein
-zwischen Heizen, Kühlen und Abtauen. [Belege und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
-
-Die vorhandene Anlagensteuerung und deine Thermostate bleiben verantwortlich.
-Die Schaltfläche **Gerätezeit abgleichen** korrigiert den Kalender. Für
-Sommer- und Winterzeit lässt sich der Abgleich je Gerät über einen
-[Konfigurationsschalter](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
-automatisieren.
-Allgemeine Heizungs-/Lüftersteuerung und eine bestätigte Unterscheidung von
-Heizen, Kühlen und Abtauen sind nicht enthalten.
+- Optionale Diagnosen wie Verdichter-Stellgröße und BDE-Anzeigen. Der Status
+  **Verdichter läuft** beschreibt die gemeldete Drehung. Die
+  [BDE-Betriebsanzeige](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md)
+  zeigt **Heizbetrieb** und **Betriebsfeld leer** ausschließlich in belegten
+  Eco-Winter-Konstellationen.
+- Manuelle und automatische [Diagnoseaufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md)
+  zur Fehlersuche und für Vergleiche mit dem BDE.
+- Optionale [Heizraum-Überwachung](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ROOMS.md)
+  mit vorhandenen Home-Assistant-Entitäten.
+- Optionaler [Gerätezeitabgleich](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/CLOCK_SYNC.md)
+  per Schaltfläche oder über den standardmäßig ausgeschalteten Schalter für
+  Sommer- und Winterzeit. Beim Einschalten kann der Schalter die Gerätezeit
+  sofort korrigieren.
 
 ## Installation und Updates
 
 [![Repository in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
 1. Dieses Repository in HACS als benutzerdefinierte **Integration** hinzufügen.
-2. PROXON HESP herunterladen und Home Assistant neu starten.
+2. Die [aktuelle stabile Version](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest)
+   herunterladen und Home Assistant neu starten.
 3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen**
-   PROXON HESP auswählen und Gateway-Adresse, Port und Profil eintragen.
+   **PROXON HESP** auswählen. Gateway-Adresse, TCP-Port und Anlagenprofil angeben.
 
-Die [aktuelle stabile Version](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest)
-erfordert keine Freigabe von Vorabversionen in HACS. Auch von 0.12.0b1–b9 kann direkt aktualisiert werden.
-
-HACS prüft Updates regelmäßig; Veröffentlichungen werden nicht unmittelbar an
-Home Assistant gepusht. Bei Bedarf in HACS **Informationen aktualisieren** verwenden.
-Die Update-Entität meldet verfügbare Versionen. Installation und HA-Neustart sind
-separate Schritte; eine Handy-Pushnachricht wird dadurch nicht automatisch eingerichtet.
-
-Vor Updates ein Backup erstellen und benötigte Mitschnitte herunterladen.
-Beim Wechsel von vor 0.12.0b3 wird das Konfigurationsformat migriert;
-ein Zurückwechseln erfordert das vorherige Backup. Bestehende Einträge behalten.
-
-Ab **0.16.8** ersetzt die standardmäßig deaktivierte **Verdichter-Stellgröße**
-den Rohsensor `raw_0120`. Eine bisherige Aktivierung wird übernommen, sofern
-nur die Integration den Ersatz deaktiviert hat. Eigene Dashboards und
-Automationen auf die neue Entität und ihren numerischen Prozentwert umstellen.
-[Umfang und Entitätswechsel (Englisch)](docs/DATA_POINTS.md#compressor-control-output-0168).
-
-**Update auf 0.16.6:** Ein weiterer zeitlich geprüfter BDE-Fotovergleich ergänzt
-Luftstufe 2 für ein bisher unbekanntes vollständiges Statuswort. Bestehende
-Entitäts-IDs und Einstellungen bleiben erhalten; Home Assistant nach der
-Installation neu starten. [Belege und Grenzen (Englisch)](docs/DATA_POINTS.md#optional-diagnostics).
-
-Bei aktivierter Ereignisaufnahme ist auch der vorhandene, begrenzte
-Drei-Minuten-Empfangspuffer lesend exportierbar. Externe Sicherungen können damit
-Originaltelegramme zur Fotozeit erhalten; die dauerhafte Ablage bleibt eine
-separate Einrichtung. [Aufnahmen und Grenzen](docs/DIAGNOSTICS.md).
-
-**Update auf 0.15.4:** Bei aktivierter Ereignisaufnahme lösen drei ungeklärte
-Rohbitwechsel zusätzliche passive Aufnahmen mit längerem Nachlauf für BDE-Fotos
-aus. Daraus werden keine neuen PTC- oder Heiz-/Kühlsensoren abgeleitet.
-Entitäts-IDs und Einstellungen bleiben erhalten; Home Assistant nach der
-Installation neu starten. [Aufnahmefenster und Grenzen](docs/DIAGNOSTICS.md#rohbitwechsel-mit-längerem-fotofenster-ab-0154).
-
-**Seit 0.15.3:** Ein weiterer, durch zwei BDE-Fotovergleiche
-bestätigter Statuswert liefert Luftstufe 2 im Winterbetrieb. Entitäts-IDs und
-Einstellungen bleiben erhalten; Home Assistant nach der Installation neu starten.
-
-Seit 0.15.2 wird auch Luftstufe 3 während des belegten Heiz-Auslaufs erkannt.
-
-Seit 0.15.1 werden negative Temperaturen im bestehenden Temperaturblock
-ausgewertet. Die Temperaturkennung `FFFF` bleibt wegen ihrer ungeklärten
-Fehlerbedeutung unverfügbar.
-
-**Update von vor 0.15.0:** Sieben bisherige Rohanzeigen werden durch verständliche
-Werte ersetzt: Kühlschwelle, konfigurierte maximale Heiz-/Kühlleistung,
-Verdichterdrehzahl, Geräteuhrzeit, Gerätedatum sowie Zu-/Abluft-Ansteuerung.
-Die alten Entitäten werden bei der Einrichtung des aktualisierten Eintrags aus
-der Entitätsregistrierung entfernt. War ein alter Sensor aktiviert, wird ein
-Ersatz aktiviert, der bisher nur durch die Integration deaktiviert war.
-Eine ausdrücklich vom Nutzer deaktivierte Ersatzentität bleibt deaktiviert.
-Alle anderen Entitäts-IDs und Aktivierungseinstellungen bleiben erhalten.
-
-Eigene Dashboards und Automationen mit den entfernten Entitäts-IDs müssen auf
-die Ersatzsensoren umgestellt werden. Die Prozentanzeigen erhalten neue IDs;
-historische Rohwerte wie 5200 werden nicht nachträglich in 52 % umgerechnet.
-Die Zu-/Abluft-Ansteuerung zeigt die passende empfangene Kennlinienstufe, keine
-gemessene Spannung oder Luftmenge. Ohne frischen passenden Wert bleibt sie
-„Nicht verfügbar“. Seit 0.16.8 sind 17 teilweise oder vollständig ungeklärte
-Rohanzeigen als optionale Diagnose verfügbar.
-[Entitätswechsel und Prozentanzeige (Englisch)](docs/DATA_POINTS.md#readable-telemetry-and-entity-migration-0150).
+Vor einem Update benötigte Mitschnitte herunterladen und die
+[Hinweise für bestehende Installationen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/GETTING_STARTED.md#updates-und-bestehende-installationen)
+lesen. Den bestehenden Integrationseintrag behalten.
 
 ## Austausch und Mithilfe
 
-Fragen und Ideen gehören in die [GitHub-Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions).
-Für Fehler und Kompatibilitätsberichte stehen [Meldeformulare](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
-bereit. Unbekannte Hardwareangaben sind in Ordnung; Belege sind freiwillig und
-müssen vor dem Teilen bereinigt werden.
-
-Beiträge richten sich nach [Contributing (Englisch)](CONTRIBUTING.md) und dem
-[Code of Conduct (Englisch)](CODE_OF_CONDUCT.md). Vermutete Sicherheitslücken
-bitte [vertraulich melden](SECURITY.md).
-
-Im [Home-Assistant-Forum: PROXON P-series via HESP](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553)
-stehen die Anbindung und Möglichkeiten zur Mithilfe auf Englisch. Berichte anderer
-PROXON-Besitzer mit Platinenrevision, BDE-Version und Vergleich zur Geräteanzeige
-helfen, die Kompatibilität zu prüfen. Vollständige Diagnoseexporte und
-Originalaufnahmen privat aufbewahren; nur benötigte bereinigte Auszüge freiwillig
-teilen. Details unter [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md).
+Fragen und Ideen gehören in die [GitHub-Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions)
+oder ins [Home-Assistant-Forum](https://community.home-assistant.io/t/proxon-p-series-via-hesp-local-integration-without-a-modbus-module-testers-and-contributors-welcome/1026553).
+Für Fehler und Kompatibilitätsberichte gibt es [Meldeformulare](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose).
+Teile bei Bedarf einen kurzen, bereinigten Auszug. Vollständige Diagnoseexporte,
+Mitschnitte und Fotos bleiben privat. Sicherheitslücken bitte
+[vertraulich melden](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/SECURITY.md).
 
 ## Dokumentation
 
-- [Einrichtung und ausführliche Übersicht](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/GETTING_STARTED.md)
+- [Einrichtung und Fehlerhilfe](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/GETTING_STARTED.md)
 - [Hardware und Kompatibilität](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/COMPATIBILITY.md)
+- [Entitäten am Hauptgerät](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ENTITY_ORGANIZATION.md)
 - [Heizräume einrichten](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ROOMS.md)
+- [Gerätezeit abgleichen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/CLOCK_SYNC.md)
 - [Diagnose und Aufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md)
 - [Gezielte BDE-Vergleiche](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/REFERENCE_TESTS.md)
 - [Experimentelle Statusbits vergleichen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/EXPERIMENTAL.md)
-- [Gerätezeit abgleichen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/CLOCK_SYNC.md)
-- [Entitäten am Hauptgerät](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ENTITY_ORGANIZATION.md)
 - [Versions- und Upgradehinweise](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/RELEASE_NOTES.md)
-- [English overview](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/README.en.md)
-- [Entwicklung – Englisch](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/CONTRIBUTING.md)
+- [Entwicklung und Beiträge (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/CONTRIBUTING.md)
 
-Eigener Code: [MIT-Lizenz](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/LICENSE).
-Protokollquellen, CC-BY-4.0-Zuordnung und Markenhinweise:
-[Quellen und Rechte](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/NOTICE.md).
+[MIT-Lizenz für den Projektcode](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/LICENSE)
+· [Protokollquellen und Rechte](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/NOTICE.md)
+· [Verhaltenskodex (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/CODE_OF_CONDUCT.md)

@@ -35,50 +35,24 @@ to the last label, operating mode alone, a valve bit or warm supply air. No
 
 ## Evidence and time alignment
 
-Four independent photo/readout references show the BDE label Heizbetrieb with
-the original `0x82001312 / 0x27` combination. In each case, the full displayed device-minute interval lies
-inside the same validated status/valve/mode context with positive speed. This is
-stronger than assigning a later Telegram receipt time to an earlier trigger.
-The references also satisfy the causal 15-second condition at their approximate
-readout times.
+A display reference is aligned using the full visible device-minute bracket.
+Received device-calendar messages bound that interval without assuming that
+Home Assistant and the BDE share a synchronized clock. A qualified reference
+requires the exact mode, status and valve words and positive speed across the
+bracket. The production tracker starts labelling after 15 seconds of coherent
+receipt.
 
-Version 0.16.2 additionally admits only `0x8200131A / 0x27`, supported by two
-independently recorded episodes showing Eco Winter, level 3 and Heizbetrieb.
-For each, all four source values and their freshness remain valid across the
-entire conservative received device-minute bracket, already after the 15-second
-proof window. Device-calendar observations were matched to the visible minute;
-the device clock was not assumed synchronized to the camera or HA clock.
-A later point from the same recording is not an additional time-safe reference:
-its displayed-minute bracket also contains `0x8200111A`. That word remains
-unadmitted even though a separate fan-level mapping exists for it.
+| Status and valve word | Independent evidence and limit |
+| --- | --- |
+| `0x82001312 / 0x27` | Four BDE heating readings match qualified intervals. |
+| `0x8200131A / 0x27` | Two BDE heating readings match qualified intervals at level 3. A separate interval in the same recording overlaps `0x8200111A`, so it supplies no additional label. |
+| `0x9200131A / 0x27` or `/ 0xA7` | The reviewed intervals leave an unresolved word transition or have insufficient independent references. Both combinations remain unassigned. |
 
-The 0.16.2 extension was replayed across 533 terminal archived windows and 60
-deduplicated historical diagnostic windows. It preserves all four earlier
-qualifying current photo references and
-adds one current photo plus two nominal historical points. Only one of those
-historical points supplies the additional time-safe episode described above.
-No opposing qualified label was found among the known retained labelled points. Three additional historical raw matches
-of the original combination lack a contemporaneous visible BDE label and
-remain unlabelled, rather than being counted as confirmations. Additional
-raw-only matches of the new combination likewise supply no independent display labels. These are recording windows, not a count of
-independent operating cycles or a continuous observation of the entire period.
-
-Both initially considered `0x9200131A` extensions are excluded. The `0x27`
-photo points occur close to a complete-word transition, and the displayed clock
-minute does not resolve which word was present when the picture was taken.
-The `0xA7` variant has insufficient independent references whose whole displayed
-minute is unambiguous under this stricter review. Neither is admitted by masking
-bits or extrapolating the confirmed normal-winter combination.
-
-Original household photos, full recordings, device times and Home Assistant
-history remain private. The original minimal reference sequence in
-`tests/fixtures/bde_display_frames.json` remains unchanged. The additional
-`tests/fixtures/bde_display_fan3_frames.json` combines only wire frames already
-published before this extension, with explicitly synthetic timing for regression
-tests. Those synthetic sequences are not additional recorded display references.
-The two independent recorded episodes were replayed separately against the
-production decoder and tracker; their original wire bytes and received intervals
-were retained in private evidence rather than added to the public fixture.
+Count independent display episodes rather than matching raw windows. Raw
+matches without an independent display label carry no label evidence.
+`tests/fixtures/bde_display_frames.json` contains a minimal recorded reference.
+`tests/fixtures/bde_display_fan3_frames.json` combines recorded wire frames
+with synthetic receipt timing to test the qualification rule.
 
 ### Additional level 2 heating context (0.16.9)
 
@@ -96,50 +70,31 @@ neighboring words remain subject to their own display evidence.
 
 ## Blank-field evidence
 
-Two independent original photo episodes show Eco Winter, level 1 and an absent
-operating label. Their complete conservative device-minute brackets lie inside
-the exact blank context, after the actual 15-second source-driven qualification
-and with all four sources continuously fresh. Device-calendar responses bound
-the visible minute; no fixed device-to-host clock offset is assumed. A third
-compatible episode has a short qualification gap at the earliest possible
-photo time and is not counted as a third fully qualified reference.
+Two independent BDE readings at Eco Winter and level 1 show an empty operating
+field across the full qualified interval. A third compatible reference has a
+short gap at the earliest possible observation time. A preceding compressor-stop
+phase has a different complete status word and requires its own display
+reference. Zero speed or Eco Winter on its own leaves the display field unknown.
 
-The later blank photo does not label the preceding short compressor-stop phase.
-That phase has a different complete status word. The production decoder and
-tracker are replayed against the original retained windows and time-bound
-heating, cooling and blank counterexamples. Existing heating qualifications
-remain unchanged; no reviewed heating/cooling photo bracket is labelled blank.
-Overlapping captures and repeated use of the same photo are not independent
-episodes. Original photos, device times and household recordings remain private.
-
-Public regression tests reuse previously published wire frames with explicitly
-synthetic timing. Those sequences exercise qualification, transitions and HA
-availability; they are not additional recorded display references. Zero speed
-alone, Eco Winter alone, or a photo taken after a trigger cannot establish blank.
-The blank state makes no statement about PTC, valve position or remaining heat.
+Public regression tests use previously published wire frames with synthetic
+timing to exercise qualification, transitions and Home Assistant availability.
+The original display references establish the scope of the comparison.
 
 ## PTC counterexamples remain separate
 
-The reviewed PTC-Wohnen-on examples with all three candidate bits clear were
-rechecked against independent timing evidence. One uses original camera offsets
-and neighbouring numerical fan/temperature displays; another uses device-clock
-minutes and retained video presentation timestamps. A preserved HA history also
-agrees with the corresponding raw host timeline. PTC/LED/valve transitions were
-not used as the synchronization reference.
-
-These checks support retaining the counterexamples to a universal PTC mirror.
-The original video container for one historical case is no longer available in
-the reviewed local set; retained extracted frames and their original timestamp
-logs provide its provenance. This limitation is not hidden or converted into a
-new positive mapping. The bounded BDE display adds no PTC state or permission.
+Independent display references show PTC-Wohnen On while all three candidate
+bits are clear. Alignment uses visible device-clock minutes or camera offsets
+cross-checked against neighbouring numerical fan and temperature displays.
+One reference uses timestamped extracted frames from an original video. The
+operating-display rule classifies only the labelled contexts above, with PTC
+interpretation evaluated separately. [PTC evidence and limits](STATUS_EVIDENCE.md)
 
 ## Integration and upgrade behaviour
 
 The existing entity keeps its stable unique ID, no unit and no statistics class.
 Version 0.16.5 adds only the `blank` enum option. Existing entity identities,
-enabled settings, recording formats and configuration entries are preserved. The receiver still owns one passive TCP connection;
-observing the display creates no query, control command, clock write or additional
-connection. On other hardware or firmware the exact context may remain
+enabled settings, recording formats and configuration entries are preserved.
+The display uses the data received on the existing passive connection. On other hardware or firmware the exact context may remain
 unavailable; this does not extend the documented compatibility claims.
 
 See [data points](DATA_POINTS.md), [switching-state boundaries](STATUS_EVIDENCE.md)

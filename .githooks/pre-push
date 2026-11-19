@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+checker="$hook_dir/public_content_check.py"
+if [ ! -f "$checker" ]; then
+    checker="$hook_dir/../tools/public_content_check.py"
+fi
+if [ ! -f "$checker" ]; then
+    echo 'Public-content check could not start: checker not found.' >&2
+    exit 2
+fi
+exec python3 "$checker" --pre-push "$2"

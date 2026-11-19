@@ -1,60 +1,40 @@
 # Entitäten am Hauptgerät
 
-Diese Einteilung verwendet seit **0.12.0b4** die vorgesehenen HA-Entitätskategorien.
-Die folgende Tabelle beschreibt den Stand **0.15.3**.
-Zusätzliche Geräte allein zur Sortierung von Messwerten werden nicht angelegt.
+Home Assistant ordnet die Werte auf der Geräteseite nach ihrem Verwendungszweck.
+In den Entitätseinstellungen kannst du zusätzliche Anzeigen für deine Anlage
+aktivieren.
 
-| Einordnung | Entitäten | Bei Neueinrichtung |
+| Kategorie | Entitäten | Bei Neueinrichtung |
 |---|---|---|
-| Normale Sensoren und Zustände | Betriebsart, angeforderte Luftstufe, Raum-/Solltemperatur, Zu-/Ab-/Fort-/Frischlufttemperatur, Verdichter läuft, Bypass und Intensivlüftung | Aktiviert |
-| Diagnose | Filterrestlaufzeit, Betriebsstunden, Aufnahmestatus und Aufnahmeaktionen | Aktiviert |
-| Optionale Diagnose | Sechs interne Temperaturen, drei Drehzahlen, getrenntes Gerätedatum und Geräteuhrzeit, kombinierte lokale Gerätezeit, Regler-Luftstufe, aktuelle Lüfteransteuerung in Prozent, konfigurierte Lüfterstufen und Leistungsgrenzen, Kühlschwelle, ungeklärte Hex-Datenpunkte, Verbindung und letzter gültiger Empfang | Deaktiviert |
-| Konfiguration | Manueller Gerätezeitabgleich | Deaktiviert |
+| Gerätewerte | Betriebsart, angeforderte Luftstufe, Raum- und Solltemperatur, Zu-/Ab-/Fort-/Frischlufttemperatur, Verdichter läuft, Bypass und Intensivlüftung | Aktiviert |
+| Diagnose | Filterrestlaufzeit, Betriebsstunden, Aufnahmestatus, Ereignisaufnahmestatus und Aufnahmeaktionen | Aktiviert |
+| Optionale Diagnose | Interne Temperaturen, Drehzahlen, Verdichter-Stellgröße, Gerätezeit und -datum, Regler-Luftstufe, Lüfterkennlinien und -ansteuerung, Leistungsgrenzen und Kühlschwelle | Deaktiviert |
+| Optionale Diagnose | BDE-Betriebsanzeige, MV-Heizen/Kühlen, MV-Abtau, experimentelle Statusbits, Rohwerte, Gateway-Verbindung und letzter gültiger Empfang | Deaktiviert |
+| Konfiguration | Schaltfläche **Gerätezeit abgleichen** | Entität deaktiviert |
+| Konfiguration | Schalter **Sommer-/Winterzeit automatisch abgleichen** | Entität aktiviert, Schalter aus |
 
-Die Kategorie Diagnose beschreibt den Verwendungszweck, nicht die Genauigkeit.
-Ein deaktivierter Drehzahlsensor unterbindet weder den Datenempfang noch den
-Sensor **Verdichter läuft**. Optionale Werte lassen sich einzeln in den
-Entitätseinstellungen aktivieren.
+**Verdichter läuft** erhält seine Drehzahldaten auch bei deaktivierter
+Drehzahlanzeige. **Ereignisaufnahme** zeigt den Aufnahmestatus an. Die
+[automatische Aufzeichnung](DIAGNOSTICS.md#automatische-ereignisaufnahmen)
+aktivierst du bei Bedarf am Integrationseintrag.
+Die [BDE-Betriebsanzeige (Englisch)](BDE_DISPLAY_EVIDENCE.md)
+und die Ventilanzeigen stehen nur in den jeweils dokumentierten Situationen zur
+Verfügung. [Gerätezeit abgleichen](CLOCK_SYNC.md) erklärt, wann die Schaltfläche
+und der Schalter die Uhr korrigieren.
+
+Der HA-Gerätebereich verwendet feste Kategorien. Für eigene Gruppen kannst du
+ein Dashboard anlegen. [Optionale Heizräume](ROOMS.md) erscheinen als virtuelle
+Geräte.
 
 ## Bestehende Installationen
 
-Ab 0.14.0 ergänzen elf zunächst deaktivierte Diagnosesensoren die Kühlschwelle,
-konfigurierte maximale Heiz-/Kühlleistung und je vier Zu-/Abluftstufen. Diese
-Einstellungen sind keine gemessene Leistung oder aktuelle Luftstufe. Ohne
-frischen Empfang werden sie unverfügbar. Quellen und Grenzen stehen im
-[technischen Evidenzbericht (Englisch)](SERVICE_SETTINGS_EVIDENCE.md).
+Behalte beim Update den vorhandenen Integrationseintrag. Bei den meisten
+Entitäten bleiben IDs, eigene Namen und Aktivierung erhalten. Die
+[Upgradehinweise](GETTING_STARTED.md#updates-und-bestehende-installationen)
+beschreiben die Ausnahmen bei ersetzten Rohsensoren.
 
-Ab 0.15.0 entfallen sieben bestätigte Rohduplikate. Die alten Registrierungen
-werden automatisch entfernt; aktivierte Rohsensoren aktivieren bisher nur
-standardmäßig deaktivierte Ersatzsensoren. Eigene Verweise müssen auf die
-[Ersatzsensoren](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
-umgestellt werden. Die neuen Lüfter-Prozentwerte erhalten eigene IDs.
-
-Alle übrigen Entitäts-IDs, eindeutigen Identitäten, eigenen Namen sowie
-Aktivierungsentscheidungen bleiben beim Update erhalten. Die geänderte Kategorie ordnet bestehende Werte der
-Diagnose zu. Neue Aktivierungsstandards deaktivieren keine bisher aktiven Entitäten.
-Die deutschen Drehzahlnamen lauten einheitlich Zuluftdrehzahl, Abluftdrehzahl und
-Verdichterdrehzahl. Eigene Namen haben weiterhin Vorrang.
-
-Nicht benötigte Detailwerte können manuell deaktiviert werden, sofern sie nicht
-in Dashboards, Verlauf oder Automationen gebraucht werden. Die Integration nimmt
-keine pauschale Deaktivierung oder Umbenennung bestehender Entitäts-IDs vor.
-Die Standard-Geräteseite bestimmt ihr Layout selbst; frei gestaltete fachliche
-Abschnitte gehören in ein eigenes Dashboard.
-
-Ab 0.12.0b5 ergänzen drei standardmäßig deaktivierte [experimentelle Statusbits](EXPERIMENTAL.md) die Diagnose.
-
-**MV-Heizen/Kühlen** ist eine optionale Diagnoseanzeige des BDE-Magnetventils.
-Ab Version 0.13.1 ergänzt **MV-Abtau** dieselbe
-Einordnung. Beide Entitäten gehören zum Hauptgerät und sind zunächst deaktiviert.
-Sie lassen sich in dessen Entitätseinstellungen aktivieren. Ihre Zustände
-bezeichnen weder aktive Kühlung noch einen tatsächlichen Abtauvorgang;
-ungeprüfte Statuswörter ergeben „Nicht verfügbar“.
-
-Für gezielte Beobachtungen ergänzen vier optionale Hex-Diagnosesensoren die
-vollständigen Payloads `118000/01F8`, `118000/03B6`, `118007/0191` und
-`224000/0208`. Sie bleiben zunächst deaktiviert und weisen den Bits keine
-PTC- oder Heizbedeutung zu. Zusammen mit `224000/006C` führen sie den Zeitpunkt
-des letzten gültigen Empfangs als Attribut. Auch identische Telegramme erneuern
-diesen Zeitpunkt; für Benachrichtigungen zählt deshalb der Wechsel des
-Hex-Zustands und nicht jede Attributaktualisierung.
+Prüfe vor dem Deaktivieren einer Entität, ob ein Dashboard, eine Automation
+oder ein Verlauf sie verwendet. Bei den optionalen Hex-Diagnosesensoren für
+`118000/01F8`, `118000/03B6`, `118007/0191`, `224000/0208` und
+`224000/006C` erneuert auch unveränderter Empfang das Zeitstempelattribut.
+Verwende für eine Zustandsbenachrichtigung den Wechsel des Hex-Werts.

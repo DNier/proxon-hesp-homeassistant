@@ -9,3 +9,5 @@ Describe any effect on entity identities, names, availability, settings or upgra
 ## References
 
 Link relevant issues, discussions or source material. Distinguish confirmed protocol meaning from a hypothesis. Omit this section if there are no references.
+
+Use public citations and minimal sanitized examples. Keep private recordings, exact household timelines and local operating notes in private storage.

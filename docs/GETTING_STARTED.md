@@ -1,244 +1,138 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/DNier/proxon-hesp-homeassistant/main/custom_components/proxon_hesp/brand/logo.png" alt="PROXON HESP" width="160" height="160">
-</p>
-
 # PROXON HESP für Home Assistant
 
-[English overview](../README.en.md) · [Installation](#installation-mit-hacs) · [Dokumentation](#dokumentation)
+[English overview](../README.en.md) · [Installation](#installation-mit-hacs) · [Fehlerhilfe](#fehlerhilfe)
 
-Lokale Integration für die PROXON-P2-Referenz und die Community-getestete FWT 2-L
-mit einem transparenten
-RS485-zu-TCP-Gateway am HESP-Bus. MQTT, Cloud oder eine zusätzliche Anwendung
-sind nicht erforderlich. Die vorhandene Anlagensteuerung bleibt verantwortlich.
+PROXON HESP liest Betriebsdaten einer PROXON-Anlage über den vorhandenen HESP-Bus
+und ein transparentes RS485-zu-TCP-Gateway. Die Integration nutzt eine bestehende
+Verbindung für Messwerte und Aufnahmen. Die Anlagensteuerung und vorhandene
+Thermostate bleiben für den Betrieb zuständig.
 
-Die Integration empfängt den bestehenden Busverkehr ohne eigene Abfragen.
-Die optionale Schaltfläche **Gerätezeit abgleichen** ist die einzige
-Schreibfunktion: Auf Tastendruck sendet sie einmalig eine Kalenderkorrektur.
-Einrichtung, Wiederverbindung und Aufnahmen senden keine Steuerbefehle.
+Die Integration sendet nur zur optionalen Korrektur der Gerätezeit. Dafür gibt es
+die Schaltfläche **Gerätezeit abgleichen** und den standardmäßig ausgeschalteten
+Schalter **Sommer-/Winterzeit automatisch abgleichen**. Beim Einschalten kann
+der Schalter die frisch empfangene Gerätezeit sofort korrigieren. Einrichtung,
+Wiederverbindung und Diagnoseaufnahmen arbeiten rein lesend.
 
 ## Versionsstand
 
 Installiere die [aktuelle stabile Version](https://github.com/DNier/proxon-hesp-homeassistant/releases/latest).
-Die [Versionshinweise](../RELEASE_NOTES.md) beschreiben Änderungen und nötige
-Upgrade-Schritte für die jeweilige Version.
-
-Benötigte Mitschnitte vor einem Update herunterladen: Sie liegen nur im
-Arbeitsspeicher. Nach der Installation Home Assistant neu starten.
-
-Beim Update von einer Version vor 0.15.0 werden sieben bisherige Rohanzeigen
-durch verständliche Sensoren ersetzt. Eigene Dashboards und Automationen mit
-entfernten Entitäts-IDs müssen angepasst werden; die bisherigen Rohverläufe
-werden nicht nachträglich umgerechnet. Die
-[Migrationsregeln](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
-beschreiben Ersatzsensoren und Aktivierungseinstellungen.
-
-Vor dem Wechsel von einer Version vor 0.12.0b3 ein HA-Backup erstellen:
-Das Konfigurationsformat steigt auf Version 2. Ältere Integrationsversionen
-können es nicht laden; für ein Zurückwechseln ist das vorherige Backup erforderlich.
-Von 0.12.0b3–b9 ist keine weitere Migration nötig.
-Details stehen in den [Versionshinweisen](../RELEASE_NOTES.md).
+Die [Versionshinweise](../RELEASE_NOTES.md) beschreiben Änderungen und
+Migrationsschritte je Version.
 
 ## Voraussetzungen und Kompatibilität
 
-Die Integration benötigt **Home Assistant ab 2026.9**.
-Das bestätigte Hardwareprofil ist **LT-ZIM V1.6 mit PTC 4× V1.2 und BDE Comfort**.
-Die Unterstützung beruht auf Mitschnitten und Displayvergleichen dieser
-Konfiguration. Zusätzlich ist die **FWT 2-L mit LT-ZIM V1.3 und BDE Comfort
-V03.7.9B00** für den dokumentierten lesenden Umfang Community-getestet, ebenfalls
-mit dem Profil `lt_zim_16_observed`. Aktiver Wärmepumpenbetrieb, Ventilzuordnungen
-und Zeitabgleich sind dort noch nicht bestätigt. Andere Revisionen sind damit
-nicht automatisch unterstützt.
-Das Profil wird bei der Einrichtung ausgewählt, nicht vom Gateway erkannt.
+- **Home Assistant ab 2026.9.**
+- **PROXON P2** mit LT-ZIM V1.6, PTC 4× V1.2 und BDE Comfort als bestätigte
+  Referenz. Für die **FWT 2-L** mit LT-ZIM V1.3 und BDE Comfort V03.7.9B00
+  ist ein lesender Teilumfang geprüft. Angaben zu bestätigten Funktionen und
+  Busabschnitten stehen unter [Hardware und Kompatibilität](COMPATIBILITY.md).
+- **Transparentes RS485-zu-TCP-Gateway**, eingestellt auf **19200 Baud, 8N1**.
+  Das Gateway reicht die HESP-Daten direkt weiter. Das Bedienteil (BDE) bleibt
+  angeschlossen.
 
-Bitte vor der Installation die [Kompatibilität](COMPATIBILITY.md) prüfen.
-Dieses unabhängige Projekt steht in keiner Verbindung zum Gerätehersteller.
-Zimmermann unterstützt die externe HESP-Auswertung nicht. Für die angefragte
-P-Serie-Generation gibt es keine Modbus-Nachrüstung. BDE angeschlossen lassen;
-nach vollständiger Spannungsunterbrechung Datum und Uhrzeit kontrollieren.
-Details und Quellenabgrenzung: [Herstellerangaben](MANUFACTURER_INFORMATION.md).
+Wähle das dokumentierte Anlagenprofil `lt_zim_16_observed` bei der Einrichtung.
+Die Integration erkennt Modell, Platinenrevision und Firmware nicht automatisch.
+Belegungen unterscheiden sich je nach Platinenrevision. Richte den Zugang zum
+Bus anhand der Dokumentation für deine Hardware ein.
+
+Die Integration nutzt HESP unabhängig von Zimmermann und benötigt kein
+Modbus-Modul, MQTT oder Cloud-Konto. Informationen zur genannten P-Serie und zum
+Verhalten nach einem Stromausfall stehen unter [Herstellerangaben](MANUFACTURER_INFORMATION.md).
 
 ## Funktionen und Grenzen
 
-| Funktion | Umfang |
+| Funktion | Verfügbarer Umfang |
 |---|---|
-| Betriebsart, angeforderte Luftstufe, Raum- und Solltemperatur | Lesend |
-| Zehn Anlagentemperaturen sowie Lüfter- und Verdichterdrehzahlen | Lesend |
-| Verdichter-Stellgröße (`0120`) | Lesende optionale Diagnose in Prozent, ab 0.16.8 an der P2-Referenz belegt |
-| Verdichter läuft, Bypass-Schaltzustand, Intensivlüftung | Lesend; kein Nachweis von Heiz-/Kühlbetrieb |
-| Filterrestlaufzeit und acht Betriebsstundenzähler | Lesend |
-| Kühlschwelle, maximale Heiz-/Kühlleistung und Lüfterkennlinien | Lesende optionale Diagnose |
-| Aktuelle Zu-/Abluft-Ansteuerung | Prozentanzeige bei frischer passender Kennlinienstufe |
-| Regler-Luftstufe, ungeklärte Rohwerte und Hex-Datenpunkte | Optionale Diagnose |
-| BDE-Schaltzustände MV-Heizen/Kühlen und MV-Abtau | Optionale Diagnose; kein Nachweis aktiver Kühlung oder Abtauung |
-| Begrenzte BDE-Betriebsanzeige | Heizbetrieb oder Betriebsfeld leer nur in ausdrücklich belegten Winterkonstellationen |
-| Manuelle und automatische Mitschnitte | Passiv, zeitlich und im Speicher begrenzt |
-| Gerätedatum/-uhrzeit und manueller Zeitabgleich | Optional, ab 0.12.0b1 |
-| Heizräume mit vorhandenen HA-Entitäten | Herstellerunabhängige Überwachung, ab 0.12.0b1 |
+| Temperaturen, Lüftungsstufe, Lüfter- und Verdichterdrehzahlen | Lesende Betriebswerte |
+| Bypass, Intensivlüftung, Filterrestlaufzeit und Betriebsstunden | Lesende Zustände und Zähler |
+| Verdichter-Stellgröße, Lüfteransteuerung und konfigurierte Leistungsgrenzen | Optionale Diagnose. Kennlinienwerte und Stellgrößen beschreiben Steuerungswerte. |
+| BDE-Betriebsanzeige sowie MV-Heizen/Kühlen und MV-Abtau | Optionale Anzeige ausgewählter, belegter BDE-Zustände |
+| Manuelle und automatische Mitschnitte | Passive, zeitlich und im Speicher begrenzte [Aufnahmen](DIAGNOSTICS.md) |
+| Gerätezeit | Optionale Anzeige und [manueller oder automatischer Abgleich](CLOCK_SYNC.md) |
+| Heizräume | Optionale Überwachung anhand vorhandener Home-Assistant-Entitäten |
 
-Nach 30 Sekunden ohne gültige Aktualisierung wird der jeweilige Messwert nicht
-verfügbar; bei Verbindungsabbruch sofort. Fehlende Daten bedeuten nicht null,
-„aus“ oder „störungsfrei“. Die angeforderte Luftstufe kann von der Reglerstufe
-abweichen. Ein gemeldeter Schaltzustand ist keine Messung der mechanischen Position.
+Betriebswerte sind bei frischem, gültigem Empfang verfügbar. Die meisten Werte
+laufen nach 30 Sekunden ohne gültige Aktualisierung ab. Bei einem
+Verbindungsabbruch werden sie sofort unverfügbar. Die
+[Entitätsübersicht](ENTITY_ORGANIZATION.md) zeigt, welche Diagnosen du am Gerät
+bei Bedarf aktivieren kannst.
 
-Die **Verdichter-Stellgröße** zeigt den aktuellen Ausgabewert der Steuerung in
-Prozent. In den P2-Mitschnitten wurden auch bei stehendem Verdichter 30 %
-gemeldet. Für die tatsächliche Rotation ist die Verdichterdrehzahl maßgeblich.
-Die Entität findest du unter **Diagnose** am PROXON-Gerät. Sie ist standardmäßig
-deaktiviert. [Datenpunkt und Entitätswechsel (Englisch)](DATA_POINTS.md#compressor-control-output-0168).
-
-Die optionale **Regler-Luftstufe** verwendet nur einzeln belegte vollständige
-Statuswörter. Ab 0.16.6 gehört `80001312` zusätzlich zu Stufe 2, ab 0.16.9
-auch `82009312`. Die Betriebsanzeige prüft dafür eine eigene Kombination.
-[Belegte Wörter und Grenzen (Englisch)](DATA_POINTS.md#optional-diagnostics).
-
-An der Referenzanlage sind **Eco Sommer, Eco Winter, Komfort, Ofenbetrieb und Aus**
-vorhanden. In Eco ist eine feste Luftstufe 1–4 oder Auto nach Nutzerzeitplan
-wählbar. In Komfort und Ofenbetrieb bestimmt die Steuerung die Stufe;
-Intensivlüftung schaltet dort für die eingestellte Dauer auf Stufe 4. Eco bietet
-keine separate Intensivlüftung. Diese Bedienerbeobachtung gilt zunächst für die
-Referenzanlage; [Details und Vergleichsbedingungen](REFERENCE_TESTS.md).
-
-Die optionale, standardmäßig deaktivierte **BDE-Betriebsanzeige** zeigt
-**Heizbetrieb** ab 0.16.9 in drei belegten Winterkonstellationen. Ab 0.16.5 kommt
-**Betriebsfeld leer** für einen eigenen belegten Eco-Winter-Kontext bei
-Verdichterdrehzahl null hinzu. Jede vollständige Kombination benötigt
-15 Sekunden stabilen, frischen Empfangs. Andere Konstellationen bleiben
-**nicht verfügbar**. „Betriebsfeld leer“ beschreibt ausschließlich die sichtbare
-BDE-Beschriftung und bedeutet nicht „Heizung aus“. Die BDE-Schaltzustände
-**MV-Heizen/Kühlen** und **MV-Abtau** sind ebenfalls optionale Diagnoseanzeigen,
-keine Bestätigung tatsächlicher Kühlung oder Abtauaktivität.
-[Belege und Grenzen (Englisch)](BDE_DISPLAY_EVIDENCE.md).
-
-Bei aktivierten automatischen Mitschnitten enthält die Diagnose ab 0.16.6
-zusätzlich einen rein lesenden Auszug des vorhandenen Empfangspuffers: höchstens
-drei Minuten, 512 KiB und 8.192 TCP-Blöcke mit ihren ursprünglichen
-UTC-Empfangszeiten. Der Auszug startet keine Aufnahme und ist kein vollständiges
-Ereignisfenster. Ohne passende gepufferte Daten oder bei einer erkannten
-Uhrzeitabweichung wird kein zeitlich zugeordneter Auszug geliefert.
-
-Es gibt keine allgemeine Heizungs- oder Lüftersteuerung, keine allgemeine
-Unterscheidung aktiver Heizung, Kühlung und Abtauung, keinen Fehlertextsensor,
-keinen Countdown für Intensivlüftung und keine Warmwasserintegration.
-Die technische [Datenpunktreferenz (Englisch)](DATA_POINTS.md) beschreibt die Beleglage.
+**Verdichter läuft** beschreibt die gemeldete Rotation. **BDE-Betriebsanzeige**
+meldet **Heizbetrieb** oder **Betriebsfeld leer** nur in den dafür belegten
+Eco-Winter-Konstellationen. Für Aussagen über abgegebene Leistung, tatsächliche
+Ventilpositionen und PTC-Aktivität sind eigene Messungen erforderlich. Die
+[Protokollreferenz (Englisch)](DATA_POINTS.md) beschreibt die Zuordnungen.
 
 ## Installation mit HACS
 
 [![Repository in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DNier&repository=proxon-hesp-homeassistant&category=integration)
 
-1. In HACS `https://github.com/DNier/proxon-hesp-homeassistant` als
-   benutzerdefiniertes Repository der Kategorie **Integration** hinzufügen
-   oder die Schaltfläche oben verwenden.
-2. **PROXON HESP** herunterladen und Home Assistant neu starten.
-3. **Einstellungen → Geräte & Dienste → Integration hinzufügen → PROXON HESP** öffnen.
-4. Gateway-Adresse, TCP-Port (Standard `4196`), Namen und Hardwareprofil eintragen.
+1. Das Gateway mit dem unterstützten Busabschnitt verbinden und als
+   transparenten TCP-Server einstellen. Einen vorhandenen Modbus-Modus
+   ausschalten. Andere Aufnahmeprogramme, die mit dem Gateway verbunden sind,
+   vor der Einrichtung schließen.
+2. In HACS [dieses Repository](https://github.com/DNier/proxon-hesp-homeassistant)
+   als benutzerdefiniertes Repository der Kategorie **Integration** hinzufügen.
+3. **PROXON HESP** herunterladen und Home Assistant neu starten.
+4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → PROXON HESP**
+   öffnen. Gateway-Adresse, TCP-Port (Standard `4196`), Name und Anlagenprofil
+   angeben.
 
-Für eine Beta in HACS gegebenenfalls Vorabversionen zulassen und über
-**Erneut herunterladen** die gewünschte Version wählen.
-
-Bei manueller Installation den Ordner `custom_components/proxon_hesp` in den
-Ordner `custom_components` der HA-Konfiguration kopieren. Danach HA neu starten
-und die Integration wie oben hinzufügen.
-
-Das Gateway separat als transparenten TCP-Server mit **19200 Baud, 8N1** für den
-unterstützten Busabschnitt konfigurieren. Keine Modbus-Konvertierung aktivieren.
-Die Integration konfiguriert das Gateway nicht. Anschlussbezeichnungen und
-Belegungen unterscheiden sich je nach Platinenrevision; es gibt hier keine
-universelle Verdrahtungsanleitung.
-
-Die Einrichtung wartet bis zu 20 Sekunden auf unterstützte, prüfsummengültige
-Daten. Ein erreichbarer TCP-Port allein reicht nicht. Andere Aufnahmeprogramme
-vorher beenden: Das Gateway unterstützt möglicherweise nur eine Verbindung.
-Auch während Aufnahmen nutzt die Integration nur ihre bestehende Verbindung.
+Der Verbindungstest wartet bis zu 20 Sekunden auf gültige, unterstützte
+Telegramme. Bei manueller Installation den Ordner `custom_components/proxon_hesp`
+aus dem Release in den Ordner `custom_components` der HA-Konfiguration kopieren.
+Danach Home Assistant neu starten und die Integration wie oben hinzufügen.
 
 ## Optionale Heizräume
 
-Mit **Heizraum hinzufügen** lassen sich vorhandene Heizschalter, Leistungssensoren
-und optional Thermostate sowie Temperatur-/Feuchtesensoren zu Räumen verknüpfen.
-Jeder Raum erhält ein virtuelles Gerät mit Erreichbarkeit, Schaltzustand,
-Leistung und erkanntem elektrischem Heizbetrieb. Mehrere Heizelemente je Raum
-sind möglich. Die vorhandenen Thermostate regeln weiter; die Raumüberwachung
-schaltet nichts. Es sind keine bestimmten Hersteller vorausgesetzt.
-
-Einrichtung und Verhalten bei fehlenden Werten: [Heizräume](ROOMS.md).
-Aufnahmeoptionen bleiben am übergeordneten Integrationseintrag unter **Konfigurieren**.
+Über **Heizraum hinzufügen** verknüpfst du vorhandene Heizschalter,
+Leistungssensoren und optional Thermostate sowie Temperatur- oder
+Feuchtesensoren. Jeder [Heizraum](ROOMS.md) erhält ein virtuelles Gerät mit
+Erreichbarkeit, Schaltzustand, Leistung und erkanntem elektrischem Heizbetrieb.
 
 ## Updates und bestehende Installationen
 
-Updates über HACS installieren und HA neu starten. Benötigte Mitschnitte zuvor
-herunterladen: Sie liegen nur im Arbeitsspeicher. Den bestehenden Eintrag behalten,
-damit die verbleibenden Entitätsidentitäten, eigenen Namen und Einstellungen
-erhalten bleiben. Die sieben Rohduplikate werden ab 0.15.0 durch verständliche
-Sensoren ersetzt; siehe unten.
+Benötigte Mitschnitte vor einem Update herunterladen. Sie liegen im
+Arbeitsspeicher und gehen beim Neustart verloren. Installiere das Update in HACS
+und starte Home Assistant neu. Behalte den vorhandenen Integrationseintrag,
+damit Namen und Aktivierungseinstellungen erhalten bleiben. Adresse, Port und
+Name kannst du über **Neu konfigurieren** ändern.
 
-Gateway-Adresse, Port oder Namen über **Neu konfigurieren** ändern. Löschen und
-Neuanlegen erzeugt eine neue Identität. Verschiedene Hostnamen für dasselbe
-Gateway können derzeit nicht als Duplikat erkannt werden.
-
-Beim Update auf 0.15.0 werden sieben der 54 Entitätsidentitäten aus 0.8.0
-entfernt: Rohkalender, Geräteuhrzeit-, Drehzahl- und Service-Rohduplikate sowie
-die beiden rohen Lüfterstellwerte. Alle anderen bleiben erhalten.
-[Ersatzsensoren und Migrationsregeln](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150)
-beschreiben die nötige Anpassung eigener Dashboards, Automationen und Vorlagen.
-0.15.0 registriert insgesamt 78 Entitäten am Hauptgerät, einschließlich
-standardmäßig deaktivierter Diagnose- und Zeitfunktionen. Jeder konfigurierte
-Heizraum ergänzt vier Entitäten. Bestehende Aktivierungseinstellungen bleiben
-erhalten. Automatische Ereignisaufnahmen sind ohne vorherige Aktivierung zunächst
-deaktiviert; die manuelle Aufnahmedauer bleibt ohne Änderung bei 120 Sekunden.
-
-Seit 0.8.0 sind `proxon_hesp.prepare_target_temperature_test` und
-`proxon_hesp.send_target_temperature_test` entfernt. Gespeicherte Aufrufe aus
-0.7.x entfernen; es gibt keine Ersatzaktion für die Solltemperatur. Der frühere
-Diagnoseabschnitt `target_temperature_test` entfällt ebenfalls.
+| Ausgangsversion | Was du beim Update beachten musst |
+|---|---|
+| Vor 0.16.8 | Die optionale **Verdichter-Stellgröße** ersetzt `raw_0120`. Passe eigene Verweise und Vergleiche an die neue Entität und ihren numerischen Prozentwert an. [Details (Englisch)](DATA_POINTS.md#compressor-control-output-0168) |
+| Vor 0.15.0 | Sieben Rohanzeigen werden durch verständlich benannte Sensoren ersetzt. Prüfe Dashboards, Automationen und Vorlagen auf Verweise zu entfernten IDs. Die neue Prozentanzeige hat eine eigene Zeitreihe. [Ersatzsensoren und Aktivierung (Englisch)](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150) |
+| Vor 0.12.0b3 | Erstelle vor dem Wechsel ein HA-Backup. Das Konfigurationsformat wird migriert. Für eine Rückkehr zu einer älteren Version brauchst du das Backup. |
+| 0.7.x | Entferne gespeicherte Aufrufe der früheren Testaktionen `proxon_hesp.prepare_target_temperature_test` und `proxon_hesp.send_target_temperature_test`. |
 
 ## Fehlerhilfe
 
-Bei fehlgeschlagener Einrichtung Gateway-Modus, serielle Einstellungen und
-konkurrierende TCP-Verbindungen prüfen. Sind nur einzelne Werte nicht verfügbar,
-fehlen möglicherweise unterstützte gültige Telegramme für diese Datenpunkte.
-Eine bestehende TCP-Verbindung belegt keine aktuellen Messwerte.
-
-Für Untersuchungen auf der Geräteseite **Aufnahme starten**, anschließend
-**Mitschnitt stoppen** und Diagnosedaten herunterladen. Dauer und automatische
-Ereignisaufnahmen werden am Integrationseintrag unter **Konfigurieren** eingestellt.
-Vollständige Diagnoseexporte und Originalaufnahmen privat aufbewahren.
-Nur benötigte bereinigte Auszüge freiwillig teilen.
-
-Für Fehler und Kompatibilitätsberichte die [Meldeformulare](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose)
-nutzen; bereinigte Belege sind freiwillig. Fragen gehören in die
-[Discussions](https://github.com/DNier/proxon-hesp-homeassistant/discussions),
-vermutete Sicherheitslücken in den [vertraulichen Meldeweg](../SECURITY.md).
+- Wenn die Einrichtung fehlschlägt, prüfe Gateway-Adresse, Port, serielle
+  Einstellungen und den transparenten TCP-Modus. Trenne andere TCP-Clients.
+- Wenn einzelne Werte fehlen, prüfe Hardwareprofil, Ausstattung und den Empfang
+  der betroffenen Werte. Die optionale Entität **Gateway-Verbindung** zeigt
+  den Zustand der TCP-Verbindung an.
+- Für einen Mitschnitt wähle auf der Geräteseite **Aufnahme starten** und später
+  **Mitschnitt stoppen**. Im Menü des Integrationseintrags kannst du die
+  [Diagnosedaten](DIAGNOSTICS.md) herunterladen. Halte Originalexporte privat und
+  teile bei Bedarf einen kurzen, bereinigten Auszug über das
+  [Meldeformular](https://github.com/DNier/proxon-hesp-homeassistant/issues/new/choose).
 
 ## Dokumentation
-
-**Für die Einrichtung und Nutzung (Deutsch):**
 
 - [Hardware und Kompatibilität](COMPATIBILITY.md)
 - [Heizräume](ROOMS.md)
 - [Gerätezeit abgleichen](CLOCK_SYNC.md)
 - [Diagnose und Aufnahmen](DIAGNOSTICS.md)
-- [Gezielte BDE-Vergleiche und Beobachtungsmarkierungen](REFERENCE_TESTS.md)
+- [Gezielte BDE-Vergleiche](REFERENCE_TESTS.md)
 - [Entitäten am Hauptgerät](ENTITY_ORGANIZATION.md)
 - [Versions- und Upgradehinweise](../RELEASE_NOTES.md)
 
-**Für Entwicklung und Protokollanalyse (Englisch):**
-
-- [Mitwirken und Prüfungen](../CONTRIBUTING.md)
-- [Datenpunkte und Validierungsgrenzen](DATA_POINTS.md)
-- [Offline-Auswertung](OFFLINE_ANALYSIS.md)
-- [Belege zu Steuerbefehlen](CONTROL_EVIDENCE.md)
-- [Herleitung der Prüfsumme](CHECKSUM_ALGORITHM.md)
-
-Nutzerdokumentation und Versionshinweise werden auf Deutsch gepflegt;
-[README.en.md](../README.en.md) bietet einen kompakten englischen Einstieg.
-Code, Codekommentare und Entwicklerreferenzen bleiben englisch.
-Die HA-Oberfläche unterstützt Deutsch und Englisch.
+Für die Entwicklung stehen [Beitragsleitfaden](../CONTRIBUTING.md),
+[Datenpunktreferenz](DATA_POINTS.md), [Offline-Auswertung](OFFLINE_ANALYSIS.md),
+[Belege zu Steuerbefehlen](CONTROL_EVIDENCE.md) und
+[Prüfsummenherleitung](CHECKSUM_ALGORITHM.md) auf Englisch zur Verfügung.
 
 ## Lizenz und Quellen
 
-Eigener Code steht unter der [MIT-Lizenz](../LICENSE). Protokollinterpretation und
-Prüfsummenherleitung bauen auf [Markus Mauchs HESP-Dokumentation](https://markusmauch.github.io/proxon-hesp/)
-unter CC BY 4.0 auf. Für übernommenes bzw. angepasstes Material bleiben
-Quellenangabe und Lizenz erhalten; siehe [NOTICE.md](../NOTICE.md).
-Das PROXON-Logo ist von der MIT-Lizenz ausgenommen und gehört den jeweiligen Rechteinhabern.
-
-[Experimentelle Statusbits zum BDE-Vergleich](EXPERIMENTAL.md).
+[MIT-Lizenz für den Projektcode](../LICENSE) · [Protokollquellen und Rechte](../NOTICE.md)
