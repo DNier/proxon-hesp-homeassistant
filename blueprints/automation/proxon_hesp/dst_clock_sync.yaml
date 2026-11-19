@@ -1,0 +1,70 @@
+blueprint:
+  name: PROXON HESP – Sommer-/Winterzeit abgleichen
+  description: >
+    Prüft um 04:15 Uhr Ortszeit, ob die PROXON-Geräteuhr nach einer
+    Zeitumstellung noch um den erwarteten Betrag abweicht. Verwendet dann
+    einmal die vorhandene Schaltfläche „Gerätezeit abgleichen“.
+  domain: automation
+  source_url: https://github.com/DNier/proxon-hesp-homeassistant/blob/main/blueprints/automation/proxon_hesp/dst_clock_sync.yaml
+  homeassistant:
+    min_version: "2026.9.0"
+  input:
+    clock_sensor:
+      name: Gerätedatum und -uhrzeit (lokal)
+      description: Wähle die kombinierte Kalenderentität des PROXON-Hauptgeräts.
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+              integration: proxon_hesp
+    sync_button:
+      name: Gerätezeit abgleichen
+      description: Wähle die Schaltfläche desselben PROXON-Hauptgeräts.
+      selector:
+        entity:
+          filter:
+            - domain: button
+              integration: proxon_hesp
+
+mode: single
+triggers:
+  - trigger: time
+    at: "04:15:00"
+    id: scheduled_check
+variables:
+  clock_sensor: !input clock_sensor
+  sync_button: !input sync_button
+actions:
+  # Keep the guards in the action sequence so "Run actions" also checks them.
+  - alias: Nur zum geplanten Prüfzeitpunkt
+    condition: template
+    value_template: >
+      {{ trigger is defined and trigger.platform == 'time'
+         and trigger.id == 'scheduled_check' }}
+  - alias: Zeitumstellung und passende Gerätezeitabweichung prüfen
+    condition: template
+    value_template: >
+      {% set current = now() %}
+      {% set previous = current - timedelta(days=1) %}
+      {% set shift = (current.utcoffset() - previous.utcoffset()).total_seconds() %}
+      {% set unambiguous = current.replace(fold=0).utcoffset() == current.replace(fold=1).utcoffset() %}
+      {% set device = device_id(clock_sensor) %}
+      {% set button_status = state_attr(sync_button, 'status') %}
+      {% if shift and current.dst() != previous.dst() and unambiguous
+            and device and device == device_id(sync_button)
+            and states(sync_button) != 'unavailable'
+            and button_status in ['idle', 'already_current', 'confirmed', 'unconfirmed'] %}
+        {# The calendar sensor becomes unavailable when its HESP data expires. #}
+        {% set device_time = strptime(states(clock_sensor), '%Y-%m-%dT%H:%M', none) %}
+        {% if device_time is not none %}
+          {% set lag = (current.replace(tzinfo=none) - device_time).total_seconds() %}
+          {{ (lag - shift) | abs <= 120 }}
+        {% else %}
+          {{ false }}
+        {% endif %}
+      {% else %}
+        {{ false }}
+      {% endif %}
+  - action: button.press
+    target:
+      entity_id: !input sync_button
