@@ -142,6 +142,7 @@ class Decoder:
         self._on_validated_frame = on_validated_frame
         self.buffer = bytearray()
         self.stats = Statistics()
+        self.last_calendar_valid = False
 
     def feed(self, data: bytes) -> list[Reading]:
         self.stats.bytes_received += len(data)
@@ -175,6 +176,10 @@ class Decoder:
                 self.stats.checksum_rejected += 1
             else:
                 decoded = self._readings(key, frame[8:-2])
+                if key == "uptime":
+                    self.last_calendar_valid = any(
+                        reading.key == "device_datetime" for reading in decoded
+                    )
                 if self._on_validated_frame is not None:
                     self._on_validated_frame(key, decoded)
                 if decoded:

@@ -1,4 +1,4 @@
-"""Read-only local PROXON HESP reception."""
+"""Local PROXON HESP reception and optional device time correction."""
 
 from types import MappingProxyType
 
@@ -23,7 +23,7 @@ from .services import async_register_services
 from .telemetry_migration import async_retire_raw_sensors
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -10,3 +10,4 @@ STALE_SECONDS = 30.0
 CONF_CAPTURE_DURATION = "capture_duration"
 
 CONF_EVENT_CAPTURE = "event_capture_enabled"
+CONF_AUTO_CLOCK_SYNC = "auto_clock_sync"

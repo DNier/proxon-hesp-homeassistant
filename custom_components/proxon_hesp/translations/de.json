@@ -314,6 +314,11 @@
         "name": "Gerätezeit abgleichen"
       }
     },
+    "switch": {
+      "auto_clock_sync": {
+        "name": "Sommer-/Winterzeit automatisch abgleichen"
+      }
+    },
     "binary_sensor": {
       "compressor_running": {
         "name": "Verdichter läuft"

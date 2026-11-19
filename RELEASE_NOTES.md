@@ -3,6 +3,21 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.10 – Schalter für die automatische Sommer-/Winterzeit
+
+- Am PROXON-Hauptgerät gibt es unter **Konfiguration** den Schalter
+  **Sommer-/Winterzeit automatisch abgleichen**. Er ist standardmäßig aus.
+- Beim Einschalten vergleicht die Integration einmalig die frische Gerätezeit mit
+  der HA-Zeit auf die Minute genau und korrigiert eine Abweichung. Danach prüft
+  sie an Tagen mit Zeitumstellung um 04:15 Uhr in der HA-Zeitzone. Ein Neustart
+  oder eine Wiederverbindung löst keinen Erstabgleich aus.
+- Je Anlage genügt ein Weg. Wer den Zeit-Blueprint als Automation eingerichtet
+  hat und zum Schalter wechseln möchte, deaktiviert zuerst die Automation.
+
+Nach der Installation über HACS Home Assistant neu starten. Benötigte
+flüchtige Aufnahmen vorher herunterladen. Home Assistant ab 2026.9.
+[Anleitung zum Zeitabgleich](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/CLOCK_SYNC.md).
+
 ## 0.16.9 – Weitere belegte Luftstufe 2 und BDE-Heizanzeige
 
 - Die optionale **Regler-Luftstufe** zeigt **Stufe 2** für das vollständige

@@ -49,30 +49,33 @@ Wiederverbinden wird nichts erneut gesendet.
 
 ## Sommer-/Winterzeit automatisch abgleichen
 
-Der optionale [Home-Assistant-Blueprint](../blueprints/automation/proxon_hesp/dst_clock_sync.yaml)
-verwendet dieselbe Schaltfläche. Der Import stellt die Vorlage bereit.
-Eine daraus erstellte Automation kann sofort aktiv sein.
+Am PROXON-Hauptgerät steht unter **Konfiguration** der Schalter
+**Sommer-/Winterzeit automatisch abgleichen**. Er ist standardmäßig aus und
+speichert die Einstellung pro Anlage. Beim Einschalten vergleicht die Integration
+einmalig die frisch empfangene Gerätezeit mit der lokalen HA-Zeit auf die Minute
+genau. Bei einer Abweichung korrigiert sie die Uhr sofort. Fehlen gültige, frische
+Kalenderdaten, bleibt der Schalter eingeschaltet und der Erstabgleich entfällt.
+Ein HA-Neustart oder eine Wiederverbindung löst keinen Erstabgleich aus.
 
-1. Prüfe die Zeitzone in Home Assistant. Aktiviere am PROXON-Hauptgerät die
-   Entitäten **Gerätedatum und -uhrzeit (lokal)** und **Gerätezeit abgleichen**.
-2. Importiere die Blueprint-Datei unter **Einstellungen → Automatisierungen
-   & Szenen → Blueprints**. Verwende dazu den Link auf die YAML-Datei im
-   veröffentlichten Repository.
-3. Erstelle daraus eine Automation und wähle beide Entitäten desselben
-   PROXON-Hauptgeräts. Bei mehreren Anlagen legst du je Hauptgerät eine
-   Automation an.
-
-Die Automation prüft täglich um 04:15 Uhr in der HA-Zeitzone. Sie löst die
-Schaltfläche aus, wenn sich der Sommerzeit- und UTC-Offset seit dem
-Prüfzeitpunkt des Vortags geändert hat und der frische Kalenderwert um den
-erwarteten Betrag in der richtigen Richtung abweicht. Die Toleranz beträgt
-zwei Minuten. Die Schaltfläche erfasst das Ergebnis wie beim manuellen Abgleich
-im Attribut `status`.
+Bei eingeschaltetem Schalter prüft die Integration um 04:15 Uhr in der
+HA-Zeitzone. Ein einzelner Abgleich kommt infrage, wenn sich seit diesem
+Zeitpunkt am Vortag die Sommerzeit und der UTC-Offset geändert haben und die
+frische Gerätezeit um den erwarteten Betrag in der richtigen Richtung abweicht.
+Die Toleranz beträgt zwei Minuten. Den Bestätigungsstatus zeigt die Integration
+in der Diagnose sowie an der optionalen Schaltfläche **Gerätezeit abgleichen**.
 
 Bei einer Unterbrechung zum Prüfzeitpunkt oder einem unbestätigten Abgleich
-wartet die Automation auf die nächste Zeitumstellung. Prüfe das Ergebnis in
-der Automationsspur und bei Bedarf am BDE. Für einen falsch gesetzten Kalender
-nach Stromausfall kannst du den zuvor beschriebenen manuellen Abgleich nutzen.
+wartet die Integration auf die nächste Zeitumstellung. Für eine schon länger
+abweichende Uhr kannst du den zuvor beschriebenen manuellen Abgleich nutzen.
+
+### Vorhandenen Blueprint verwenden
+
+Der [Home-Assistant-Blueprint](../blueprints/automation/proxon_hesp/dst_clock_sync.yaml)
+steht weiterhin zur Verfügung. Er benötigt die aktivierten Entitäten
+**Gerätedatum und -uhrzeit (lokal)** und **Gerätezeit abgleichen** am selben
+PROXON-Hauptgerät. Importiere die YAML-Datei unter **Einstellungen →
+Automatisierungen & Szenen → Blueprints** und wähle beide Entitäten beim
+Erstellen der Automation aus. Verwende je Anlage einen der beiden Wege.
 
 ## Umfang und Grenzen
 
@@ -88,8 +91,7 @@ Interne Kalenderdaten und die Identität der Abgleichaktion ändern sich nicht.
 Die Funktion wurde an einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort über den
 ursprünglichen PTC-zur-Steuerung-Abgriff am Display bestätigt. Andere Revisionen
 sind nicht bestätigt. Die Korrektur verhindert keinen erneuten Zeitverlust nach
-einer vollständigen Spannungsunterbrechung. Die Integration führt den Abgleich
-beim Aufruf der Schaltfläche aus.
+einer vollständigen Spannungsunterbrechung.
 
 Empfang, Verbindungstest, Aufnahmen und Wiederverbindung bleiben passiv.
 Keinen zweiten TCP-Mitschnitt gegen ein Gateway mit nur einem Client öffnen,

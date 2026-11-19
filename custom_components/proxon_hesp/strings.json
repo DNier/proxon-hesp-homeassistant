@@ -314,6 +314,11 @@
         "name": "Align device time"
       }
     },
+    "switch": {
+      "auto_clock_sync": {
+        "name": "Automatically adjust for daylight saving time"
+      }
+    },
     "binary_sensor": {
       "compressor_running": {
         "name": "Compressor running"
