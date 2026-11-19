@@ -47,6 +47,33 @@ Wiederholung oder Warteschlange. Nach einem Sendeversuch gilt eine Sperrzeit von
 30 Sekunden. Ein Verbindungsabbruch beendet die Bestätigungsprüfung; beim
 Wiederverbinden wird nichts erneut gesendet.
 
+## Sommer-/Winterzeit automatisch abgleichen
+
+Der optionale [Home-Assistant-Blueprint](../blueprints/automation/proxon_hesp/dst_clock_sync.yaml)
+verwendet dieselbe Schaltfläche. Der Import stellt die Vorlage bereit.
+Eine daraus erstellte Automation kann sofort aktiv sein.
+
+1. Prüfe die Zeitzone in Home Assistant. Aktiviere am PROXON-Hauptgerät die
+   Entitäten **Gerätedatum und -uhrzeit (lokal)** und **Gerätezeit abgleichen**.
+2. Importiere die Blueprint-Datei unter **Einstellungen → Automatisierungen
+   & Szenen → Blueprints**. Verwende dazu den Link auf die YAML-Datei im
+   veröffentlichten Repository.
+3. Erstelle daraus eine Automation und wähle beide Entitäten desselben
+   PROXON-Hauptgeräts. Bei mehreren Anlagen legst du je Hauptgerät eine
+   Automation an.
+
+Die Automation prüft täglich um 04:15 Uhr in der HA-Zeitzone. Sie löst die
+Schaltfläche aus, wenn sich der Sommerzeit- und UTC-Offset seit dem
+Prüfzeitpunkt des Vortags geändert hat und der frische Kalenderwert um den
+erwarteten Betrag in der richtigen Richtung abweicht. Die Toleranz beträgt
+zwei Minuten. Die Schaltfläche erfasst das Ergebnis wie beim manuellen Abgleich
+im Attribut `status`.
+
+Bei einer Unterbrechung zum Prüfzeitpunkt oder einem unbestätigten Abgleich
+wartet die Automation auf die nächste Zeitumstellung. Prüfe das Ergebnis in
+der Automationsspur und bei Bedarf am BDE. Für einen falsch gesetzten Kalender
+nach Stromausfall kannst du den zuvor beschriebenen manuellen Abgleich nutzen.
+
 ## Umfang und Grenzen
 
 Korrigiert werden Jahr, Monat, Tag, Wochentag, Stunde und Minute, nicht die Sekunden.
@@ -61,8 +88,8 @@ Interne Kalenderdaten und die Identität der Abgleichaktion ändern sich nicht.
 Die Funktion wurde an einer LT-ZIM V1.6 / PTC 4× V1.2 / BDE Comfort über den
 ursprünglichen PTC-zur-Steuerung-Abgriff am Display bestätigt. Andere Revisionen
 sind nicht bestätigt. Die Korrektur verhindert keinen erneuten Zeitverlust nach
-einer vollständigen Spannungsunterbrechung. Es gibt weder
-Startautomatik noch periodisches Schreiben oder einen Dienst für beliebige Telegramme.
+einer vollständigen Spannungsunterbrechung. Die Integration führt den Abgleich
+beim Aufruf der Schaltfläche aus.
 
 Empfang, Verbindungstest, Aufnahmen und Wiederverbindung bleiben passiv.
 Keinen zweiten TCP-Mitschnitt gegen ein Gateway mit nur einem Client öffnen,
