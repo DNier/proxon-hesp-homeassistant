@@ -103,11 +103,10 @@ Version 0.12.0 adds optional heating-room monitoring using existing switches, po
 sensors and optional thermostat/temperature/humidity references. Existing
 thermostats retain control. Missing or stale power measurements leave heating
 activity unknown; availability alone does not prove central heating permission.
-The optional device-time button is the only HESP write action. Each press
-attempts a single calendar correction. An opt-in
-[Home Assistant blueprint](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
-can press it after a daylight saving time change. Corrected time can change
-which existing time-program period is active. Setup and capture stay passive.
+The device-time button and the opt-in
+[daylight saving switch](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
+use the same calendar correction over HESP. Corrected time can change which
+existing time-program period is active. Setup and capture stay passive.
 
 Back up HA before upgrading from a version before 0.12.0b3: the migrated
 configuration format cannot be loaded by those older versions. Downgrading requires the previous backup. Keep the existing

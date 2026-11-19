@@ -1,8 +1,8 @@
 # Contributing
 
 Contributions to documentation, passive telemetry, diagnostics and test coverage
-are welcome. Telemetry and recordings are passive; the explicit device-time
-alignment button is the only production write action. Changes must
+are welcome. Telemetry and recordings are passive. The manual button and the
+opt-in daylight saving switch share the same calendar command. Changes must
 preserve one receiving TCP connection per entry and must not introduce polling
 or control commands as a side effect of setup, reconnect or recording.
 

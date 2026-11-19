@@ -56,10 +56,10 @@ Entität bleibt standardmäßig deaktiviert und unterscheidet nicht allgemein
 zwischen Heizen, Kühlen und Abtauen. [Belege und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
 
 Die vorhandene Anlagensteuerung und deine Thermostate bleiben verantwortlich.
-Die Schaltfläche **Gerätezeit abgleichen** schreibt einen Kalenderwert. Für
-Sommer- und Winterzeit kann sie über einen optionalen
-[Home-Assistant-Blueprint](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
-ausgelöst werden.
+Die Schaltfläche **Gerätezeit abgleichen** korrigiert den Kalender. Für
+Sommer- und Winterzeit lässt sich der Abgleich je Gerät über einen
+[Konfigurationsschalter](docs/CLOCK_SYNC.md#sommer-winterzeit-automatisch-abgleichen)
+automatisieren.
 Allgemeine Heizungs-/Lüftersteuerung und eine bestätigte Unterscheidung von
 Heizen, Kühlen und Abtauen sind nicht enthalten.
 

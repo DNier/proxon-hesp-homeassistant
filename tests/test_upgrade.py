@@ -104,7 +104,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 79
+        assert len(all_entities) == 80
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
@@ -132,6 +132,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "heat_cool_valve",
             "defrost_valve",
             "clock_sync",
+            "auto_clock_sync",
             "device_datetime",
             "device_date",
             "capture_status",
@@ -147,6 +148,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         }
         assert new["compressor_running"].disabled_by is None
         assert new["capture_status"].disabled_by is None
+        assert hass.states.is_state(new["auto_clock_sync"].entity_id, "off")
         # Enabled raw_0116 carries visibility to both meaningful limit sensors.
         assert new["max_heating_output"].disabled_by is None
         assert new["max_cooling_output"].disabled_by is None
