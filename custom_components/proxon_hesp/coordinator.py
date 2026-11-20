@@ -60,7 +60,7 @@ class ProxonRuntime:
         self.ready = asyncio.Event()
         self.last_error: str | None = None
         self.reconnects = 0
-        self.bde_display = BdeDisplay()
+        self.bde_display = BdeDisplay(supports_green_led=profile == PROFILE)
         self.decoder = Decoder(self._observe_bde_display)
         self.previous_stats = Statistics()
         self.task: asyncio.Task | None = None
@@ -165,9 +165,13 @@ class ProxonRuntime:
             delay = min(delay * 2, 60)
 
     def _observe_bde_display(self, source: str, readings: list[Reading]) -> None:
-        previous_expiry = self.bde_display.expires_at
+        previous_deadlines = (
+            self.bde_display.expires_at,
+            self.bde_display.green_led_expires_at,
+        )
         changed = self.bde_display.observe(source, readings, time.monotonic())
-        if self.timer is not None and previous_expiry != self.bde_display.expires_at:
+        deadlines = self.bde_display.expires_at, self.bde_display.green_led_expires_at
+        if self.timer is not None and previous_deadlines != deadlines:
             self._schedule_expiry()
         if changed:
             self._notify()
@@ -176,6 +180,11 @@ class ProxonRuntime:
         if not self.connected:
             return None
         return self.bde_display.value(time.monotonic())
+
+    def get_bde_green_led(self) -> bool | None:
+        if not self.connected or self.profile != PROFILE:
+            return None
+        return self.bde_display.green_led(time.monotonic())
 
     @callback
     def _set_writer(self, writer) -> None:
@@ -275,9 +284,12 @@ class ProxonRuntime:
         if self._next_general_expiry is None:
             self._next_general_expiry = now + 5
         deadline = self._next_general_expiry
-        display_expiry = self.bde_display.expires_at
-        if display_expiry is not None:
-            deadline = min(deadline, display_expiry + _BDE_EXPIRY_MARGIN)
+        for expiry in (
+            self.bde_display.expires_at,
+            self.bde_display.green_led_expires_at,
+        ):
+            if expiry is not None:
+                deadline = min(deadline, expiry + _BDE_EXPIRY_MARGIN)
         if self.timer is not None:
             self.timer.cancel()
         self.timer = asyncio.get_running_loop().call_later(

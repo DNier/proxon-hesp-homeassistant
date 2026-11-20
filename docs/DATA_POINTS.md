@@ -541,6 +541,29 @@ LED illuminates and supply air starts cooling, on both the BDE and HESP. The
 existing compressor entity reports RPM > 0, not an independently measured
 physical start time. Heating/cooling/defrost classification remains unimplemented.
 
+## Upper green BDE LED
+
+The optional diagnostic binary sensor `bde_green_led` mirrors the upper green
+LED within three display-backed contexts for the manually selected
+`lt_zim_16_observed` profile. Independent display references on the P2 with
+LT-ZIM V1.6 and BDE Comfort support each mode and complete status word pair.
+
+| Operating mode | Status word (little-endian uint32) | Visible LED |
+| --- | --- | --- |
+| Eco Winter | `0x8000100A` | Dark |
+| Eco Winter | `0x82001312` | Lit |
+| Comfort | `0x8000131A` | Lit |
+
+Both checksum-validated sources, `118000 / 020A / 2` for mode and
+`224000 / 0208 / 4` for status, must have arrived within the last six seconds.
+A mode change requires a new status receipt. The entity is unavailable for other
+pairs, missing or stale data, and on disconnect. It is disabled by default and
+uses the existing receive stream.
+
+The LED was also observed lit with the operating field blank and reported
+compressor speed zero. The references establish the listed pairs and leave the
+general interpretation of individual status bits open.
+
 ## Bounded BDE operating-display indication (0.16.0)
 
 The optional diagnostic enum `bde_operating_display` reports `heating` for

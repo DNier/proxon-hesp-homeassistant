@@ -109,7 +109,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             ] == "sensor":
                 assert state.attributes.get("unit_of_measurement") == item["unit"]
         all_entities = er.async_entries_for_config_entry(registry, entry.entry_id)
-        assert len(all_entities) == 80
+        assert len(all_entities) == 81
         new = {
             e.unique_id.removeprefix("existing-unit_"): e
             for e in all_entities
@@ -118,6 +118,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         assert set(new) == {
             "compressor_command_percent",
             "bde_operating_display",
+            "bde_green_led",
             "cooling_threshold",
             "heat_pump_start_threshold",
             "heat_pump_continuous_run_threshold",
@@ -181,6 +182,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         assert new["device_date"].disabled_by is None
         for key in (
             "bde_operating_display",
+            "bde_green_led",
             "cooling_threshold",
             "heat_pump_continuous_run_threshold",
             "fan_supply_control_percent",

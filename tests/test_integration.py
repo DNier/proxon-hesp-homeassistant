@@ -73,7 +73,15 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert registry.async_get(filter_id).entity_category.value == "diagnostic"
         assert "state_class" not in hass.states.get(hours_id).attributes
         assert device.model == "PROXON P-Serie (HESP)"
-        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 80
+        assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 81
+        led_id = registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, "stable-unit_bde_green_led"
+        )
+        led = registry.async_get(led_id)
+        assert led.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+        assert led.entity_category.value == "diagnostic"
+        assert led.device_id == device.id
+        assert hass.states.get(led_id) is None
         for key in (
             "device_datetime",
             "device_date",

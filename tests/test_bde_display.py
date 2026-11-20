@@ -17,7 +17,11 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from custom_components.proxon_hesp.bde_display import BdeDisplay
+from custom_components.proxon_hesp.binary_sensor import (
+    async_setup_entry as setup_binary_sensors,
+)
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.coordinator import ProxonRuntime
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from custom_components.proxon_hesp.hesp.decoder import Decoder
 from custom_components.proxon_hesp.sensor import DESCRIPTIONS, ProxonSensor
@@ -691,6 +695,122 @@ async def test_silent_stream_publishes_unavailable_at_scheduled_source_deadline(
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert runtime.timer is None
         assert runtime._next_general_expiry is None
+
+
+async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
+    # All positive frames were published for the operating mode, fan, or RPM.
+    # This combined playback and its reception timing are synthetic.
+    comfort = bytes.fromhex("1180000a020000040300caef")
+    dark = BLANK_SOURCES[1]
+    comfort_lit = bytes.fromhex("22400008020000081a130080d98b")
+    invalid_mode = checked(MODE[:8] + b"\xff\xff")
+    corrupt_comfort = comfort[:-1] + bytes([comfort[-1] ^ 1])
+    wrong_status_node = checked(b"\x11\x80\x00" + dark[3:-2])
+
+    loop = asyncio.get_running_loop()
+    start = float(int(loop.time()))
+    clock = SimpleNamespace(now=start)
+    first_reader, next_reader = asyncio.StreamReader(), asyncio.StreamReader()
+    first_reader.feed_data(frames["0xe1"])
+    readers = iter((first_reader, next_reader))
+
+    @asynccontextmanager
+    async def receiver(*args):
+        yield next(readers)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="PROXON",
+        unique_id="led-unit",
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+    )
+    entry.add_to_hass(hass)
+    registered = er.async_get(hass).async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        "led-unit_bde_green_led",
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    async def advance_to(elapsed):
+        clock.now = start + elapsed
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    async def receive_at(elapsed, data, expected, reader=first_reader):
+        await advance_to(elapsed)
+        reader.feed_data(data)
+        await hass.async_block_till_done()
+        assert hass.states.is_state(registered.entity_id, expected)
+
+    with (
+        patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver),
+        patch(
+            "custom_components.proxon_hesp.coordinator.time",
+            SimpleNamespace(monotonic=lambda: clock.now),
+        ),
+        patch.object(loop, "time", lambda: clock.now),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        runtime = entry.runtime_data
+        await receive_at(1, STATUS, "unavailable")
+        await receive_at(2, MODE + dark, "off")
+        await receive_at(3, STATUS, "on")
+        await receive_at(3.25, STATUS_82009312, "unavailable")
+        await receive_at(3.5, STATUS, "on")
+        await receive_at(3.75, wrong_status_node, "on")
+        await receive_at(4, comfort, "unavailable")
+        await receive_at(5, MODE, "unavailable")
+        await receive_at(6, dark, "off")
+        await receive_at(7, comfort + comfort_lit + STOPPED, "on")
+        assert runtime.get_bde_operating_display() is None
+        assert runtime.get("compressor_rpm").value == 0
+        await receive_at(8, STATUS, "unavailable")
+        await receive_at(9, comfort_lit, "on")
+        await receive_at(11, corrupt_comfort, "on")
+        await receive_at(12, comfort_lit, "on")
+        assert runtime.timer.when() == pytest.approx(start + 13.001, abs=0.00001)
+        await advance_to(13)
+        assert runtime.get_bde_green_led() is True
+        await advance_to(13.002)
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(14, comfort, "on")
+        await receive_at(16, comfort, "on")
+        await advance_to(18.002)
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(19, comfort_lit, "on")
+        await receive_at(20, invalid_mode, "unavailable")
+        await receive_at(21, comfort, "unavailable")
+        await receive_at(22, comfort_lit, "on")
+        first_reader.feed_eof()
+        await hass.async_block_till_done()
+        assert not runtime.connected
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await advance_to(23.002)
+        # The reconnect coroutine resumes after its sleep's timer callback.
+        await asyncio.sleep(0)
+        assert runtime.connected
+        await receive_at(24, comfort_lit, "unavailable", next_reader)
+        await receive_at(25, comfort, "on", next_reader)
+        assert runtime.diagnostics()["application_bytes_sent"] == 0
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert runtime.timer is None
+
+
+async def test_upper_green_led_is_inactive_for_other_profiles(hass):
+    entry = MockConfigEntry(domain=DOMAIN, title="PROXON", unique_id="other-unit")
+    runtime = entry.runtime_data = ProxonRuntime(
+        hass, "gateway.test", 4196, profile="other"
+    )
+    runtime.connected = True
+    runtime.decoder.feed(MODE + STATUS)
+    assert runtime.get_bde_green_led() is None
+    assert runtime.bde_display.green_led_expires_at is None
+    entities = []
+    await setup_binary_sensors(hass, entry, entities.extend)
+    assert all(entity.entity_description.key != "bde_green_led" for entity in entities)
 
 
 def test_blank_qualifies_only_on_actual_receipt_at_the_stability_boundary(
