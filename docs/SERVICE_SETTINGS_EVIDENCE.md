@@ -46,6 +46,27 @@ disconnect; no persisted setting or missing-data default is inferred.
 No statistics class is assigned. The threshold has no absolute-temperature
 device class because its delta/reference semantics are not further established.
 
+## Configured heat pump thresholds
+
+These read-only diagnostics are optional in the `lt_zim_16_observed` profile.
+The P2 reference replies agree with the parameter identifiers and values shown in the public
+[ServiceApp heat pump page](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/2b4294cfb15cede4b145421037703990fd9958a8/Screenshots/ServiceApp_W%C3%A4rmepumpe2.jpg).
+The ServiceApp displays the parameter identifiers in decimal.
+The two checksum-valid reply examples in
+[`controller_frames.json`](../tests/fixtures/controller_frames.json) contain
+only the controller header, setting value and checksum.
+
+| Controller reply | ServiceApp parameter | Recorded value | Receive sanity bound |
+| --- | --- | --- | --- |
+| `224000/0115/4` | `0277` (`WpEinschaltschwelle`) | 0.399993896 K (shown as 0.4 K) | 0–100 K |
+| `224000/011C/4` | `0284` (`WpDauerOnTemp`) | 2.0 °C | −50…150 °C |
+
+Both payloads are finite little-endian float32 values. The first is a
+temperature difference, and the second is a configured temperature threshold.
+The readback establishes the displayed settings for the tested profile. Sensor
+location, control logic and editable ranges remain unverified. The diagnostics
+expire under the usual 30-second freshness rule. No queries or writes are added.
+
 ## Current fan control percentages (0.15.0)
 
 The optional `fan_supply_control_percent` and `fan_extract_control_percent`

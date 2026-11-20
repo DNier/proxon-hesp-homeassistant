@@ -1666,7 +1666,7 @@ wheels = [
 
 [[package]]
 name = "proxon-hesp-homeassistant"
-version = "0.16.10"
+version = "0.16.11"
 source = { virtual = "." }
 
 [package.dev-dependencies]

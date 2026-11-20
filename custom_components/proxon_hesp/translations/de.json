@@ -69,6 +69,12 @@
       "cooling_threshold": {
         "name": "Kühlschwelle"
       },
+      "heat_pump_start_threshold": {
+        "name": "Wärmepumpen-Einschaltschwelle (konfiguriert)"
+      },
+      "heat_pump_continuous_run_threshold": {
+        "name": "Temperaturschwelle für Wärmepumpen-Dauerbetrieb (konfiguriert)"
+      },
       "max_heating_output": {
         "name": "Maximale Heizleistung (konfiguriert)"
       },
@@ -143,12 +149,6 @@
       },
       "raw_0105": {
         "name": "DP 0x0105 (Hex)"
-      },
-      "raw_0115": {
-        "name": "DP 0x0115 (Hex)"
-      },
-      "raw_011c": {
-        "name": "DP 0x011C (Hex)"
       },
       "raw_0206": {
         "name": "DP 0x0206 (Hex)"

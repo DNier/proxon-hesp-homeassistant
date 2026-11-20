@@ -45,7 +45,7 @@ Verhalten nach einem Stromausfall stehen unter [Herstellerangaben](MANUFACTURER_
 |---|---|
 | Temperaturen, Lüftungsstufe, Lüfter- und Verdichterdrehzahlen | Lesende Betriebswerte |
 | Bypass, Intensivlüftung, Filterrestlaufzeit und Betriebsstunden | Lesende Zustände und Zähler |
-| Verdichter-Stellgröße, Lüfteransteuerung und konfigurierte Leistungsgrenzen | Optionale Diagnose. Kennlinienwerte und Stellgrößen beschreiben Steuerungswerte. |
+| Verdichter-Stellgröße, Lüfteransteuerung, Leistungsgrenzen und Wärmepumpen-Schwellen | Optionale Diagnose. Die Schwellen zeigen die von der Steuerung gemeldeten Einstellungen. |
 | BDE-Betriebsanzeige sowie MV-Heizen/Kühlen und MV-Abtau | Optionale Anzeige ausgewählter, belegter BDE-Zustände |
 | Manuelle und automatische Mitschnitte | Passive, zeitlich und im Speicher begrenzte [Aufnahmen](DIAGNOSTICS.md) |
 | Gerätezeit | Optionale Anzeige und [manueller oder automatischer Abgleich](CLOCK_SYNC.md) |
@@ -100,6 +100,7 @@ Name kannst du über **Neu konfigurieren** ändern.
 
 | Ausgangsversion | Was du beim Update beachten musst |
 |---|---|
+| Vor 0.16.11 | Die konfigurierten Wärmepumpen-Schwellen ersetzen `raw_0115` und `raw_011c`. Passe Verweise und Vergleiche in Dashboards und Automationen an die neuen Entitäten mit K bzw. °C an. [Details (Englisch)](SERVICE_SETTINGS_EVIDENCE.md#configured-heat-pump-thresholds) |
 | Vor 0.16.8 | Die optionale **Verdichter-Stellgröße** ersetzt `raw_0120`. Passe eigene Verweise und Vergleiche an die neue Entität und ihren numerischen Prozentwert an. [Details (Englisch)](DATA_POINTS.md#compressor-control-output-0168) |
 | Vor 0.15.0 | Sieben Rohanzeigen werden durch verständlich benannte Sensoren ersetzt. Prüfe Dashboards, Automationen und Vorlagen auf Verweise zu entfernten IDs. Die neue Prozentanzeige hat eine eigene Zeitreihe. [Ersatzsensoren und Aktivierung (Englisch)](DATA_POINTS.md#readable-telemetry-and-entity-migration-0150) |
 | Vor 0.12.0b3 | Erstelle vor dem Wechsel ein HA-Backup. Das Konfigurationsformat wird migriert. Für eine Rückkehr zu einer älteren Version brauchst du das Backup. |

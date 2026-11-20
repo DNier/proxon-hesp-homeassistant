@@ -71,6 +71,13 @@ RAW_OBSERVATION_SOURCES = {
     },
 }
 
+# Receive sanity bounds for configured values, independent of editable ranges.
+CONFIGURED_THRESHOLDS = {
+    "raw_0110": ("cooling_threshold", 0, 100),
+    "raw_0115": ("heat_pump_start_threshold", 0, 100),
+    "raw_011c": ("heat_pump_continuous_run_threshold", -50, 150),
+}
+
 TEMPERATURE_KEYS = (
     "temperature_supply",
     "temperature_extract",
@@ -257,11 +264,11 @@ class Decoder:
         if value is None:
             return []
         readings = [Reading(key, value)]
-        if key == "raw_0110":
+        if key in CONFIGURED_THRESHOLDS:
+            threshold_key, low, high = CONFIGURED_THRESHOLDS[key]
             threshold = struct.unpack("<f", payload)[0]
-            # Receive sanity bound only; not a manufacturer setting range.
-            if math.isfinite(threshold) and 0 <= threshold <= 100:
-                readings.append(Reading("cooling_threshold", threshold))
+            if math.isfinite(threshold) and low <= threshold <= high:
+                readings.append(Reading(threshold_key, threshold))
         if key == "raw_0116":
             readings.extend(
                 Reading(name, limit)

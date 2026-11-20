@@ -2,9 +2,9 @@
 
 Developer documentation · English. [Deutsche Nutzerdokumentation](../README.md#dokumentation).
 
-This table describes the published data-point mappings in version 0.16.9.
-Seven legacy raw/numeric entities are retired in favour of readable values;
-see [entity migration](#readable-telemetry-and-entity-migration-0150).
+This table describes the integration's data-point mappings.
+See [entity migration](#readable-telemetry-and-entity-migration-0150) for
+legacy sensor replacements.
 The following counts describe earlier releases at the time of their additions,
 not the current entity total.
 
@@ -41,13 +41,15 @@ little-endian order unless stated otherwise.
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
+| Heat pump start threshold (configured) | 0115 / C / 4 | float32 / K | ServiceApp `WpEinschaltschwelle`; temperature difference; optional. [Evidence and scope](SERVICE_SETTINGS_EVIDENCE.md#configured-heat-pump-thresholds) |
+| Heat pump continuous-run threshold (configured) | 011C / C / 4 | float32 / °C | ServiceApp `WpDauerOnTemp`; controller setting; optional. [Evidence and scope](SERVICE_SETTINGS_EVIDENCE.md#configured-heat-pump-thresholds) |
 | Maximum heating/cooling output | 0116 / C / 4 | Two uint16 / % | Configured limits, not measured power; each 0–100; raw decoding retained internally |
 | Filter remaining time | 00ED / C / 4 | uint32 / days | Display comparison and decrement observed; reset behaviour unresolved |
 | Operating-hour counters | 02D0–02D5, 02D7, 02D9 / C / 4 | uint32 / h | Display mappings confirmed; reset behaviour unresolved, no statistics class |
 | Device date and time (local) | 032E / C / 4 | Local ISO text, minute resolution | Display-matched calendar edits; validated date and weekday; disabled by default |
 | Device date | 032E / C / 4 | HA date | Date portion of the validated device calendar; shares its freshness; disabled by default |
 | Device clock | 0330 / C / 4 | Local HH:MM:SS text | Observed local device time; no date or timezone; agrees with the calendar minute in reviewed captures; disabled by default |
-| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | 17 partly or fully uninterpreted payloads; disabled by default |
+| Raw diagnostics | Listed below / exact identity | Hexadecimal bytes | Partly or fully uninterpreted payloads; disabled by default |
 
 The temperature block supplies T1, T7, T4, T3, T5, T6, T8, T12, T10 and T13
 in that order. Its eleventh slot is not published. Values use signed little-endian
@@ -86,8 +88,8 @@ its own history. Diagnostic captures retain the original telegrams.
 
 ## Readable telemetry and entity migration (0.15.0)
 
-These seven legacy sensor keys are no longer published and their entity-registry
-entries are removed when the updated integration entry is set up:
+The integration replaces these legacy sensor keys when the updated integration
+entry is set up. The first seven replacements were introduced in 0.15.0.
 
 | Retired key | Readable replacement keys |
 | --- | --- |
@@ -98,6 +100,9 @@ entries are removed when the updated integration entry is set up:
 | `uptime` | `device_date`, `device_clock` |
 | `fan_supply_control` | `fan_supply_control_percent` |
 | `fan_extract_control` | `fan_extract_control_percent` |
+| `raw_0120` | `compressor_command_percent` |
+| `raw_0115` | `heat_pump_start_threshold` |
+| `raw_011c` | `heat_pump_continuous_run_threshold` |
 
 An enabled legacy sensor enables a replacement only when that replacement was
 disabled by the integration. Explicit user-disabled replacements remain disabled.
@@ -239,18 +244,17 @@ control percentages have separate validation based on fresh same-direction
 configured stages, as described below. Their availability does not depend on
 this controller-level allowlist and they have no statistics class.
 
-Thirteen optional controller raw sensors retain payload byte order and leading
-zeros. Together with the four exact-identity observations below, they form the
-17 partly or fully uninterpreted raw entities in 0.16.8:
+Optional controller raw sensors retain payload byte order and leading zeros.
 
 | Payload bytes | Data points |
 |---|---|
 | 1 | 0168 |
 | 2 | 0206, 0519, 0123, 020F |
-| 4 | 051E, 006C, 00EE, 01F5, 0105, 0115, 011C, 051D |
+| 4 | 051E, 006C, 00EE, 01F5, 0105, 051D |
 
-The raw entities for `0110`, `0116`, `0120`, `051C` and `0330` are retired. Raw
-decoding and diagnostic captures still include those points. The retained hexadecimal
+Raw decoding and diagnostic captures still include the
+[retired raw sensor data points](#readable-telemetry-and-entity-migration-0150).
+The retained hexadecimal
 states are complete payloads, not physical measurements or complete actuator
 interpretations. For example, selected `006C` valve bits are mapped below,
 while other bits and unreviewed complete words remain uninterpreted.

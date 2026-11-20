@@ -40,7 +40,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         # Both a user-disabled default sensor and a user-enabled raw sensor.
         if item["key"] == "temperature_supply":
             disabled = er.RegistryEntryDisabler.USER
-        elif item["key"] in {"raw_0116", "raw_0120"}:
+        elif item["key"] in {"raw_0115", "raw_0116", "raw_0120"}:
             disabled = None
         saved = registry.async_get_or_create(
             item["domain"],
@@ -61,12 +61,17 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         if baseline[f"existing-unit_{raw_key}"][1] is None
         for key in keys
     }
+    controller_frames = json.loads(
+        (Path(__file__).parent / "fixtures/controller_frames.json").read_text()
+    )
 
     @asynccontextmanager
     async def receiver(*args):
         reader = asyncio.StreamReader()
         reader.feed_data(
-            b"".join(frames.values()) + bytes.fromhex("22400020010000041e004d60")
+            b"".join(frames.values())
+            + bytes.fromhex(controller_frames["0x0115"])
+            + bytes.fromhex("22400020010000041e004d60")
         )
         yield reader
 
@@ -114,6 +119,8 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
             "compressor_command_percent",
             "bde_operating_display",
             "cooling_threshold",
+            "heat_pump_start_threshold",
+            "heat_pump_continuous_run_threshold",
             "fan_supply_control_percent",
             "fan_extract_control_percent",
             "max_heating_output",
@@ -152,11 +159,16 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         # Enabled raw_0116 carries visibility to both meaningful limit sensors.
         assert new["max_heating_output"].disabled_by is None
         assert new["max_cooling_output"].disabled_by is None
+        heat_pump_start = new["heat_pump_start_threshold"]
+        assert heat_pump_start.disabled_by is None
         command = new["compressor_command_percent"]
         assert command.disabled_by is None
         # HA reloads the entry after the registry enables its replacement.
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
         await hass.async_block_till_done()
+        heat_pump_start_state = hass.states.get(heat_pump_start.entity_id)
+        assert round(float(heat_pump_start_state.state), 1) == 0.4
+        assert heat_pump_start_state.attributes["unit_of_measurement"] == "K"
         command_state = hass.states.get(command.entity_id)
         assert command_state.state == "30"
         assert command_state.attributes["unit_of_measurement"] == "%"
@@ -170,6 +182,7 @@ async def test_0_8_0_registry_settings_and_default_options_survive(hass, frames)
         for key in (
             "bde_operating_display",
             "cooling_threshold",
+            "heat_pump_continuous_run_threshold",
             "fan_supply_control_percent",
             "fan_extract_control_percent",
             "fan_supply_stage_1",

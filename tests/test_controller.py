@@ -20,6 +20,8 @@ def test_recorded_controller_values_and_every_split():
     stream = b"".join(FRAMES.values())
     expected = {
         "cooling_threshold": 3.0,
+        "heat_pump_start_threshold": pytest.approx(0.399993896),
+        "heat_pump_continuous_run_threshold": 2.0,
         "max_heating_output": 100,
         "max_cooling_output": 90,
         **{
