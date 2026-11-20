@@ -8,7 +8,7 @@ aktivieren.
 |---|---|---|
 | Gerätewerte | Betriebsart, angeforderte Luftstufe, Raum- und Solltemperatur, Zu-/Ab-/Fort-/Frischlufttemperatur, Verdichter läuft, Bypass und Intensivlüftung | Aktiviert |
 | Diagnose | Filterrestlaufzeit, Betriebsstunden, Aufnahmestatus, Ereignisaufnahmestatus und Aufnahmeaktionen | Aktiviert |
-| Optionale Diagnose | Interne Temperaturen, Drehzahlen, Verdichter-Stellgröße, Gerätezeit und -datum, Regler-Luftstufe, Lüfterkennlinien und -ansteuerung, Leistungsgrenzen und Kühlschwelle | Deaktiviert |
+| Optionale Diagnose | Interne Temperaturen, Drehzahlen, Verdichter-Stellgröße, Gerätezeit und -datum, Regler-Luftstufe, Lüfterkennlinien und -ansteuerung, Leistungsgrenzen sowie konfigurierte Kühl- und Wärmepumpen-Schwellen | Deaktiviert |
 | Optionale Diagnose | BDE-Betriebsanzeige, MV-Heizen/Kühlen, MV-Abtau, experimentelle Statusbits, Rohwerte, Gateway-Verbindung und letzter gültiger Empfang | Deaktiviert |
 | Konfiguration | Schaltfläche **Gerätezeit abgleichen** | Entität deaktiviert |
 | Konfiguration | Schalter **Sommer-/Winterzeit automatisch abgleichen** | Entität aktiviert, Schalter aus |

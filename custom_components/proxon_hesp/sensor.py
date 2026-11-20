@@ -50,6 +50,25 @@ DESCRIPTIONS = (
         suggested_display_precision=1,
         icon="mdi:thermometer",
     ),
+    SensorEntityDescription(
+        key="heat_pump_start_threshold",
+        translation_key="heat_pump_start_threshold",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        suggested_display_precision=1,
+        icon="mdi:thermometer",
+    ),
+    SensorEntityDescription(
+        key="heat_pump_continuous_run_threshold",
+        translation_key="heat_pump_continuous_run_threshold",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        icon="mdi:thermometer",
+    ),
     *(
         SensorEntityDescription(
             key=key,

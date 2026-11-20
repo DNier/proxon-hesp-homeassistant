@@ -8,7 +8,9 @@ from .const import DOMAIN
 
 RAW_SENSOR_REPLACEMENTS = {
     "raw_0110": ("cooling_threshold",),
+    "raw_0115": ("heat_pump_start_threshold",),
     "raw_0116": ("max_heating_output", "max_cooling_output"),
+    "raw_011c": ("heat_pump_continuous_run_threshold",),
     "raw_0120": ("compressor_command_percent",),
     "raw_051c": ("compressor_rpm",),
     "raw_0330": ("device_clock",),

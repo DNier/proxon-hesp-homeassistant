@@ -79,6 +79,8 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
             "device_date",
             "controller_fan_level",
             "compressor_command_percent",
+            "heat_pump_start_threshold",
+            "heat_pump_continuous_run_threshold",
             "fan_supply_control_percent",
             "fan_extract_control_percent",
             "raw_118000_01f8",

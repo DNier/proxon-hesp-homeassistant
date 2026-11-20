@@ -69,6 +69,12 @@
       "cooling_threshold": {
         "name": "Cooling threshold"
       },
+      "heat_pump_start_threshold": {
+        "name": "Heat pump start threshold (configured)"
+      },
+      "heat_pump_continuous_run_threshold": {
+        "name": "Heat pump continuous-run threshold (configured)"
+      },
       "max_heating_output": {
         "name": "Maximum heating output (configured)"
       },
@@ -143,12 +149,6 @@
       },
       "raw_0105": {
         "name": "DP 0x0105 (Hex)"
-      },
-      "raw_0115": {
-        "name": "DP 0x0115 (Hex)"
-      },
-      "raw_011c": {
-        "name": "DP 0x011C (Hex)"
       },
       "raw_0206": {
         "name": "DP 0x0206 (Hex)"

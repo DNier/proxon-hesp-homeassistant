@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.11 – Konfigurierte Wärmepumpen-Schwellen anzeigen
+
+- Zwei optionale Diagnoseentitäten zeigen die **Wärmepumpen-Einschaltschwelle**
+  in Kelvin und die **Temperaturschwelle für Wärmepumpen-Dauerbetrieb** in °C.
+  Beide Werte stammen aus empfangenen Reglertelegrammen und wurden für das
+  P2-Referenzprofil `lt_zim_16_observed` mit der ServiceApp abgeglichen.
+  [Datenpunkte und Belege (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/SERVICE_SETTINGS_EVIDENCE.md#configured-heat-pump-thresholds).
+- Die Zahlenwerte ersetzen die Hex-Entitäten `raw_0115` und `raw_011c`.
+  War eine Hex-Entität aktiviert, übernimmt der Ersatz die Aktivierung, sofern
+  er noch durch die Integration deaktiviert ist. Passe Verweise und Vergleiche
+  in Dashboards und Automationen an die neue Entität und ihre Einheit an.
+  Die neuen Entitäten beginnen ihren eigenen Verlauf.
+
+Nach der Installation über HACS Home Assistant neu starten. Benötigte
+flüchtige Aufnahmen vorher herunterladen. Home Assistant ab 2026.9.
+
 ## 0.16.10 – Schalter für die automatische Sommer-/Winterzeit
 
 - Am PROXON-Hauptgerät gibt es unter **Konfiguration** den Schalter
