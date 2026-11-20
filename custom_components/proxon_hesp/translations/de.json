@@ -355,6 +355,9 @@
       },
       "defrost_valve": {
         "name": "MV-Abtau"
+      },
+      "bde_green_led": {
+        "name": "Obere grüne BDE-LED"
       }
     }
   },

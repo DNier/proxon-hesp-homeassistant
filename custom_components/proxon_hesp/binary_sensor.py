@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, PROFILE
 from .rooms import async_setup_rooms
 
 DESCRIPTIONS = (
@@ -36,12 +36,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     await async_setup_rooms(hass, entry, async_add_entities, "binary_sensor")
+    led_entities = (
+        [ProxonBdeGreenLed(entry)] if entry.runtime_data.profile == PROFILE else []
+    )
     async_add_entities(
         [
             *(ProxonBinarySensor(entry, desc) for desc in DESCRIPTIONS),
             *(ProxonExperimentalBit(entry, bit) for bit in (8, 9, 28)),
             ProxonHeatCoolValve(entry),
             ProxonDefrostValve(entry),
+            *led_entities,
             ProxonCompressorSensor(
                 entry,
                 BinarySensorEntityDescription(
@@ -107,6 +111,30 @@ class ProxonCompressorSensor(ProxonBinarySensor):
     def is_on(self) -> bool | None:
         reading = self.runtime.get("compressor_rpm")
         return reading.value > 0 if reading is not None else None
+
+
+class ProxonBdeGreenLed(ProxonBinarySensor):
+    """Expose the display-backed BDE LED for the observed profile."""
+
+    def __init__(self, entry: ProxonConfigEntry) -> None:
+        super().__init__(
+            entry,
+            BinarySensorEntityDescription(
+                key="bde_green_led",
+                translation_key="bde_green_led",
+                icon="mdi:led-on",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                entity_registry_enabled_default=False,
+            ),
+        )
+
+    @property
+    def available(self) -> bool:
+        return self.is_on is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.runtime.get_bde_green_led()
 
 
 class ProxonConnectionSensor(ProxonBinarySensor):

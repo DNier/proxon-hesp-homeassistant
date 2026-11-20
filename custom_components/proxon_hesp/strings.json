@@ -355,6 +355,9 @@
       },
       "defrost_valve": {
         "name": "Defrost solenoid valve"
+      },
+      "bde_green_led": {
+        "name": "Upper green BDE LED"
       }
     }
   },

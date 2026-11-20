@@ -3,6 +3,19 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.12 – Obere grüne BDE-LED anzeigen
+
+- Die optionale Entität **Obere grüne BDE-LED** zeigt am P2-Referenzprofil
+  drei belegte Kombinationen aus Betriebsart und vollständigem Statuswort an.
+  Zwei Kombinationen betreffen Eco Winter, eine den Komfortbetrieb.
+  Betriebsart und Statuswort müssen frisch sein. Nach einem Moduswechsel
+  braucht die Entität ein neues Statuswort. In anderen Kombinationen bleibt
+  sie nicht verfügbar. [Genaue Bedingungen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#upper-green-bde-led).
+
+Nach der Installation über HACS Home Assistant neu starten und die Entität bei
+Bedarf am PROXON-Gerät unter **Diagnose** aktivieren. Benötigte flüchtige
+Aufnahmen vorher herunterladen. Home Assistant ab 2026.9.
+
 ## 0.16.11 – Konfigurierte Wärmepumpen-Schwellen anzeigen
 
 - Zwei optionale Diagnoseentitäten zeigen die **Wärmepumpen-Einschaltschwelle**
