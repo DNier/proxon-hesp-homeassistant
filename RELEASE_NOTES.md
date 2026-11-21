@@ -3,6 +3,13 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.15 – Gerätemodell aus der P2-Auswahl
+
+- Bei aktivierter Integrationsoption **BDE-Anzeige für P2-Referenzgerät**
+  zeigt Home Assistant am vorhandenen Hauptgerät das Modell **PROXON P2 (HESP)**.
+  Die Standardangabe für das gemeinsame Profil lautet **PROXON (HESP)**.
+  Das Modell wird beim Ändern der Option direkt aktualisiert.
+
 ## 0.16.14 – Obere grüne BDE-LED in Eco Winter
 
 - Die vorhandene Entität **Obere grüne BDE-LED** zeigt bei der ausgewählten

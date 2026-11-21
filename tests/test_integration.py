@@ -6,11 +6,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.const import (
+    CONF_P2_REFERENCE_DISPLAY,
+    DOMAIN,
+    PROFILE,
+)
 from custom_components.proxon_hesp.diagnostics import async_get_config_entry_diagnostics
 from custom_components.proxon_hesp.telemetry_migration import RAW_SENSOR_REPLACEMENTS
 
@@ -171,7 +176,13 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert closed.is_set()
 
 
-async def test_existing_device_metadata_updates_in_place(hass, frames):
+@pytest.mark.parametrize(
+    ("p2_selected", "update_during_setup"),
+    [(False, False), (True, False), (False, True)],
+)
+async def test_existing_device_metadata_updates_in_place(
+    hass, frames, p2_selected, update_during_setup
+):
     reader = asyncio.StreamReader()
     reader.feed_data(frames["0xe1"])
 
@@ -182,9 +193,10 @@ async def test_existing_device_metadata_updates_in_place(hass, frames):
     unique_id = "existing-unit"
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="FWT 2-L",
+        title="Ventilation unit",
         unique_id=unique_id,
         data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+        options={CONF_P2_REFERENCE_DISPLAY: True} if p2_selected else {},
     )
     entry.add_to_hass(hass)
     devices = dr.async_get(hass)
@@ -215,11 +227,27 @@ async def test_existing_device_metadata_updates_in_place(hass, frames):
         disabled_by=er.RegistryEntryDisabler.USER,
     )
 
-    with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
+    forward_platforms = hass.config_entries.async_forward_entry_setups
+
+    async def forward_and_update(config_entry, platforms):
+        await forward_platforms(config_entry, platforms)
+        if update_during_setup:
+            hass.config_entries.async_update_entry(
+                config_entry, options={CONF_P2_REFERENCE_DISPLAY: True}
+            )
+
+    with (
+        patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver),
+        patch.object(
+            hass.config_entries, "async_forward_entry_setups", forward_and_update
+        ),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        p2_selected = p2_selected or update_during_setup
         updated = devices.async_get(device.id)
-        assert updated.model == "PROXON (HESP)"
+        assert updated.model == ("PROXON P2 (HESP)" if p2_selected else "PROXON (HESP)")
+        assert entry.runtime_data.bde_display._p2_reference is p2_selected
         assert updated.identifiers == device.identifiers
         assert updated.config_entries == {entry.entry_id}
         assert updated.name_by_user == "Ventilation"
@@ -236,6 +264,24 @@ async def test_existing_device_metadata_updates_in_place(hass, frames):
         )
         assert entities.async_get(fan_id).device_id == device.id
         assert hass.states.get(fan_id).state == "3"
+
+        runtime = entry.runtime_data
+        capture = runtime.capture
+        for selected in (not p2_selected, p2_selected):
+            hass.config_entries.async_update_entry(
+                entry, options={CONF_P2_REFERENCE_DISPLAY: selected}
+            )
+            await hass.async_block_till_done()
+            updated = devices.async_get(device.id)
+            assert updated.model == (
+                "PROXON P2 (HESP)" if selected else "PROXON (HESP)"
+            )
+            assert updated.name_by_user == "Ventilation"
+            assert entities.async_get(display.entity_id).device_id == device.id
+            assert entities.async_get(led.entity_id).device_id == device.id
+            assert entry.runtime_data is runtime
+            assert entry.runtime_data.capture is capture
+            assert runtime.bde_display._p2_reference is selected
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

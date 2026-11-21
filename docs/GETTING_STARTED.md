@@ -32,6 +32,9 @@ Migrationsschritte je Version.
 
 Wähle das dokumentierte Anlagenprofil `lt_zim_16_observed` bei der Einrichtung.
 Die Integration erkennt Modell, Platinenrevision und Firmware nicht automatisch.
+Als Modell in Home Assistant erscheint standardmäßig **PROXON (HESP)**.
+Die Option **BDE-Anzeige für P2-Referenzgerät** übernimmt die gewählte
+Referenz als **PROXON P2 (HESP)** in die Geräteinformationen.
 Belegungen unterscheiden sich je nach Platinenrevision. Richte den Zugang zum
 Bus anhand der Dokumentation für deine Hardware ein.
 
