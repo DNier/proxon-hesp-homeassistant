@@ -3,6 +3,13 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.14 – Obere grüne BDE-LED in Eco Winter
+
+- Die vorhandene Entität **Obere grüne BDE-LED** zeigt bei der ausgewählten
+  P2-Referenz in Eco Winter auch für das Statuswort `0x8200131A` **Ein**.
+  Betriebsart und Statuswort müssen frisch sein.
+  [Genaue Bedingungen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#upper-green-bde-led).
+
 ## 0.16.13 – Kühlanzeige und weitere Luftstufe für die P2-Referenz
 
 - **BDE-Betriebsanzeige** kann beim geprüften PROXON P2 im Komfortbetrieb
