@@ -2,6 +2,7 @@
 
 DOMAIN = "proxon_hesp"
 DEVICE_MODEL = "PROXON (HESP)"
+P2_DEVICE_MODEL = "PROXON P2 (HESP)"
 DEFAULT_PORT = 4196
 PROFILE = "lt_zim_16_observed"
 CONF_PROFILE = "profile"

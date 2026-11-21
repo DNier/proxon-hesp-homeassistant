@@ -14,16 +14,17 @@ BDE-Displayvergleichen mit dieser Hardware:
 | Verbindung | RS485, transparent über TCP |
 | Serielle Einstellungen | 19200 Baud, 8N1 |
 
-Diese Angaben beschreiben die Referenzkonfiguration. Home Assistant zeigt
-für das Gerät die allgemeine Modellbezeichnung **PROXON (HESP)**. Das
+Diese Angaben beschreiben die Referenzkonfiguration. Home Assistant verwendet
+standardmäßig die Modellbezeichnung **PROXON (HESP)**. Das
 Transportprofil `lt_zim_16_observed` wird bei der Einrichtung ausgewählt
 und gilt auch für die unten beschriebene lesende Anbindung der FWT 2-L.
 Welche Messwerte verfügbar sind, hängt von Hardware, Ausstattung und
 Busverkehr ab.
 
 Die Integrationsoption **BDE-Anzeige für P2-Referenzgerät** gilt für die
-oben beschriebene P2. Sie gibt die Auswertung der oberen grünen LED, eine
-belegte Kühlanzeige und eine Regler-Luftstufe frei. Die Option ist
+oben beschriebene P2. Sie setzt das Modell auf **PROXON P2 (HESP)** und gibt
+die Auswertung der oberen grünen LED, eine belegte Kühlanzeige und eine
+Regler-Luftstufe frei. Die Option ist
 standardmäßig aus und lässt sich im laufenden Betrieb ändern.
 
 Das Waveshare-Modell ist die eingesetzte Referenzhardware, keine Voraussetzung

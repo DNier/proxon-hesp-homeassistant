@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
@@ -15,7 +16,9 @@ from .const import (
     CONF_EVENT_CAPTURE,
     CONF_P2_REFERENCE_DISPLAY,
     CONF_PROFILE,
+    DEVICE_MODEL,
     DOMAIN,
+    P2_DEVICE_MODEL,
     PROFILE,
 )
 from .coordinator import ProxonRuntime
@@ -25,6 +28,19 @@ from .telemetry_migration import async_retire_raw_sensors
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SWITCH]
+
+
+def _sync_main_device(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
+    """Apply the hardware selection to the runtime and its registry device."""
+    p2_selected = entry.options.get(CONF_P2_REFERENCE_DISPLAY) is True
+    entry.runtime_data.configure_p2_reference_display(p2_selected)
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=entry.title,
+        manufacturer="Zimmermann",
+        model=P2_DEVICE_MODEL if p2_selected else DEVICE_MODEL,
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -52,11 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
     except TimeoutError as err:
         raise ConfigEntryNotReady("No supported HESP data received") from err
     entry.runtime_data = runtime
-    sync_room_devices(hass, entry)
-    runtime.room_config = configured_rooms(entry)
     try:
+        _sync_main_device(hass, entry)
+        sync_room_devices(hass, entry)
+        runtime.room_config = configured_rooms(entry)
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         await async_retire_raw_sensors(hass, entry)
+        # Options can change before the loaded entry starts listening for updates.
+        _sync_main_device(hass, entry)
     except BaseException:
         await runtime.stop()
         raise
@@ -72,9 +91,7 @@ async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) ->
     entry.runtime_data.event_capture.configure(
         entry.options.get(CONF_EVENT_CAPTURE, False)
     )
-    entry.runtime_data.configure_p2_reference_display(
-        entry.options.get(CONF_P2_REFERENCE_DISPLAY) is True
-    )
+    _sync_main_device(hass, entry)
     entry.runtime_data._notify_diagnostics()
     async with entry.runtime_data.room_update_lock:
         rooms = configured_rooms(entry)
