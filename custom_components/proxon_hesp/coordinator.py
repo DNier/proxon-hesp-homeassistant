@@ -41,7 +41,7 @@ class ProxonRuntime:
         profile: str = PROFILE,
         p2_reference_display: bool = False,
     ) -> None:
-        self.room_update_lock = asyncio.Lock()
+        self.config_update_lock = asyncio.Lock()
         self.room_updates = []
         self.room_config = []
         self.diagnostic_listeners: set[Callable[[], None]] = set()

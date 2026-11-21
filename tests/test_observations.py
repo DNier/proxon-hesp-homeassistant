@@ -8,6 +8,7 @@ import pytest
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.proxon_hesp.capture import (
@@ -16,7 +17,6 @@ from custom_components.proxon_hesp.capture import (
 )
 from custom_components.proxon_hesp.const import DOMAIN, PROFILE
 from custom_components.proxon_hesp.diagnostics import async_get_config_entry_diagnostics
-from custom_components.proxon_hesp.services import async_register_services
 from tools.audit_observations import audit
 
 
@@ -114,7 +114,7 @@ async def test_annotation_limit_is_explicit_and_preserves_existing_references():
 
 
 async def test_service_is_available_without_loaded_entry_and_requires_target(hass):
-    async_register_services(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     assert hass.services.has_service(DOMAIN, "mark_observation")
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(

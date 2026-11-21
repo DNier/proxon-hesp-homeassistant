@@ -3,6 +3,17 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.16 – Mitschnitte beim Umbenennen erhalten
+
+- Beim Umbenennen des PROXON-Geräts in der Integrationskonfiguration läuft
+  ein aktueller Mitschnitt weiter. Bei einer neuen Gateway-Adresse oder einem
+  neuen Port startet der Empfänger nach der Verbindungsprüfung genau einmal
+  neu, auch wenn zugleich Aufnahmeoptionen gespeichert werden.
+- Während des Verbindungsaufbaus gespeicherte Aufnahmeoptionen gelten nach dem
+  Start des Empfängers sofort.
+- PROXON verwendet das Home-Assistant-Schema für Integrationen, die über die
+  Oberfläche eingerichtet werden. Die Diagnoseaktionen stehen weiterhin bereit.
+
 ## 0.16.15 – Gerätemodell aus der P2-Auswahl
 
 - Bei aktivierter Integrationsoption **BDE-Anzeige für P2-Referenzgerät**
