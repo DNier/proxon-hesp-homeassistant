@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
 from .capture import STATUSES
-from .const import DOMAIN
+from .const import DEVICE_MODEL, DOMAIN
 from .event_capture import EVENT_STATUSES
 from .hesp.decoder import (
     MODES,
@@ -36,7 +36,7 @@ DESCRIPTIONS = (
         key="bde_operating_display",
         translation_key="bde_operating_display",
         device_class=SensorDeviceClass.ENUM,
-        options=["heating", "blank"],
+        options=["heating", "blank", "cooling"],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:monitor-dashboard",
@@ -307,7 +307,7 @@ class ProxonSensor(SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title,
             manufacturer="Zimmermann",
-            model="PROXON P-Serie (HESP)",
+            model=DEVICE_MODEL,
         )
 
     async def async_added_to_hass(self) -> None:

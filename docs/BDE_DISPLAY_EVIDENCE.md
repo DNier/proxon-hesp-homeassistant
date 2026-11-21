@@ -2,11 +2,12 @@
 
 The optional diagnostic enum sensor **BDE operating display** reports `heating`
 (German: **Heizbetrieb**) for three exact source combinations as of 0.16.9 and,
-from 0.16.5,
-`blank` (German: **Betriebsfeld leer**) for a separate exact source combination.
-It remains the same disabled-by-default entity. These states mirror
-corroborated display labels on the reference installation; they do not identify
-physical heat output, PTC activity, cooling, defrost activity or general idle.
+from 0.16.5, `blank` (German: **Betriebsfeld leer**) for a separate exact
+source combination. The same entity reports `cooling` (German:
+**Kühlbetrieb**) for one confirmed Comfort combination. The entity is
+disabled by default. Each state describes the display label on the reference
+installation. Physical heat output, PTC activity and defrost require
+independent evidence.
 
 ## Admitted source combinations
 
@@ -18,6 +19,7 @@ promoted to a heating flag.
 | --- | --- | --- | --- | --- |
 | `heating` | `2` / Eco Winter | `0x82001312` (`12130082`), `0x8200131A` (`1a130082`), or `0x82009312` (`12930082`, since 0.16.9) | `0x27` (`27000000`) | Finite, validated speed above zero |
 | `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero |
+| `cooling` | `3` / Comfort | `0x80001522` (`22150080`) | `0x0227` (`27020000`) | Finite, validated speed above zero |
 
 Each source must be fresh within six seconds and receipts must form a coherent
 context. The combination must persist for at least 15 seconds of actual received
@@ -30,8 +32,7 @@ to blank and the reverse, starts a new 15-second proof window. The existing gene
 Other combinations are unavailable, including other complete level-3 status
 words, uncorroborated startup/stop contexts and the longer bit-28 phases. Unavailable never means that the BDE display is
 blank, that the heat pump is off or that heating has stopped. There is no fallback
-to the last label, operating mode alone, a valve bit or warm supply air. No
-`off`, `cooling` or `defrost` enum option is inferred.
+to the last label, operating mode alone, a valve bit or warm supply air.
 
 ## Evidence and time alignment
 
@@ -39,8 +40,8 @@ A display reference is aligned using the full visible device-minute bracket.
 Received device-calendar messages bound that interval without assuming that
 Home Assistant and the BDE share a synchronized clock. A qualified reference
 requires the exact mode, status and valve words and positive speed across the
-bracket. The production tracker starts labelling after 15 seconds of coherent
-receipt.
+bracket for a heating or cooling label. The tracker starts labelling after
+15 seconds of coherent receipt.
 
 | Status and valve word | Independent evidence and limit |
 | --- | --- |
@@ -79,6 +80,24 @@ reference. Zero speed or Eco Winter on its own leaves the display field unknown.
 Public regression tests use previously published wire frames with synthetic
 timing to exercise qualification, transitions and Home Assistant availability.
 The original display references establish the scope of the comparison.
+
+## Cooling label in Comfort
+
+Two independently captured P2 Comfort episodes show **Kühlbetrieb**. In both
+episodes the complete status and valve words remained stable across the
+qualifying device-minute bracket. Positive compressor speed and all four fresh
+sources were present throughout. The second episode establishes at least 15
+seconds of qualifying reception before the earliest possible image time.
+
+Enable **P2 reference BDE display** in the integration options for the
+[documented P2 configuration](COMPATIBILITY.md). The option is off by
+default. This applies the P2-specific rule on the existing
+`lt_zim_16_observed` connection. Qualification starts again after a
+display profile, mode or connection change.
+Other Comfort combinations may illuminate the upper green LED or report
+positive compressor speed while the operating field is blank. The
+adjacent status word `0x80001122` remains unassigned.
+[Hardware compatibility](COMPATIBILITY.md).
 
 ## PTC counterexamples remain separate
 

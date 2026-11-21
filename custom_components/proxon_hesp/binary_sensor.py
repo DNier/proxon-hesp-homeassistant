@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ProxonConfigEntry
-from .const import DOMAIN, PROFILE
+from .const import DEVICE_MODEL, DOMAIN, PROFILE
 from .rooms import async_setup_rooms
 
 DESCRIPTIONS = (
@@ -84,7 +84,7 @@ class ProxonBinarySensor(BinarySensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             name=entry.title,
             manufacturer="Zimmermann",
-            model="PROXON P-Serie (HESP)",
+            model=DEVICE_MODEL,
         )
 
     async def async_added_to_hass(self) -> None:

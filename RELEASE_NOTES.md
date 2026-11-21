@@ -3,6 +3,27 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.13 – Kühlanzeige und weitere Luftstufe für die P2-Referenz
+
+- **BDE-Betriebsanzeige** kann beim geprüften PROXON P2 im Komfortbetrieb
+  **Kühlbetrieb** anzeigen. Die vollständigen Status- und Schaltwörter,
+  Betriebsart und Verdichterdrehzahl müssen die belegten Bedingungen erfüllen.
+  [Beleg und Bedingungen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md#cooling-label-in-comfort).
+- **Regler-Luftstufe** kann für das vollständige Statuswort `0x9200131A`
+  in Eco Winter **Stufe 3** anzeigen. Betriebsart und Statuswort müssen
+  frisch sein.
+- Die Auswertung der **oberen grünen BDE-LED** braucht ab dieser Version
+  dieselbe ausdrückliche Geräteauswahl. Ein FWT-Mitschnitt enthält passende
+  Rohwörter ohne Sichtbeleg. Für die LED und die zwei neuen Zuordnungen die
+  Integrationsoption **BDE-Anzeige für P2-Referenzgerät** am passenden Gerät
+  aktivieren. Die LED-Entität behält ihre bisherige ID und Einstellung.
+- Das HA-Gerätemodell heißt **PROXON (HESP)**. Diese Bezeichnung gilt auch für
+  kompatible FWT-Geräte mit dem gemeinsamen Transportprofil. Geräte- und
+  Entitäts-IDs sowie vorhandene Aktivierungseinstellungen bleiben erhalten.
+
+Nach der Installation über HACS Home Assistant neu starten. Benötigte
+flüchtige Aufnahmen vorher herunterladen. Home Assistant ab 2026.9.
+
 ## 0.16.12 – Obere grüne BDE-LED anzeigen
 
 - Die optionale Entität **Obere grüne BDE-LED** zeigt am P2-Referenzprofil

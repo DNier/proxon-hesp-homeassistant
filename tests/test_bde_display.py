@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -20,7 +21,11 @@ from custom_components.proxon_hesp.bde_display import BdeDisplay
 from custom_components.proxon_hesp.binary_sensor import (
     async_setup_entry as setup_binary_sensors,
 )
-from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.const import (
+    CONF_P2_REFERENCE_DISPLAY,
+    DOMAIN,
+    PROFILE,
+)
 from custom_components.proxon_hesp.coordinator import ProxonRuntime
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from custom_components.proxon_hesp.hesp.decoder import Decoder
@@ -528,7 +533,7 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
         state = hass.states.get(entity_id)
         assert state.state == expected_state
         assert state.attributes["device_class"] == "enum"
-        assert state.attributes["options"] == ["heating", "blank"]
+        assert state.attributes["options"] == ["heating", "blank", "cooling"]
         assert "state_class" not in state.attributes
         assert "unit_of_measurement" not in state.attributes
         clock.now = 121.001
@@ -744,6 +749,14 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         await hass.async_block_till_done()
         assert hass.states.is_state(registered.entity_id, expected)
 
+    async def set_reference(enabled):
+        form = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            form["flow_id"], {CONF_P2_REFERENCE_DISPLAY: enabled}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+
     with (
         patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver),
         patch(
@@ -755,6 +768,11 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         runtime = entry.runtime_data
+        # A frame pair shared by P2 and FWT is insufficient to select a panel.
+        await receive_at(0.25, comfort + comfort_lit + STOPPED, "unavailable")
+        await set_reference(True)
+        assert entry.runtime_data is runtime
+        assert hass.states.is_state(registered.entity_id, "unavailable")
         await receive_at(1, STATUS, "unavailable")
         await receive_at(2, MODE + dark, "off")
         await receive_at(3, STATUS, "on")
@@ -794,9 +812,128 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         assert runtime.connected
         await receive_at(24, comfort_lit, "unavailable", next_reader)
         await receive_at(25, comfort, "on", next_reader)
+        await set_reference(False)
+        assert entry.runtime_data is runtime
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(26, comfort + comfort_lit, "unavailable", next_reader)
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert runtime.timer is None
+
+
+async def test_fan_level_9200131a_requires_fresh_preceding_eco_winter(hass, frames):
+    comfort = bytes.fromhex("1180000a020000040300caef")
+    adjacent = checked(STATUS[:8] + bytes.fromhex("12130092"))
+    corrupted = STATUS_9200131A[:-1] + bytes([STATUS_9200131A[-1] ^ 1])
+    loop = asyncio.get_running_loop()
+    start = float(int(loop.time()))
+    clock = SimpleNamespace(now=start)
+    first_reader, next_reader = asyncio.StreamReader(), asyncio.StreamReader()
+    first_reader.feed_data(frames["0xe1"])
+    readers = iter((first_reader, next_reader))
+
+    @asynccontextmanager
+    async def receiver(*args):
+        yield next(readers)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="PROXON",
+        unique_id="context-fan-unit",
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+        options={CONF_P2_REFERENCE_DISPLAY: True},
+    )
+    entry.add_to_hass(hass)
+    registered = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "context-fan-unit_controller_fan_level",
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    async def advance_to(elapsed):
+        clock.now = start + elapsed
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    async def receive_at(elapsed, data, expected, reader=first_reader):
+        await advance_to(elapsed)
+        reader.feed_data(data)
+        await hass.async_block_till_done()
+        assert hass.states.is_state(registered.entity_id, expected)
+
+    with (
+        patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver),
+        patch(
+            "custom_components.proxon_hesp.coordinator.time",
+            SimpleNamespace(monotonic=lambda: clock.now),
+        ),
+        patch.object(loop, "time", lambda: clock.now),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await receive_at(1, STATUS_9200131A + MODE, "unavailable")
+        await receive_at(2, corrupted, "unavailable")
+        await receive_at(3, STATUS_9200131A, "3")
+        runtime = entry.runtime_data
+        assert runtime.get_bde_operating_display() is None
+        assert runtime.get_bde_green_led() is None
+        await receive_at(4.25, comfort + MODE, "unavailable")
+        await receive_at(5, STATUS_9200131A, "3")
+        await receive_at(6, adjacent, "unavailable")
+        await receive_at(7, STATUS_9200131A, "3")
+        await advance_to(10)  # Earlier general maintenance tick.
+        assert runtime.timer.when() == pytest.approx(start + 10.251, abs=0.00001)
+        await advance_to(10.252)
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(11, STATUS_9200131A + MODE, "unavailable")
+        await receive_at(12, STATUS_9200131A, "3")
+        await receive_at(13, MODE + STATUS, "2")
+        await receive_at(14, comfort + STATUS, "2")
+        await receive_at(15, STATUS_9200131A, "unavailable")
+        await receive_at(16, MODE + STATUS_9200131A, "3")
+        first_reader.feed_eof()
+        await hass.async_block_till_done()
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await advance_to(17.002)
+        await asyncio.sleep(0)
+        await receive_at(18, STATUS_9200131A + MODE, "unavailable", next_reader)
+        await receive_at(19, STATUS_9200131A, "3", next_reader)
+        runtime.capture.start()
+        await receive_at(20, STATUS_9200131A, "3", next_reader)
+        capture_state = runtime.capture.started, runtime.capture.size
+
+        async def set_variant(enabled):
+            form = await hass.config_entries.options.async_init(entry.entry_id)
+            result = await hass.config_entries.options.async_configure(
+                form["flow_id"], {CONF_P2_REFERENCE_DISPLAY: enabled}
+            )
+            assert result["type"] is FlowResultType.CREATE_ENTRY
+            await hass.async_block_till_done()
+            assert entry.runtime_data is runtime
+            assert runtime.capture.reason == "recording"
+            assert (runtime.capture.started, runtime.capture.size) == capture_state
+            assert hass.states.is_state(registered.entity_id, "unavailable")
+
+        await set_variant(False)
+        await receive_at(21, MODE + STATUS_9200131A, "unavailable", next_reader)
+        capture_state = runtime.capture.started, runtime.capture.size
+        await set_variant(True)
+        await receive_at(22, STATUS_9200131A + MODE, "unavailable", next_reader)
+        await receive_at(23, STATUS_9200131A, "3", next_reader)
+        assert runtime.diagnostics()["application_bytes_sent"] == 0
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_fan_level_9200131a_requires_the_observed_transport_profile(hass):
+    runtime = ProxonRuntime(
+        hass, "gateway.test", 4196, profile="other", p2_reference_display=True
+    )
+    runtime.connected = True
+    for reading in runtime.decoder.feed(MODE + STATUS_9200131A):
+        runtime.values[reading.key] = (reading, asyncio.get_running_loop().time())
+    assert runtime.bde_display.fan_level_expires_at is None
+    assert runtime.get("controller_fan_level") is None
 
 
 async def test_upper_green_led_is_inactive_for_other_profiles(hass):
@@ -877,15 +1014,16 @@ def test_blank_requires_both_complete_words_without_ignored_bits(display_stream)
                 assert display.value(now) is None, (index, bit)
 
 
-def test_display_enum_has_specific_blank_labels_in_both_languages():
+def test_display_enum_has_specific_labels_in_both_languages():
     folder = Path(__file__).parents[1] / "custom_components/proxon_hesp"
-    for name, label in (
-        ("strings.json", "Blank operating field"),
-        ("translations/en.json", "Blank operating field"),
-        ("translations/de.json", "Betriebsfeld leer"),
+    for name, label, cooling in (
+        ("strings.json", "Blank operating field", "Cooling"),
+        ("translations/en.json", "Blank operating field", "Cooling"),
+        ("translations/de.json", "Betriebsfeld leer", "Kühlbetrieb"),
     ):
         states = json.loads((folder / name).read_text())["entity"]["sensor"][
             "bde_operating_display"
         ]["state"]
         assert states["blank"] == label
-        assert set(states) == {"heating", "blank"}
+        assert states["cooling"] == cooling
+        assert set(states) == {"heating", "blank", "cooling"}

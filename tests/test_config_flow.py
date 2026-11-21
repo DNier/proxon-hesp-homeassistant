@@ -7,7 +7,11 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.proxon_hesp.const import DOMAIN, PROFILE
+from custom_components.proxon_hesp.const import (
+    CONF_P2_REFERENCE_DISPLAY,
+    DOMAIN,
+    PROFILE,
+)
 from custom_components.proxon_hesp.hesp.transport import NoSupportedData
 
 INPUT = {"host": "gateway.test", "port": 4196, "name": "PROXON", "profile": PROFILE}
@@ -84,6 +88,7 @@ async def test_capture_options_default_bounds_and_no_probe(hass):
         assert result["data_schema"]({}) == {
             "capture_duration": 120,
             "event_capture_enabled": False,
+            CONF_P2_REFERENCE_DISPLAY: False,
         }
         for invalid in (29, 601, 30.5):
             with pytest.raises(InvalidData):
@@ -91,9 +96,11 @@ async def test_capture_options_default_bounds_and_no_probe(hass):
                     result["flow_id"], {"capture_duration": invalid}
                 )
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {"capture_duration": 600}
+            result["flow_id"],
+            {"capture_duration": 600, CONF_P2_REFERENCE_DISPLAY: True},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert entry.options["capture_duration"] == 600
+        assert entry.options[CONF_P2_REFERENCE_DISPLAY] is True
         assert entry.unique_id == "options-unit"
         probe.assert_not_called()

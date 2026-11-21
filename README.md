@@ -24,8 +24,10 @@ Das Projekt wird unabhängig von Zimmermann entwickelt. [English overview](https
 - Optionale Diagnosen wie Verdichter-Stellgröße und BDE-Anzeigen. Der Status
   **Verdichter läuft** beschreibt die gemeldete Drehung. Die
   [BDE-Betriebsanzeige](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md)
-  zeigt **Heizbetrieb** und **Betriebsfeld leer** ausschließlich in belegten
-  Eco-Winter-Konstellationen.
+  zeigt **Heizbetrieb** und **Betriebsfeld leer** in belegten
+  Eco-Winter-Konstellationen. Die Integrationsoption **BDE-Anzeige für
+  P2-Referenzgerät** gibt für die geprüfte P2-Anlage die Auswertung der oberen
+  grünen LED, einen Kühlzustand und eine weitere Regler-Luftstufe frei.
 - Manuelle und automatische [Diagnoseaufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md)
   zur Fehlersuche und für Vergleiche mit dem BDE.
 - Optionale [Heizraum-Überwachung](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ROOMS.md)

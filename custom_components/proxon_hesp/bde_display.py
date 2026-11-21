@@ -22,6 +22,7 @@ HEATING_CONTEXTS = frozenset(
 )
 
 BLANK_CONTEXT = ("eco_winter", 0x8000100A, 0x25)
+COOLING_CONTEXT = ("comfort", 0x80001522, 0x0227)
 
 
 UPPER_GREEN_LED_CONTEXTS = {
@@ -29,7 +30,8 @@ UPPER_GREEN_LED_CONTEXTS = {
     ("eco_winter", "12130082"): True,
     ("comfort", "1a130080"): True,
 }
-LED_SOURCE_KEYS = ("operating_mode", "raw_0208")
+MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
+FAN_LEVEL_THREE_WORD = "1a130092"
 
 
 class BdeDisplay:
@@ -39,21 +41,39 @@ class BdeDisplay:
     property reads cannot turn an unchanged cached snapshot into an indication.
     """
 
-    def __init__(self, *, supports_green_led: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        supports_green_led: bool = False,
+        p2_reference: bool = False,
+    ) -> None:
+        self._p2_reference = p2_reference
+        self._cooling_sources: set[str] = set()
         self._supports_green_led = supports_green_led
         self._sources: dict[str, tuple[Reading, float]] = {}
         self._green_led: tuple[bool, float, float] | None = None
         self._led_status_current = False
+        self._fan_level_status_confirmed = False
         self._context: tuple[str, int, int] | None = None
         self._since: float | None = None
         self._qualified = False
 
+    def configure_p2_reference(self, enabled: bool) -> bool:
+        """Start a fresh observation when the selected BDE variant changes."""
+        if enabled == self._p2_reference:
+            return False
+        self._p2_reference = enabled
+        self.reset()
+        return True
+
     def reset(self) -> None:
         """Forget both observations and stability across connection lifecycles."""
         self._sources.clear()
+        self._cooling_sources.clear()
         self._reset_stability()
         self._green_led = None
         self._led_status_current = False
+        self._fan_level_status_confirmed = False
 
     def _reset_stability(self) -> None:
         self._context = None
@@ -73,6 +93,10 @@ class BdeDisplay:
             self._reset_stability()
         reading = next((item for item in readings if item.key == key), None)
         previous = self._sources.get(key)
+        if key == "operating_mode" and (
+            reading is None or previous is None or previous[0].value != reading.value
+        ):
+            self._cooling_sources.clear()
         if reading is None:
             # A valid frame with a rejected mode/RPM invalidates the old value.
             self._sources.pop(key, None)
@@ -83,6 +107,8 @@ class BdeDisplay:
             reading = None
         else:
             self._sources[key] = (reading, now)
+            if self._p2_reference and key != "operating_mode":
+                self._cooling_sources.add(key)
             context = self._valid_context(now)
             if context is None:
                 self._reset_stability()
@@ -92,9 +118,35 @@ class BdeDisplay:
                 self._since = now
             elif self._since is not None and now - self._since >= STABILITY_SECONDS:
                 self._qualified = True
-        if self._supports_green_led and key in LED_SOURCE_KEYS:
-            self._update_green_led(key, previous, reading, now)
+        if self._p2_reference and key in MODE_STATUS_SOURCE_KEYS:
+            self._update_fan_level_context(key, previous, reading, now)
+            if self._supports_green_led:
+                self._update_green_led(key, previous, reading, now)
         return self._qualified != was_qualified or self.green_led(now) != previous_led
+
+    def _update_fan_level_context(
+        self,
+        key: str,
+        previous: tuple[Reading, float] | None,
+        reading: Reading | None,
+        now: float,
+    ) -> None:
+        if key == "raw_0208":
+            mode = self._sources.get("operating_mode")
+            self._fan_level_status_confirmed = (
+                reading is not None
+                and reading.value == FAN_LEVEL_THREE_WORD
+                and mode is not None
+                and mode[0].value == "eco_winter"
+                and 0 <= now - mode[1] <= MAX_SOURCE_AGE
+            )
+        elif key == "operating_mode" and (
+            reading is None
+            or reading.value != "eco_winter"
+            or previous is None
+            or not 0 <= now - previous[1] <= MAX_SOURCE_AGE
+        ):
+            self._fan_level_status_confirmed = False
 
     def _valid_context(self, now: float) -> tuple[str, int, int] | None:
         if len(self._sources) != len(SOURCE_KEYS):
@@ -126,6 +178,13 @@ class BdeDisplay:
             return None
         if context in HEATING_CONTEXTS and rpm > 0:
             return context
+        if (
+            self._p2_reference
+            and context == COOLING_CONTEXT
+            and len(self._cooling_sources) == len(SOURCE_KEYS) - 1
+            and rpm > 0
+        ):
+            return context
         return context if context == BLANK_CONTEXT and rpm == 0 else None
 
     @property
@@ -138,7 +197,11 @@ class BdeDisplay:
     def value(self, now: float) -> str | None:
         """Recheck availability between expiry callbacks without advancing state."""
         if self._qualified and self._valid_context(now) == self._context:
-            return "blank" if self._context == BLANK_CONTEXT else "heating"
+            if self._context == BLANK_CONTEXT:
+                return "blank"
+            if self._context == COOLING_CONTEXT:
+                return "cooling"
+            return "heating"
         return None
 
     def _update_green_led(
@@ -181,6 +244,25 @@ class BdeDisplay:
                 return state
         return None
 
+    @property
+    def fan_level_expires_at(self) -> float | None:
+        if not self._fan_level_status_confirmed:
+            return None
+        return (
+            min(self._sources[key][1] for key in MODE_STATUS_SOURCE_KEYS)
+            + MAX_SOURCE_AGE
+        )
+
+    def fan_level_confirmed(self, now: float) -> bool:
+        """Require a status received in a continuous, fresh Eco Winter context."""
+        deadline = self.fan_level_expires_at
+        return (
+            deadline is not None
+            and max(self._sources[key][1] for key in MODE_STATUS_SOURCE_KEYS)
+            <= now
+            <= deadline
+        )
+
     def expire(self, now: float) -> bool:
         """Clear an expired candidate and report whether listeners need updating."""
         display_expired = self._since is not None and self._valid_context(now) is None
@@ -189,4 +271,9 @@ class BdeDisplay:
         led_expired = self._green_led is not None and self.green_led(now) is None
         if led_expired:
             self._green_led = None
-        return display_expired or led_expired
+        fan_expired = self._fan_level_status_confirmed and not self.fan_level_confirmed(
+            now
+        )
+        if fan_expired:
+            self._fan_level_status_confirmed = False
+        return display_expired or led_expired or fan_expired

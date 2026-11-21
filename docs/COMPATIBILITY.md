@@ -14,9 +14,17 @@ BDE-Displayvergleichen mit dieser Hardware:
 | Verbindung | RS485, transparent über TCP |
 | Serielle Einstellungen | 19200 Baud, 8N1 |
 
-Diese Angaben beschreiben die Referenzkonfiguration. Sie sind keine automatisch
-erkannten Geräteattribute. Ein gleicher Produktname allein belegt keine
-Kompatibilität. Verfügbare Messwerte hängen auch von Ausstattung und Busverkehr ab.
+Diese Angaben beschreiben die Referenzkonfiguration. Home Assistant zeigt
+für das Gerät die allgemeine Modellbezeichnung **PROXON (HESP)**. Das
+Transportprofil `lt_zim_16_observed` wird bei der Einrichtung ausgewählt
+und gilt auch für die unten beschriebene lesende Anbindung der FWT 2-L.
+Welche Messwerte verfügbar sind, hängt von Hardware, Ausstattung und
+Busverkehr ab.
+
+Die Integrationsoption **BDE-Anzeige für P2-Referenzgerät** gilt für die
+oben beschriebene P2. Sie gibt die Auswertung der oberen grünen LED, eine
+belegte Kühlanzeige und eine Regler-Luftstufe frei. Die Option ist
+standardmäßig aus und lässt sich im laufenden Betrieb ändern.
 
 Das Waveshare-Modell ist die eingesetzte Referenzhardware, keine Voraussetzung
 der Integration. Andere Gateways müssen rohe serielle Daten unverändert über TCP
@@ -54,8 +62,9 @@ Verdichter**, nach einem Wechsel von Eco Sommer. Beide Betriebsarten werden
 laut Nutzer korrekt angezeigt. Im Diagnoseexport sind keine gesendeten
 Anwendungsbytes verzeichnet.
 
-**Noch nicht bestätigt:** Betrieb bei laufender Wärmepumpe, Heiz-/Kühl- und
-Abtauzuordnungen, Ventilindikatoren, aktive Vorheizung sowie der Gerätezeitabgleich.
+**Noch offen:** Betrieb mit laufender Wärmepumpe, die P2-Zuordnungen für
+BDE-Betriebsfeld und obere grüne LED, Heiz-/Kühl- und Abtauzuordnungen,
+Ventilindikatoren, aktive Vorheizung sowie der Gerätezeitabgleich.
 Ein Betriebsstundenzähler für eine Funktion ist kein Nachweis ihres aktuellen
 Schaltzustands. Kalenderwerte sind dekodierbar, wurden aber nicht durch einen
 Schreibtest geprüft.
