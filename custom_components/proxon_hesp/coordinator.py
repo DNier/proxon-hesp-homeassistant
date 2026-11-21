@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .bde_display import BdeDisplay
+from .bde_display import FAN_LEVEL_THREE_WORD, BdeDisplay
 from .capture import DURATION, Capture
 from .const import PROFILE, STALE_SECONDS
 from .event_capture import EventCapture
@@ -39,6 +39,7 @@ class ProxonRuntime:
         event_capture_enabled: bool = False,
         integration_version: str | None = None,
         profile: str = PROFILE,
+        p2_reference_display: bool = False,
     ) -> None:
         self.room_update_lock = asyncio.Lock()
         self.room_updates = []
@@ -60,7 +61,10 @@ class ProxonRuntime:
         self.ready = asyncio.Event()
         self.last_error: str | None = None
         self.reconnects = 0
-        self.bde_display = BdeDisplay(supports_green_led=profile == PROFILE)
+        self.bde_display = BdeDisplay(
+            supports_green_led=profile == PROFILE,
+            p2_reference=p2_reference_display and profile == PROFILE,
+        )
         self.decoder = Decoder(self._observe_bde_display)
         self.previous_stats = Statistics()
         self.task: asyncio.Task | None = None
@@ -168,9 +172,14 @@ class ProxonRuntime:
         previous_deadlines = (
             self.bde_display.expires_at,
             self.bde_display.green_led_expires_at,
+            self.bde_display.fan_level_expires_at,
         )
         changed = self.bde_display.observe(source, readings, time.monotonic())
-        deadlines = self.bde_display.expires_at, self.bde_display.green_led_expires_at
+        deadlines = (
+            self.bde_display.expires_at,
+            self.bde_display.green_led_expires_at,
+            self.bde_display.fan_level_expires_at,
+        )
         if self.timer is not None and previous_deadlines != deadlines:
             self._schedule_expiry()
         if changed:
@@ -185,6 +194,14 @@ class ProxonRuntime:
         if not self.connected or self.profile != PROFILE:
             return None
         return self.bde_display.green_led(time.monotonic())
+
+    @callback
+    def configure_p2_reference_display(self, enabled: bool) -> None:
+        """Apply the confirmed BDE selection without replacing the receiver."""
+        if self.bde_display.configure_p2_reference(enabled and self.profile == PROFILE):
+            if self.timer is not None:
+                self._schedule_expiry()
+            self._notify()
 
     @callback
     def _set_writer(self, writer) -> None:
@@ -287,6 +304,7 @@ class ProxonRuntime:
         for expiry in (
             self.bde_display.expires_at,
             self.bde_display.green_led_expires_at,
+            self.bde_display.fan_level_expires_at,
         ):
             if expiry is not None:
                 deadline = min(deadline, expiry + _BDE_EXPIRY_MARGIN)
@@ -307,7 +325,11 @@ class ProxonRuntime:
         if general_due:
             # Earlier display deadlines must not move the general sweep or
             # diagnostics notifications away from their five-second cadence.
-            expired = [key for key in self.values if self.get(key) is None]
+            expired = [
+                key
+                for key, (_, stamp) in self.values.items()
+                if not self.connected or now - stamp >= STALE_SECONDS
+            ]
             for key in expired:
                 del self.values[key]
             self._next_general_expiry = now + 5
@@ -319,10 +341,19 @@ class ProxonRuntime:
         self._schedule_expiry()
 
     def get(self, key: str) -> Reading | None:
-        item = self.values.get(key)
-        if not self.connected or item is None:
+        if not self.connected:
             return None
-        return item[0] if time.monotonic() - item[1] < STALE_SECONDS else None
+        now = time.monotonic()
+        if key == "controller_fan_level" and self.profile == PROFILE:
+            status = self.values.get("raw_0208")
+            if status is not None and status[0].value == FAN_LEVEL_THREE_WORD:
+                return (
+                    Reading(key, 3)
+                    if self.bde_display.fan_level_confirmed(now)
+                    else None
+                )
+        item = self.values.get(key)
+        return item[0] if item is not None and now - item[1] < STALE_SECONDS else None
 
     def diagnostics(self) -> dict:
         counters = {

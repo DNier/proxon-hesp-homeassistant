@@ -13,6 +13,7 @@ from .capture import DURATION, validate_duration
 from .const import (
     CONF_CAPTURE_DURATION,
     CONF_EVENT_CAPTURE,
+    CONF_P2_REFERENCE_DISPLAY,
     CONF_PROFILE,
     DOMAIN,
     PROFILE,
@@ -44,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
         event_capture_enabled=entry.options.get(CONF_EVENT_CAPTURE, False),
         integration_version=str(integration.version),
         profile=entry.data[CONF_PROFILE],
+        p2_reference_display=entry.options.get(CONF_P2_REFERENCE_DISPLAY) is True,
     )
     try:
         await runtime.start(entry)
@@ -63,12 +65,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
 
 
 async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
-    """Apply to the next recording without reloading or losing the current one."""
+    """Apply options on the existing runtime and keep its current recording."""
     entry.runtime_data.capture.duration = validate_duration(
         entry.options.get(CONF_CAPTURE_DURATION, DURATION)
     )
     entry.runtime_data.event_capture.configure(
         entry.options.get(CONF_EVENT_CAPTURE, False)
+    )
+    entry.runtime_data.configure_p2_reference_display(
+        entry.options.get(CONF_P2_REFERENCE_DISPLAY) is True
     )
     entry.runtime_data._notify_diagnostics()
     async with entry.runtime_data.room_update_lock:

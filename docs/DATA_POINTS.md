@@ -37,7 +37,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fifteen display-backed words; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fifteen exact words plus one fresh Eco Winter context; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -199,24 +199,22 @@ Version 0.15.1 adds only `8200131A`: the BDE showed level 3 during natural winte
 heating while the recorded complete word remained stable. Requested level 1
 and fan control percentages are separate observations, not its validation source.
 Bit 25 is not assigned a meaning and is not masked off for other words. The
-transition word `82001212` and bit-28 words `9200131A`/`92001312`
-remain uninterpreted as levels without their own display references.
+transition word `82001212` and the complete word `92001312` still need
+their own level references.
 
 The complete word `8200111A` (payload `1a110082`, identity
 `224000/0208/4`) is supported for level 3 by a BDE reading within a stable
 Recorder interval of about 91 seconds. The interval comes from checksum-validated
 sensor values. Tests reproduce the observed payload with synthetic framing and
-checksum. Words including `8200101A`, `8200121A` and `9200131A` remain
-unassigned.
+checksum. Words including `8200101A` and `8200121A` remain unassigned.
 
 Two independent Eco Winter display readings place level 2 within stable raw
 intervals of the complete word `82001312` (payload `12130082`). Each
 displayed device minute is fully contained in its matching interval. Both
 captures contain frame `2240000802000008121300820001` with its recorded checksum.
 Tests replay that frame at every TCP split. The mapping applies to that complete
-word. `82001212`, `92001312` and `9200131A` remain unassigned. The bit-28
-display reference overlaps a word change and cannot distinguish the adjacent
-words.
+word. `82001212` and `92001312` remain unassigned. A level 2 display
+reference overlaps a transition between complete words.
 
 Version 0.16.6 adds only `80001312` (payload `12130080`, identity
 `224000/0208/4`) as level 2. A BDE main-page reference shows Eco Winter and
@@ -238,6 +236,18 @@ Version 0.16.9 adds `82009312` (payload `12930082`, identity `224000/0208/4`)
 as level 2. A BDE main-page photo shows level 2 in Eco Winter. The exact
 word remains fresh throughout the displayed-minute bracket in the original
 capture. The same episode supports the separate [bounded heating context](BDE_DISPLAY_EVIDENCE.md#additional-level-2-heating-context-0169).
+
+Two independent P2 observations in Eco Winter support displayed level 3 for
+`0x9200131A` (payload `1a130092`, identity `224000/0208/4`). One whole
+device minute contains the exact word. For the second observation the
+observed room-temperature display and integer device-clock seconds both
+place the image within that exact word's interval. The temperature
+comparison allows one additional polling interval. Two other level 2
+photographs have mixed words within their displayed minutes. With **P2
+reference BDE display** enabled, the word produces level 3 when a preceding
+Eco Winter mode and this status are both fresh within six seconds. A profile
+or mode change, stale mode, or reconnect requires a new matching status.
+The operating-display and LED rules use their own contexts.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
@@ -538,15 +548,18 @@ corresponding telegram evidence are available.
 while that display still reads on. Bit 28 is absent during a display-confirmed cooling run. Neither
 is a generic cooling indicator. Positive RPM can also be reported only after the
 LED illuminates and supply air starts cooling, on both the BDE and HESP. The
-existing compressor entity reports RPM > 0, not an independently measured
-physical start time. Heating/cooling/defrost classification remains unimplemented.
+existing compressor entity reports RPM > 0. The separately documented BDE
+operating-display sensor mirrors specific confirmed labels. Physical operating
+phases require separate evidence.
 
 ## Upper green BDE LED
 
 The optional diagnostic binary sensor `bde_green_led` mirrors the upper green
-LED within three display-backed contexts for the manually selected
-`lt_zim_16_observed` profile. Independent display references on the P2 with
-LT-ZIM V1.6 and BDE Comfort support each mode and complete status word pair.
+LED within three display-backed contexts for the P2 with LT-ZIM V1.6 and
+BDE Comfort. Enable **P2 reference BDE display** in the integration options
+on that hardware. A FWT 2-R capture contains the same Comfort frame pair
+without a corresponding optical reference. The shared transport profile does
+not identify the panel or establish the meaning of the LED.
 
 | Operating mode | Status word (little-endian uint32) | Visible LED |
 | --- | --- | --- |
@@ -576,9 +589,16 @@ Two independent device-minute-backed references support this blank-label
 context. It describes the absent visible BDE operating label, not absent heat
 output, a PTC state or a general idle state.
 
+With **P2 reference BDE display** enabled, the same entity reports `cooling`
+for Comfort with full
+`224000/0208/4=0x80001522`, full `224000/006C/4=0x0227` and fresh positive
+`224000/051C/4` compressor speed. Two independent P2 display comparisons
+support this exact combination. All three sources must arrive after the
+current Comfort mode's first or changed receipt.
+
 All four sources must meet the six-second freshness/coherency bound and each
 complete combination must remain valid for 15 seconds of actual receptions.
 Every context change, including heating to blank or the reverse, starts a new
-qualification window. Elsewhere the entity is unavailable; there is no Off,
-cooling, defrost or last-known-value fallback. Existing entity identity,
-activation settings and general telemetry freshness remain unchanged. [Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).
+qualification window. Other combinations are unavailable. The existing entity
+identity, opt-in setting and general telemetry freshness are preserved.
+[Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).

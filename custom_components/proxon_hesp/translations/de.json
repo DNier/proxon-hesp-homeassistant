@@ -53,6 +53,7 @@
         "name": "BDE-Betriebsanzeige",
         "state": {
           "heating": "Heizbetrieb",
+          "cooling": "Kühlbetrieb",
           "blank": "Betriebsfeld leer"
         }
       },
@@ -364,15 +365,17 @@
   "options": {
     "step": {
       "init": {
-        "title": "Aufnahmeoptionen",
-        "description": "Die Dauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
+        "title": "Aufnahmen und BDE-Anzeige",
+        "description": "Eine geänderte Aufnahmedauer gilt ab der nächsten Aufnahme. Laufende und gespeicherte Aufnahmen bleiben erhalten. Speichergrenzen können die Aufnahme früher beenden.",
         "data": {
           "capture_duration": "Aufnahmedauer (Sekunden)",
-          "event_capture_enabled": "Automatische Ereignisaufnahme"
+          "event_capture_enabled": "Automatische Ereignisaufnahme",
+          "p2_reference_display": "BDE-Anzeige für P2-Referenzgerät"
         },
         "data_description": {
           "capture_duration": "30–600 Sekunden; Standard: 120.",
-          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart/-stopp oder einem Wechsel des experimentellen Statusbits 28 (0x0208). Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie."
+          "event_capture_enabled": "Puffert bis zu 180 Sekunden vor und nach einem Verdichterstart/-stopp oder einem Wechsel des experimentellen Statusbits 28 (0x0208). Behält automatisch die vier neuesten Aufnahmen; ältere werden ersetzt. Nur im Arbeitsspeicher; Neustart verwirft sie.",
+          "p2_reference_display": "Für PROXON P2 mit LT-ZIM V1.6 und BDE Comfort aktivieren. Gibt die Auswertung der oberen grünen LED, den belegten Kühlbetrieb in Komfort und eine Luftstufen-Zuordnung in Eco Winter frei."
         }
       }
     },

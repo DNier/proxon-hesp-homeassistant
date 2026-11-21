@@ -72,7 +72,7 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert hass.states.get(hours_id).attributes["device_class"] == "duration"
         assert registry.async_get(filter_id).entity_category.value == "diagnostic"
         assert "state_class" not in hass.states.get(hours_id).attributes
-        assert device.model == "PROXON P-Serie (HESP)"
+        assert device.model == "PROXON (HESP)"
         assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 81
         led_id = registry.async_get_entity_id(
             "binary_sensor", DOMAIN, "stable-unit_bde_green_led"
@@ -169,3 +169,73 @@ async def test_setup_values_availability_registry_and_unload(hass, frames):
         assert runtime.task is None
         assert runtime.timer is None
         assert closed.is_set()
+
+
+async def test_existing_device_metadata_updates_in_place(hass, frames):
+    reader = asyncio.StreamReader()
+    reader.feed_data(frames["0xe1"])
+
+    @asynccontextmanager
+    async def receiver(*args):
+        yield reader
+
+    unique_id = "existing-unit"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="FWT 2-L",
+        unique_id=unique_id,
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+    )
+    entry.add_to_hass(hass)
+    devices = dr.async_get(hass)
+    entities = er.async_get(hass)
+    device = devices.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, unique_id)},
+        name=entry.title,
+        model="PROXON P-Serie (HESP)",
+    )
+    devices.async_update_device(device.id, name_by_user="Ventilation")
+    display = entities.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{unique_id}_bde_operating_display",
+        suggested_object_id="existing_bde_display",
+        config_entry=entry,
+        device_id=device.id,
+    )
+    entities.async_update_entity(display.entity_id, name="Operating label")
+    led = entities.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        f"{unique_id}_bde_green_led",
+        suggested_object_id="existing_bde_led",
+        config_entry=entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    with patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        updated = devices.async_get(device.id)
+        assert updated.model == "PROXON (HESP)"
+        assert updated.identifiers == device.identifiers
+        assert updated.config_entries == {entry.entry_id}
+        assert updated.name_by_user == "Ventilation"
+        assert updated.sw_version is None
+
+        for original in (display, led):
+            registered = entities.async_get(original.entity_id)
+            assert registered.device_id == device.id
+            assert registered.unique_id == original.unique_id
+            assert registered.disabled_by == original.disabled_by
+        assert entities.async_get(display.entity_id).name == "Operating label"
+        fan_id = entities.async_get_entity_id(
+            "sensor", DOMAIN, f"{unique_id}_fan_level"
+        )
+        assert entities.async_get(fan_id).device_id == device.id
+        assert hass.states.get(fan_id).state == "3"
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

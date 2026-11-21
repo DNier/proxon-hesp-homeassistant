@@ -53,6 +53,7 @@
         "name": "BDE operating display",
         "state": {
           "heating": "Heating",
+          "cooling": "Cooling",
           "blank": "Blank operating field"
         }
       },
@@ -364,15 +365,17 @@
   "options": {
     "step": {
       "init": {
-        "title": "Capture options",
-        "description": "Applies to the next recording. Running and saved recordings are preserved. Memory limits may end a recording earlier.",
+        "title": "Capture and BDE display options",
+        "description": "Capture duration changes apply to the next recording. Running and saved recordings are preserved. Memory limits may end a recording earlier.",
         "data": {
           "capture_duration": "Capture duration (seconds)",
-          "event_capture_enabled": "Automatic event capture"
+          "event_capture_enabled": "Automatic event capture",
+          "p2_reference_display": "P2 reference BDE display"
         },
         "data_description": {
           "capture_duration": "30–600 seconds; default: 120.",
-          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start/stop or a change of experimental status bit 28 (0x0208). Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them."
+          "event_capture_enabled": "Buffers up to 180 seconds before and after a compressor start/stop or a change of experimental status bit 28 (0x0208). Automatically keeps the four latest recordings, replacing older ones. Memory only; restart discards them.",
+          "p2_reference_display": "Enable for PROXON P2 with LT-ZIM V1.6 and BDE Comfort. Enables the upper green LED interpretation, the verified Comfort cooling label and one Eco Winter fan-level context."
         }
       }
     },

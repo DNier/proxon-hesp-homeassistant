@@ -12,6 +12,7 @@ from .capture import DURATION, MAX_DURATION, MIN_DURATION, validate_duration
 from .const import (
     CONF_CAPTURE_DURATION,
     CONF_EVENT_CAPTURE,
+    CONF_P2_REFERENCE_DISPLAY,
     CONF_PROFILE,
     DEFAULT_PORT,
     DOMAIN,
@@ -97,7 +98,7 @@ class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class ProxonOptionsFlow(OptionsFlow):
-    """Configure recording limits without touching the gateway connection."""
+    """Configure recording and display options on the existing connection."""
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         errors = {}
@@ -115,6 +116,12 @@ class ProxonOptionsFlow(OptionsFlow):
                             CONF_EVENT_CAPTURE,
                             self.config_entry.options.get(CONF_EVENT_CAPTURE, False),
                         ),
+                        CONF_P2_REFERENCE_DISPLAY: user_input.get(
+                            CONF_P2_REFERENCE_DISPLAY,
+                            self.config_entry.options.get(
+                                CONF_P2_REFERENCE_DISPLAY, False
+                            ),
+                        ),
                     }
                 )
         return self.async_show_form(
@@ -131,6 +138,12 @@ class ProxonOptionsFlow(OptionsFlow):
                         CONF_EVENT_CAPTURE,
                         default=self.config_entry.options.get(
                             CONF_EVENT_CAPTURE, False
+                        ),
+                    ): bool,
+                    vol.Required(
+                        CONF_P2_REFERENCE_DISPLAY,
+                        default=self.config_entry.options.get(
+                            CONF_P2_REFERENCE_DISPLAY, False
                         ),
                     ): bool,
                 }
