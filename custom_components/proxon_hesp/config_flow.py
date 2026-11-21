@@ -3,7 +3,12 @@
 import uuid
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -81,9 +86,19 @@ class ProxonConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     title = data.pop(CONF_NAME)
                     if entry:
-                        return self.async_update_reload_and_abort(
+                        # The listener can start a reload while saving the entry.
+                        state = entry.state
+                        result = self.async_update_and_abort(
                             entry, data_updates=data, title=title
                         )
+                        if state not in (
+                            ConfigEntryState.LOADED,
+                            ConfigEntryState.UNLOAD_IN_PROGRESS,
+                        ):
+                            self.hass.config_entries.async_schedule_reload(
+                                entry.entry_id
+                            )
+                        return result
                     await self.async_set_unique_id(uuid.uuid4().hex)
                     return self.async_create_entry(title=title, data=data)
         return self.async_show_form(

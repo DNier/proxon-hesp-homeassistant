@@ -2,10 +2,11 @@
 
 from types import MappingProxyType
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -27,6 +28,7 @@ from .services import async_register_services
 from .telemetry_migration import async_retire_raw_sensors
 
 type ProxonConfigEntry = ConfigEntry[ProxonRuntime]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SWITCH]
 
 
@@ -41,6 +43,16 @@ def _sync_main_device(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
         manufacturer="Zimmermann",
         model=P2_DEVICE_MODEL if p2_selected else DEVICE_MODEL,
     )
+
+
+def _apply_entry_options(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
+    runtime = entry.runtime_data
+    runtime.capture.duration = validate_duration(
+        entry.options.get(CONF_CAPTURE_DURATION, DURATION)
+    )
+    runtime.event_capture.configure(entry.options.get(CONF_EVENT_CAPTURE, False))
+    _sync_main_device(hass, entry)
+    runtime._notify_diagnostics()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,31 +87,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bo
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         await async_retire_raw_sensors(hass, entry)
         # Options can change before the loaded entry starts listening for updates.
-        _sync_main_device(hass, entry)
+        _apply_entry_options(hass, entry)
     except BaseException:
         await runtime.stop()
         raise
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
-    """Apply options on the existing runtime and keep its current recording."""
-    entry.runtime_data.capture.duration = validate_duration(
-        entry.options.get(CONF_CAPTURE_DURATION, DURATION)
-    )
-    entry.runtime_data.event_capture.configure(
-        entry.options.get(CONF_EVENT_CAPTURE, False)
-    )
-    _sync_main_device(hass, entry)
-    entry.runtime_data._notify_diagnostics()
-    async with entry.runtime_data.room_update_lock:
+async def async_update_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> None:
+    """Reconnect for endpoint changes and apply other updates in place."""
+    if entry.state is not ConfigEntryState.LOADED:
+        return
+    runtime = entry.runtime_data
+    async with runtime.config_update_lock:
+        if (
+            entry.state is not ConfigEntryState.LOADED
+            or entry.runtime_data is not runtime
+        ):
+            return
+        endpoint = entry.data[CONF_HOST], entry.data[CONF_PORT]
+        if (runtime.host, runtime.port) != endpoint:
+            # Keep other entry updates behind this reload until the runtime changes.
+            await hass.config_entries.async_reload(entry.entry_id)
+            return
+
+        _apply_entry_options(hass, entry)
         rooms = configured_rooms(entry)
-        if rooms != entry.runtime_data.room_config:
-            for update in entry.runtime_data.room_updates:
+        if rooms != runtime.room_config:
+            for update in runtime.room_updates:
                 await update()
-            sync_room_devices(hass, entry, entry.runtime_data.room_config)
-            entry.runtime_data.room_config = rooms
+            sync_room_devices(hass, entry, runtime.room_config)
+            runtime.room_config = rooms
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ProxonConfigEntry) -> bool:
