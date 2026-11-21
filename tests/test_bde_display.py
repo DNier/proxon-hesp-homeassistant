@@ -775,7 +775,8 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         assert hass.states.is_state(registered.entity_id, "unavailable")
         await receive_at(1, STATUS, "unavailable")
         await receive_at(2, MODE + dark, "off")
-        await receive_at(3, STATUS, "on")
+        await receive_at(3, FAN3_SOURCES[1], "on")
+        await receive_at(3.125, STATUS_9200131A, "unavailable")
         await receive_at(3.25, STATUS_82009312, "unavailable")
         await receive_at(3.5, STATUS, "on")
         await receive_at(3.75, wrong_status_node, "on")
@@ -785,6 +786,7 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         await receive_at(7, comfort + comfort_lit + STOPPED, "on")
         assert runtime.get_bde_operating_display() is None
         assert runtime.get("compressor_rpm").value == 0
+        await receive_at(7.5, FAN3_SOURCES[1], "unavailable")
         await receive_at(8, STATUS, "unavailable")
         await receive_at(9, comfort_lit, "on")
         await receive_at(11, corrupt_comfort, "on")
@@ -816,6 +818,7 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         assert entry.runtime_data is runtime
         assert hass.states.is_state(registered.entity_id, "unavailable")
         await receive_at(26, comfort + comfort_lit, "unavailable", next_reader)
+        await receive_at(27, MODE + FAN3_SOURCES[1], "unavailable", next_reader)
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert runtime.timer is None

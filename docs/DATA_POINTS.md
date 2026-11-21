@@ -555,7 +555,7 @@ phases require separate evidence.
 ## Upper green BDE LED
 
 The optional diagnostic binary sensor `bde_green_led` mirrors the upper green
-LED within three display-backed contexts for the P2 with LT-ZIM V1.6 and
+LED within four display-backed contexts for the P2 with LT-ZIM V1.6 and
 BDE Comfort. Enable **P2 reference BDE display** in the integration options
 on that hardware. A FWT 2-R capture contains the same Comfort frame pair
 without a corresponding optical reference. The shared transport profile does
@@ -565,6 +565,7 @@ not identify the panel or establish the meaning of the LED.
 | --- | --- | --- |
 | Eco Winter | `0x8000100A` | Dark |
 | Eco Winter | `0x82001312` | Lit |
+| Eco Winter | `0x8200131A` (since 0.16.14) | Lit |
 | Comfort | `0x8000131A` | Lit |
 
 Both checksum-validated sources, `118000 / 020A / 2` for mode and
@@ -573,9 +574,12 @@ A mode change requires a new status receipt. The entity is unavailable for other
 pairs, missing or stale data, and on disconnect. It is disabled by default and
 uses the existing receive stream.
 
-The LED was also observed lit with the operating field blank and reported
-compressor speed zero. The references establish the listed pairs and leave the
-general interpretation of individual status bits open.
+Two independent P2 readings confirm the lit LED for Eco Winter and
+`0x8200131A`. One uses a device-clock bracket, the other a contemporaneous
+reading with fresh matching telegrams before and after it. The neighbouring
+word `0x9200131A` remains unassigned for the LED. The LED was also observed
+lit with the operating field blank and reported compressor speed zero. The
+general interpretation of individual status bits remains open.
 
 ## Bounded BDE operating-display indication (0.16.0)
 

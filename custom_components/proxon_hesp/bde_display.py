@@ -28,6 +28,7 @@ COOLING_CONTEXT = ("comfort", 0x80001522, 0x0227)
 UPPER_GREEN_LED_CONTEXTS = {
     ("eco_winter", "0a100080"): False,
     ("eco_winter", "12130082"): True,
+    ("eco_winter", "1a130082"): True,
     ("comfort", "1a130080"): True,
 }
 MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
