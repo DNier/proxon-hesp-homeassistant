@@ -11,6 +11,8 @@ SOURCE_KEYS = {
     "raw_051c": "compressor_rpm",
 }
 MAX_SOURCE_AGE = 6.0
+# LED-only tolerance for observed unchanged source intervals up to 7.479 s.
+MAX_LED_SOURCE_AGE = 8.0
 # Bounded tolerance for observed Eco Winter poll intervals above six seconds.
 MAX_WINTER_SOURCE_AGE = 7.0
 STABILITY_SECONDS = 15.0
@@ -33,6 +35,10 @@ UPPER_GREEN_LED_CONTEXTS = {
     ("eco_winter", "1a130082"): True,
     ("comfort", "1a130080"): True,
 }
+# Explicit continuity assumption, not an independently observed LED mapping.
+INFERRED_GREEN_LED_CONTEXTS = frozenset(
+    {("eco_winter", "1a130092"), ("eco_winter", "12130092")}
+)
 MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
 FAN_LEVEL_THREE_WORD = "1a130092"
 
@@ -55,6 +61,8 @@ class BdeDisplay:
         self._supports_green_led = supports_green_led
         self._sources: dict[str, tuple[Reading, float]] = {}
         self._green_led: tuple[bool, float, float] | None = None
+        self._green_led_basis: str | None = None
+        self._led_on_continuity = False
         self._led_status_current = False
         self._fan_level_status_confirmed = False
         self._context: tuple[str, int, int] | None = None
@@ -75,6 +83,8 @@ class BdeDisplay:
         self._cooling_sources.clear()
         self._reset_stability()
         self._green_led = None
+        self._green_led_basis = None
+        self._led_on_continuity = False
         self._led_status_current = False
         self._fan_level_status_confirmed = False
 
@@ -90,6 +100,9 @@ class BdeDisplay:
             return False
         was_qualified = self._qualified
         previous_led = self._green_led[0] if self._green_led is not None else None
+        previous_led_basis = self._green_led_basis
+        if self.green_led(now) is None:
+            self._led_on_continuity = False
         # Check the old snapshot before replacing anything: a new valid batch
         # must never bridge a period during which any source had expired.
         if self._valid_context(now) is None:
@@ -129,9 +142,17 @@ class BdeDisplay:
                 self._qualified = True
         if self._p2_reference and key in MODE_STATUS_SOURCE_KEYS:
             self._update_fan_level_context(key, previous, reading, now)
-            if self._supports_green_led:
-                self._update_green_led(key, previous, reading, now)
-        return self._qualified != was_qualified or self.green_led(now) != previous_led
+        if (
+            self._p2_reference
+            and self._supports_green_led
+            and key in (*MODE_STATUS_SOURCE_KEYS, "compressor_rpm")
+        ):
+            self._update_green_led(key, previous, reading, now)
+        return (
+            self._qualified != was_qualified
+            or self.green_led(now) != previous_led
+            or self._green_led_basis != previous_led_basis
+        )
 
     def _update_fan_level_context(
         self,
@@ -235,34 +256,66 @@ class BdeDisplay:
         # particular, switching back cannot revive the old mode's LED state.
         if key == "raw_0208":
             self._led_status_current = reading is not None
-        elif reading is None or (
-            previous is not None and previous[0].value != reading.value
+        elif key == "operating_mode" and (
+            reading is None
+            or (previous is not None and previous[0].value != reading.value)
         ):
             self._led_status_current = False
+            self._led_on_continuity = False
         self._green_led = None
+        self._green_led_basis = None
         if not self._led_status_current:
+            self._led_on_continuity = False
             return
         mode = self._sources.get("operating_mode")
         status = self._sources.get("raw_0208")
         if mode is None or status is None:
+            self._led_on_continuity = False
             return
-        state = UPPER_GREEN_LED_CONTEXTS.get((mode[0].value, status[0].value))
+        context = mode[0].value, status[0].value
+        state = UPPER_GREEN_LED_CONTEXTS.get(context)
+        rpm = self._sources.get("compressor_rpm")
+        positive_rpm = (
+            rpm is not None
+            and isinstance(rpm[0].value, (int, float))
+            and not isinstance(rpm[0].value, bool)
+            and math.isfinite(rpm[0].value)
+            and 0 < rpm[0].value <= 10000
+            and 0 <= now - rpm[1] <= MAX_LED_SOURCE_AGE
+        )
         latest = max(mode[1], status[1])
-        deadline = min(mode[1], status[1]) + MAX_SOURCE_AGE
+        deadline = min(mode[1], status[1]) + MAX_LED_SOURCE_AGE
+        basis = "display_reference"
+        if state is None and context in INFERRED_GREEN_LED_CONTEXTS:
+            if self._led_on_continuity and positive_rpm:
+                latest = max(latest, rpm[1])
+                deadline = min(deadline, rpm[1] + MAX_LED_SOURCE_AGE)
+                state = True
+                basis = "inferred_continuity"
         if state is not None and latest <= now <= deadline:
             self._green_led = state, latest, deadline
+            self._green_led_basis = basis
+            self._led_on_continuity = (
+                state and mode[0].value == "eco_winter" and positive_rpm
+            )
+        else:
+            self._led_on_continuity = False
 
     @property
     def green_led_expires_at(self) -> float | None:
         return self._green_led[2] if self._green_led is not None else None
 
     def green_led(self, now: float) -> bool | None:
-        """Mirror the upper green LED while both matching sources are fresh."""
+        """Report a display-backed or explicitly inferred LED while fresh."""
         if self._green_led is not None:
             state, latest, deadline = self._green_led
             if latest <= now <= deadline:
                 return state
         return None
+
+    def green_led_basis(self, now: float) -> str | None:
+        """Keep continuity assumptions distinguishable from display references."""
+        return self._green_led_basis if self.green_led(now) is not None else None
 
     @property
     def fan_level_expires_at(self) -> float | None:
@@ -291,6 +344,8 @@ class BdeDisplay:
         led_expired = self._green_led is not None and self.green_led(now) is None
         if led_expired:
             self._green_led = None
+            self._green_led_basis = None
+            self._led_on_continuity = False
         fan_expired = self._fan_level_status_confirmed and not self.fan_level_confirmed(
             now
         )

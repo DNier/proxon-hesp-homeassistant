@@ -568,16 +568,35 @@ not identify the panel or establish the meaning of the LED.
 | Eco Winter | `0x8200131A` (since 0.16.14) | Lit |
 | Comfort | `0x8000131A` | Lit |
 
-Both checksum-validated sources, `118000 / 020A / 2` for mode and
-`224000 / 0208 / 4` for status, must have arrived within the last six seconds.
-A mode change requires a new status receipt. The entity is unavailable for other
-pairs, missing or stale data, and on disconnect. It is disabled by default and
-uses the existing receive stream.
+**From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
+mode and `224000 / 0208 / 4` for status, must have arrived within the last
+eight seconds. This LED-only limit covers observed unchanged-source intervals
+up to 7.479 seconds. It can expose missing data up to two seconds later than
+the previous six-second limit. The operating-display and fan-level limits
+are unchanged. A mode change requires a new status receipt. The entity is
+disabled by default and uses the existing receive stream.
+
+An explicit **continuity assumption** fills two additional Eco Winter contexts:
+`0x9200131A` and `0x92001312`. They may continue an already admitted On state
+on the same uninterrupted connection while mode, status and finite positive
+compressor RPM (`224000 / 051C / 4`) all remain within eight seconds. These
+complete words are not independently photographed LED references. The
+assumption is restricted by the exact context and freshness, with no fixed
+total duration cap while those conditions continue.
+
+The entity exposes `state_basis=display_reference` for the four observed
+pairs and `state_basis=inferred_continuity` with Home Assistant's
+`assumed_state=true` for the two inferred contexts. Missing, invalid, expired
+or unassigned data, an explicit Off context, a mode change or disconnect
+breaks continuity. Starting or reconnecting directly in a Bit-28 context
+cannot infer On. Fresh positive RPM alone cannot restore a lost anchor.
+Unavailable states expose `state_basis=unavailable`, without an assumed On.
 
 Two independent P2 readings confirm the lit LED for Eco Winter and
 `0x8200131A`. One uses a device-clock bracket, the other a contemporaneous
 reading with fresh matching telegrams before and after it. The neighbouring
-word `0x9200131A` remains unassigned for the LED. The LED was also observed
+words `0x9200131A` and `0x92001312` have no direct optical LED reference;
+the continuity rule above is an explicit assumption. The LED was also observed
 lit with the operating field blank and reported compressor speed zero. The
 general interpretation of individual status bits remains open.
 

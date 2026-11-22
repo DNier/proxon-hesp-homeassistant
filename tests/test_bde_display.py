@@ -69,7 +69,7 @@ FAN2_BIT15_SOURCES = (MODE, STATUS_82009312, VALVES, RPM)
 
 
 def checked(body):
-    """Create synthetic negative cases; positive fixtures keep recorded checksums."""
+    """Build synthetic wire cases; recorded fixtures keep original checksums."""
     return body + checksum(body).to_bytes(2, "little")
 
 
@@ -298,7 +298,7 @@ def test_each_winter_source_has_an_inclusive_seven_second_hard_limit(
     assert display.value(22.000001) is None
 
 
-def test_winter_poll_tolerance_does_not_extend_the_led_source_contract():
+def test_winter_and_led_keep_independent_hard_source_deadlines():
     display = BdeDisplay(p2_reference=True, supports_green_led=True)
     clock = SimpleNamespace(now=0.0)
     decoder = Decoder(
@@ -307,10 +307,11 @@ def test_winter_poll_tolerance_does_not_extend_the_led_source_contract():
     for clock.now in (0, 5, 10, 15):
         decoder.feed(ALL)
     assert display.value(21.5) == "heating"
-    assert display.green_led(21) is True
-    assert display.green_led(21.000001) is None
-    assert display.expire(21.000001)
-    assert display.value(21.5) == "heating"
+    assert display.value(22) == "heating"
+    assert display.value(22.000001) is None
+    assert display.green_led(23) is True
+    assert display.green_led(23.000001) is None
+    assert display.expire(23.000001)
 
 
 def test_future_receipts_and_incoherent_sources_fail_closed(
@@ -884,6 +885,10 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
             "custom_components.proxon_hesp.coordinator.time",
             SimpleNamespace(monotonic=lambda: clock.now),
         ),
+        patch(
+            "custom_components.proxon_hesp.binary_sensor.time",
+            SimpleNamespace(monotonic=lambda: clock.now),
+        ),
         patch.object(loop, "time", lambda: clock.now),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -901,6 +906,19 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         await receive_at(3.25, STATUS_82009312, "unavailable")
         await receive_at(3.5, STATUS, "on")
         await receive_at(3.75, wrong_status_node, "on")
+        await receive_at(3.8, RPM, "on")
+        await receive_at(3.9, STATUS_9200131A, "on")
+        assert hass.states.get(registered.entity_id).attributes["assumed_state"]
+        assert (
+            hass.states.get(registered.entity_id).attributes["state_basis"]
+            == "inferred_continuity"
+        )
+        await receive_at(3.95, STATUS, "on")
+        assert not hass.states.get(registered.entity_id).attributes.get("assumed_state")
+        assert (
+            hass.states.get(registered.entity_id).attributes["state_basis"]
+            == "display_reference"
+        )
         await receive_at(4, comfort, "unavailable")
         await receive_at(5, MODE, "unavailable")
         await receive_at(6, dark, "off")
@@ -912,37 +930,159 @@ async def test_upper_green_led_uses_fresh_validated_pairs(hass, frames):
         await receive_at(9, comfort_lit, "on")
         await receive_at(11, corrupt_comfort, "on")
         await receive_at(12, comfort_lit, "on")
-        assert runtime.timer.when() == pytest.approx(start + 13.001, abs=0.00001)
+        assert runtime.bde_display.green_led_expires_at == start + 15
         await advance_to(13)
         assert runtime.get_bde_green_led() is True
-        await advance_to(13.002)
+        await advance_to(15.002)
         assert hass.states.is_state(registered.entity_id, "unavailable")
-        await receive_at(14, comfort, "on")
         await receive_at(16, comfort, "on")
-        await advance_to(18.002)
+        await advance_to(20.002)
         assert hass.states.is_state(registered.entity_id, "unavailable")
-        await receive_at(19, comfort_lit, "on")
-        await receive_at(20, invalid_mode, "unavailable")
-        await receive_at(21, comfort, "unavailable")
-        await receive_at(22, comfort_lit, "on")
+        await receive_at(21, comfort_lit, "on")
+        await receive_at(22, invalid_mode, "unavailable")
+        await receive_at(23, comfort, "unavailable")
+        await receive_at(24, comfort_lit, "on")
         first_reader.feed_eof()
         await hass.async_block_till_done()
         assert not runtime.connected
         assert hass.states.is_state(registered.entity_id, "unavailable")
-        await advance_to(23.002)
+        await advance_to(25.002)
         # The reconnect coroutine resumes after its sleep's timer callback.
         await asyncio.sleep(0)
         assert runtime.connected
-        await receive_at(24, comfort_lit, "unavailable", next_reader)
-        await receive_at(25, comfort, "on", next_reader)
+        await receive_at(26, comfort_lit, "unavailable", next_reader)
+        await receive_at(27, comfort, "on", next_reader)
         await set_reference(False)
         assert entry.runtime_data is runtime
         assert hass.states.is_state(registered.entity_id, "unavailable")
-        await receive_at(26, comfort + comfort_lit, "unavailable", next_reader)
-        await receive_at(27, MODE + FAN3_SOURCES[1], "unavailable", next_reader)
+        await receive_at(28, comfort + comfort_lit, "unavailable", next_reader)
+        await receive_at(29, MODE + FAN3_SOURCES[1], "unavailable", next_reader)
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert runtime.timer is None
+
+
+@pytest.fixture
+def led_stream():
+    display = BdeDisplay(p2_reference=True, supports_green_led=True)
+    clock = SimpleNamespace(now=0.0)
+    decoder = Decoder(
+        lambda source, readings: display.observe(source, readings, clock.now)
+    )
+
+    def feed(data, at):
+        clock.now = at
+        decoder.feed(data)
+
+    return display, feed
+
+
+LED_BIT28_LEVEL2 = checked(STATUS[:8] + bytes.fromhex("12130092"))
+
+
+@pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT28_LEVEL2))
+def test_bit28_led_cannot_start_without_an_observed_on_anchor(led_stream, status):
+    display, feed = led_stream
+    feed(MODE + RPM + status, 0)
+    assert display.green_led(0) is None
+    assert display.green_led_basis(0) is None
+    feed(STATUS, 1)
+    assert display.green_led_basis(1) == "display_reference"
+    feed(status, 2)
+    assert display.green_led(2) is True
+    assert display.green_led_basis(2) == "inferred_continuity"
+
+
+def test_bit28_led_continuity_covers_a_long_fresh_phase(led_stream):
+    display, feed = led_stream
+    feed(MODE + STATUS + RPM, 0)
+    for at in range(5, 406, 5):
+        status = STATUS_9200131A if at % 10 else LED_BIT28_LEVEL2
+        feed(MODE + RPM + status, at)
+        assert display.green_led(at) is True
+        assert display.green_led_basis(at) == "inferred_continuity"
+        # Neither an inferred LED nor positive RPM assigns a BDE text label.
+        assert display.value(at) is None
+    feed(STATUS, 406)
+    assert display.green_led_basis(406) == "display_reference"
+
+
+@pytest.mark.parametrize("value", (0, -1, float("nan"), float("inf"), 10001))
+def test_bit28_zero_or_invalid_rpm_breaks_continuity(led_stream, value):
+    display, feed = led_stream
+    feed(MODE + STATUS + RPM, 0)
+    feed(STATUS_9200131A, 1)
+    invalid = checked(RPM[:8] + struct.pack("<f", value))
+    feed(invalid, 2)
+    assert display.green_led(2) is None
+    feed(RPM + STATUS_9200131A, 3)
+    assert display.green_led(3) is None
+    feed(STATUS, 4)
+    feed(STATUS_9200131A, 5)
+    assert display.green_led(5) is True
+
+
+@pytest.mark.parametrize("source", (MODE, STATUS_9200131A, RPM))
+def test_bit28_expired_dependency_cannot_be_revived_by_a_fresh_batch(
+    led_stream, source
+):
+    display, feed = led_stream
+    feed(MODE + STATUS + RPM + STATUS_9200131A, 0)
+    for frame in (MODE, STATUS_9200131A, RPM):
+        if frame != source:
+            feed(frame, 7)
+    assert display.green_led(8) is True
+    assert display.green_led(8.000001) is None
+    feed(MODE + RPM + STATUS_9200131A, 8.000001)
+    assert display.green_led(8.000001) is None
+    assert display.green_led_basis(8.000001) is None
+
+
+@pytest.mark.parametrize(
+    "interruption",
+    (
+        STATUS_82009312,
+        BLANK_SOURCES[1],
+        checked(MODE[:8] + b"\xff\xff"),
+        bytes.fromhex("1180000a020000040300caef"),
+    ),
+)
+def test_bit28_unknown_off_and_mode_changes_break_the_anchor(led_stream, interruption):
+    display, feed = led_stream
+    feed(MODE + STATUS + RPM, 0)
+    feed(STATUS_9200131A, 1)
+    feed(interruption, 2)
+    feed(MODE + RPM + STATUS_9200131A, 3)
+    assert display.green_led(3) is None
+
+
+def test_bit28_reset_and_variant_change_forget_the_anchor(led_stream):
+    display, feed = led_stream
+    for at in (0, 10):
+        feed(MODE + STATUS + RPM + STATUS_9200131A, at)
+        assert display.green_led(at) is True
+        if at == 0:
+            display.reset()
+        else:
+            display.configure_p2_reference(False)
+            display.configure_p2_reference(True)
+        feed(MODE + RPM + STATUS_9200131A, at + 1)
+        assert display.green_led(at + 1) is None
+
+
+@pytest.mark.parametrize("last_gap", (6.980, 7.479))
+def test_led_eight_second_limit_covers_observed_unchanged_poll_intervals(
+    led_stream, last_gap
+):
+    display, feed = led_stream
+    feed(MODE + STATUS, 0)
+    feed(MODE + STATUS, last_gap)
+    assert display.green_led(last_gap) is True
+    assert display.green_led_basis(last_gap) == "display_reference"
+    assert display.green_led(last_gap + 8) is True
+    assert display.green_led(last_gap + 8.000001) is None
+    display.expire(last_gap + 8.000001)
+    assert display.green_led_basis(last_gap + 8.000001) is None
 
 
 async def test_fan_level_9200131a_requires_fresh_preceding_eco_winter(hass, frames):

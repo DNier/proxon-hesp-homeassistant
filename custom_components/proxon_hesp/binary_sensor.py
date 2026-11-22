@@ -109,7 +109,7 @@ class ProxonCompressorSensor(ProxonBinarySensor):
 
 
 class ProxonBdeGreenLed(ProxonBinarySensor):
-    """Expose the display-backed BDE LED for the observed profile."""
+    """Expose the BDE LED with its display-reference or inferred basis."""
 
     def __init__(self, entry: ProxonConfigEntry) -> None:
         super().__init__(
@@ -130,6 +130,23 @@ class ProxonBdeGreenLed(ProxonBinarySensor):
     @property
     def is_on(self) -> bool | None:
         return self.runtime.get_bde_green_led()
+
+    @property
+    def assumed_state(self) -> bool:
+        return (
+            self.is_on is not None
+            and self.runtime.bde_display.green_led_basis(time.monotonic())
+            == "inferred_continuity"
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        basis = (
+            self.runtime.bde_display.green_led_basis(time.monotonic())
+            if self.is_on is not None
+            else None
+        )
+        return {"state_basis": basis or "unavailable"}
 
 
 class ProxonConnectionSensor(ProxonBinarySensor):
