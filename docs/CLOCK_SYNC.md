@@ -39,6 +39,9 @@ Ein ACK allein reicht nicht. Das Attribut `status` wird bei passender Antwort
 `confirmed`; ohne erforderliche Korrektur lautet es `already_current`.
 Wegen eines möglichen Minutenwechsels wird auch die folgende Kalenderminute
 als Bestätigung akzeptiert. Das belegt keine dauerhafte Speicherung.
+Eine nur kurz passende Antwort genügt nicht, wenn danach auf derselben
+Verbindung ein abweichender oder ungültiger Kalender empfangen wird, bevor
+die Bestätigungsprüfung abgeschlossen ist.
 
 Ein fehlgeschlagener oder unterbrochener Versuch wird `unconfirmed`, gegebenenfalls
 mit einem Aktionsfehler. Vor einem erneuten Versuch am BDE prüfen: Eine fehlende
@@ -97,3 +100,9 @@ Empfang, Verbindungstest, Aufnahmen und Wiederverbindung bleiben passiv.
 Keinen zweiten TCP-Mitschnitt gegen ein Gateway mit nur einem Client öffnen,
 während die Integration verbunden ist. Empfangsmitschnitte enthalten ausschließlich
 RX-Daten; gesendete Bytes und das letzte Ziel des Zeitabgleichs werden separat erfasst.
+
+In der Diagnose bezeichnet `clock_bytes_attempted` die für einen
+Kalendersendeversuch übergebenen Bytes, auch bei unklarem Ausgang der Übergabe.
+`clock_bytes_confirmed` zählt nur die Bytes von Vorgängen mit passendem,
+gültigem Kalenderrücklauf. Die Zähler gelten für die aktuelle Integrationslaufzeit;
+sie sind keine dauerhafte Historie und keine Messung physischer Buszustellung.
