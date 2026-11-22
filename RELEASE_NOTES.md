@@ -3,6 +3,21 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.17 – Stabilere BDE-Anzeige und Zeitbestätigung
+
+- Die **BDE-Betriebsanzeige** in Eco Winter toleriert Quellabstände bis
+  sieben Sekunden. Bereits bestätigter Heizbetrieb bleibt beim Wechsel
+  zwischen den drei belegten Heizkonstellationen verfügbar. Unbekannte
+  Kombinationen und längere Empfangsausfälle bleiben unverfügbar; nach einer
+  Unterbrechung ist weiterhin eine neue Bestätigung über 15 Sekunden nötig.
+  Die Frischegrenzen für Kühlanzeige, grüne LED und besondere Luftstufe ändern
+  sich nicht. Es kommen keine neuen Statuszuordnungen hinzu.
+- Ein **Gerätezeitabgleich** wird erst bestätigt, wenn die zuletzt empfangene
+  Kalenderantwort auf derselben Verbindung gültig ist und zum Ziel passt.
+  Ein nur kurz passender Wert vor einer abweichenden oder ungültigen Antwort
+  genügt nicht. Die Diagnose zählt versuchte und bestätigte Kalenderbytes
+  getrennt. Fehlgeschlagene Vorgänge werden nicht automatisch wiederholt.
+
 ## 0.16.16 – Mitschnitte beim Umbenennen erhalten
 
 - Beim Umbenennen des PROXON-Geräts in der Integrationskonfiguration läuft

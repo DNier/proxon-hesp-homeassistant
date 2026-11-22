@@ -21,13 +21,20 @@ promoted to a heating flag.
 | `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero |
 | `cooling` | `3` / Comfort | `0x80001522` (`22150080`) | `0x0227` (`27020000`) | Finite, validated speed above zero |
 
-Each source must be fresh within six seconds and receipts must form a coherent
-context. The combination must persist for at least 15 seconds of actual received
-source observations. Reading an unchanged cached property cannot create new
-proof. Changes outside the admitted mode/status/valve context, source gaps,
-invalid numeric/mode values, disconnects and restarts invalidate the derived display; a later valid combination must qualify
-again. Any transition between admitted complete contexts, including heating
-to blank and the reverse, starts a new 15-second proof window. The existing general telemetry freshness remains unchanged.
+For the Eco Winter operating display, each source must be fresh within seven
+seconds and receipts must form a coherent context. The Comfort cooling display
+keeps its six-second source limit. Initial qualification still requires at least
+15 seconds of actual received source observations. Reading an unchanged cached
+property cannot create new proof.
+
+An already qualified heating label remains available when the status changes
+between the three admitted heating combinations while every required source
+stays fresh and valid. This does not extend the admitted words. A transition
+to blank or cooling, an unassigned context, an expired or invalid source,
+disconnect or restart invalidates the indication and starts a new qualification
+window. There is no grace period beyond the source deadline. The green LED,
+the mode-dependent fan-level indication and general telemetry retain their
+separate freshness limits.
 
 Other combinations are unavailable, including other complete level-3 status
 words, uncorroborated startup/stop contexts and the longer bit-28 phases. Unavailable never means that the BDE display is
