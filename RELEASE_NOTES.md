@@ -3,6 +3,26 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.18 – Grüne BDE-LED mit gekennzeichneter Fortführung
+
+- Die optionale **Obere grüne BDE-LED** kann in Eco Winter ein zuvor belegtes
+  **Ein** während zweier eng begrenzter Bit-28-Konstellationen fortführen.
+  Betriebsart, Status und positive Verdichterdrehzahl müssen frisch bleiben.
+  Diese Fortführung ist eine Annahme ohne direkten Fotobeleg und wird mit
+  `assumed_state: true` und `state_basis: inferred_continuity` gekennzeichnet.
+  Die vier belegten Zuordnungen bleiben als `display_reference` erkennbar.
+- Für die LED allein gelten acht statt sechs Sekunden Quellenalter. Das
+  toleriert beobachtete normale Empfangsabstände bis 7,479 Sekunden; echter
+  Datenverlust kann dadurch bis zu zwei Sekunden später sichtbar werden.
+  Unbekannte Zustände, ein Aus-Zustand, veraltete oder ungültige Daten sowie
+  Verbindungsabbrüche beenden die Fortführung. Nach einem Neustart direkt in
+  einer solchen Phase bleibt die LED zunächst unverfügbar.
+
+Bestehende Entitäten und Aktivierungseinstellungen bleiben erhalten. Die
+gespeicherte Historie wird nicht rückwirkend geändert. Nach der Installation
+über HACS Home Assistant neu starten und benötigte flüchtige Aufnahmen vorher
+sichern. [Bedingungen und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#upper-green-bde-led).
+
 ## 0.16.17 – Stabilere BDE-Anzeige und Zeitbestätigung
 
 - Die **BDE-Betriebsanzeige** in Eco Winter toleriert Quellabstände bis
