@@ -11,6 +11,8 @@ SOURCE_KEYS = {
     "raw_051c": "compressor_rpm",
 }
 MAX_SOURCE_AGE = 6.0
+# Bounded tolerance for observed Eco Winter poll intervals above six seconds.
+MAX_WINTER_SOURCE_AGE = 7.0
 STABILITY_SECONDS = 15.0
 # Only complete, independently display-backed contexts belong here.
 HEATING_CONTEXTS = frozenset(
@@ -114,9 +116,15 @@ class BdeDisplay:
             if context is None:
                 self._reset_stability()
             elif context != self._context:
-                self._reset_stability()
+                same_qualified_heating = (
+                    self._qualified
+                    and self._context in HEATING_CONTEXTS
+                    and context in HEATING_CONTEXTS
+                )
+                if not same_qualified_heating:
+                    self._reset_stability()
+                    self._since = now
                 self._context = context
-                self._since = now
             elif self._since is not None and now - self._since >= STABILITY_SECONDS:
                 self._qualified = True
         if self._p2_reference and key in MODE_STATUS_SOURCE_KEYS:
@@ -149,13 +157,22 @@ class BdeDisplay:
         ):
             self._fan_level_status_confirmed = False
 
+    def _source_max_age(self) -> float:
+        mode = self._sources.get("operating_mode")
+        return (
+            MAX_WINTER_SOURCE_AGE
+            if mode is not None and mode[0].value == "eco_winter"
+            else MAX_SOURCE_AGE
+        )
+
     def _valid_context(self, now: float) -> tuple[str, int, int] | None:
         if len(self._sources) != len(SOURCE_KEYS):
             return None
         stamps = [stamp for _, stamp in self._sources.values()]
-        if any(not 0 <= now - stamp <= MAX_SOURCE_AGE for stamp in stamps):
+        max_age = self._source_max_age()
+        if any(not 0 <= now - stamp <= max_age for stamp in stamps):
             return None
-        if max(stamps) - min(stamps) > MAX_SOURCE_AGE:
+        if max(stamps) - min(stamps) > max_age:
             return None
         mode = self._sources["operating_mode"][0].value
         status = self._sources["raw_0208"][0].value
@@ -193,7 +210,9 @@ class BdeDisplay:
         """Earliest source deadline for an already qualified indication."""
         if not self._qualified:
             return None
-        return min(stamp for _, stamp in self._sources.values()) + MAX_SOURCE_AGE
+        return (
+            min(stamp for _, stamp in self._sources.values()) + self._source_max_age()
+        )
 
     def value(self, now: float) -> str | None:
         """Recheck availability between expiry callbacks without advancing state."""

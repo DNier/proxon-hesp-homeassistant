@@ -133,8 +133,8 @@ def test_recorded_sequence_qualifies_on_fresh_receipt_after_15_seconds(display_s
     assert first_heating == 16.669
     assert display.value(42.666) == "heating"
     # Valve/status receipts are older than the final RPM/mode updates.
-    assert display.value(43.578999) == "heating"
-    assert display.value(43.579001) is None
+    assert display.value(44.578999) == "heating"
+    assert display.value(44.579001) is None
 
 
 @pytest.mark.parametrize("sequence", FAN3_PUBLIC_VECTORS, ids=lambda item: item["name"])
@@ -234,18 +234,83 @@ def test_expired_gap_cannot_be_bridged_by_new_complete_batch(
     display, feed, _ = display_stream
     all_sources = b"".join(sources)
     stabilize(feed, sources=sources)
-    assert display.value(21) == expected_state
-    assert display.value(21.001) is None
+    assert display.value(22) == expected_state
+    assert display.value(22.001) is None
     # No expiry callback or property mutation is needed to detect the gap.
-    for now in (22, 27, 32):
+    for now in (23, 28, 33):
         feed(all_sources, now)
         assert display.value(now) is None
-    feed(all_sources, 37)
-    assert display.value(37) == expected_state
-    assert display.expire(43.001)
-    assert not display.expire(43.002)
-    feed(all_sources, 44)
-    assert display.value(44) is None
+    feed(all_sources, 38)
+    assert display.value(38) == expected_state
+    assert display.expire(45.001)
+    assert not display.expire(45.002)
+    feed(all_sources, 46)
+    assert display.value(46) is None
+
+
+def test_repeated_winter_sources_with_bounded_poll_jitter_keep_the_display(
+    display_stream, display_context
+):
+    # Synthetic timing with a measured repeated-mode interval of 6.414 s.
+    # The source words reuse the public vectors; no new label is inferred.
+    sources, expected_state = display_context
+    display, feed, _ = display_stream
+    stabilize(feed, sources=sources)
+    for at, index in (
+        (18.704, 3),
+        (20, 0),
+        (20.222, 2),
+        (20.303, 1),
+        (23.604, 3),
+    ):
+        feed(sources[index], at)
+        assert display.value(at) == expected_state
+    assert display.value(26.413) == expected_state
+    for at, index in ((26.414, 0), (26.493, 2), (26.493, 1), (28.5, 3)):
+        feed(sources[index], at)
+        assert display.value(at) == expected_state
+    assert display.expires_at == pytest.approx(33.414)
+    assert display.value(33.414) == expected_state
+    assert display.value(33.414001) is None
+    assert display.expire(33.414001)
+    assert display.expires_at is None
+    # An actual outage still loses the proof and needs another full 15 s.
+    for at in (34, 39, 44):
+        feed(b"".join(sources), at)
+        assert display.value(at) is None
+    feed(b"".join(sources), 49)
+    assert display.value(49) == expected_state
+
+
+@pytest.mark.parametrize("late_source", range(4))
+def test_each_winter_source_has_an_inclusive_seven_second_hard_limit(
+    display_stream, display_context, late_source
+):
+    sources, expected_state = display_context
+    display, feed, _ = display_stream
+    stabilize(feed, sources=sources)
+    for index, source in enumerate(sources):
+        if index != late_source:
+            feed(source, 20)
+    assert display.value(22) == expected_state
+    assert display.value(22.000001) is None
+    feed(sources[late_source], 22.000001)
+    assert display.value(22.000001) is None
+
+
+def test_winter_poll_tolerance_does_not_extend_the_led_source_contract():
+    display = BdeDisplay(p2_reference=True, supports_green_led=True)
+    clock = SimpleNamespace(now=0.0)
+    decoder = Decoder(
+        lambda source, readings: display.observe(source, readings, clock.now)
+    )
+    for clock.now in (0, 5, 10, 15):
+        decoder.feed(ALL)
+    assert display.value(21.5) == "heating"
+    assert display.green_led(21) is True
+    assert display.green_led(21.000001) is None
+    assert display.expire(21.000001)
+    assert display.value(21.5) == "heating"
 
 
 def test_future_receipts_and_incoherent_sources_fail_closed(
@@ -260,15 +325,15 @@ def test_future_receipts_and_incoherent_sources_fail_closed(
     feed(mode, 14.999)
     assert display.value(15) is None
     display.reset()
-    for at, frame in zip((20, 26.1, 26.2, 26.3), sources, strict=True):
+    for at, frame in zip((20, 27.1, 27.2, 27.3), sources, strict=True):
         feed(frame, at)
-    assert display.value(26.3) is None
+    assert display.value(27.3) is None
     # Bringing the oldest source into the coherent interval starts a new window.
-    feed(mode, 26.4)
-    assert display.value(26.4) is None
-    for now in (31.4, 36.4, 41.4):
+    feed(mode, 27.4)
+    assert display.value(27.4) is None
+    for now in (32.4, 37.4, 42.4):
         feed(all_sources, now)
-    assert display.value(41.4) == expected_state
+    assert display.value(42.4) == expected_state
 
 
 @pytest.mark.parametrize(
@@ -345,7 +410,7 @@ def test_9200131a_context_remains_unavailable_with_either_valve_word(
         "bit15-to-blank",
     ),
 )
-def test_switching_allowed_full_context_restarts_15_second_proof(
+def test_allowed_context_change_keeps_only_an_already_qualified_same_label(
     display_stream, before, after
 ):
     display, feed, _ = display_stream
@@ -354,9 +419,65 @@ def test_switching_allowed_full_context_restarts_15_second_proof(
     all_sources = b"".join(after)
     for now in (16, 21, 26, 30.999):
         feed(all_sources, now)
-        assert display.value(now) is None
+        assert display.value(now) == (
+            "heating" if before != BLANK_SOURCES and after != BLANK_SOURCES else None
+        )
     feed(all_sources, 31)
     assert display.value(31) == ("blank" if after == BLANK_SOURCES else "heating")
+
+
+def test_unqualified_heating_context_change_still_requires_full_stability(
+    display_stream,
+):
+    display, feed, _ = display_stream
+    for at in (0, 5, 10):
+        feed(ALL, at)
+    for at in (14, 19, 24, 28.999):
+        feed(b"".join(FAN3_SOURCES), at)
+        assert display.value(at) is None
+    assert display.value(29) is None
+    feed(RPM, 29)
+    assert display.value(29) == "heating"
+
+
+def test_unknown_between_known_heating_contexts_cannot_keep_the_old_label(
+    display_stream,
+):
+    display, feed, _ = display_stream
+    stabilize(feed)
+    feed(STATUS_8200111A, 16)
+    assert display.value(16) is None
+    for at in (16.1, 21.1, 26.1, 31.099):
+        feed(b"".join(FAN3_SOURCES), at)
+        assert display.value(at) is None
+    feed(RPM, 31.1)
+    assert display.value(31.1) == "heating"
+
+
+@pytest.mark.parametrize(
+    ("status_word", "valve_word"),
+    (
+        (0x8200931A, 0x27),
+        (0x9200931A, 0x27),
+        (0x9200931A, 0xA7),
+        (0x92009312, 0x27),
+        (0x92009312, 0xA7),
+        (0x92001312, 0xA7),
+        (0x92001312, 0x27),
+        (0x9200131A, 0x27),
+    ),
+)
+def test_unsupported_winter_words_stay_unknown_with_a_running_compressor(
+    display_stream, status_word, valve_word
+):
+    # Synthetic negative combinations, not additional display references.
+    display, feed, _ = display_stream
+    status = checked(STATUS[:8] + status_word.to_bytes(4, "little"))
+    valves = checked(VALVES[:8] + valve_word.to_bytes(4, "little"))
+    stabilize(feed)
+    for at in (16, 21, 26, 31, 36):
+        feed(MODE + status + valves + RPM, at)
+        assert display.value(at) is None
 
 
 def test_neighboring_full_word_stays_unknown_despite_fan_level_three_mapping(
@@ -462,8 +583,8 @@ def test_bad_frames_cannot_refresh_or_extend_source(
     for index, other in enumerate(sources):
         if index != source_index:
             feed(other, 20)
-    assert display.value(21) == expected_state
-    assert display.value(21.001) is None
+    assert display.value(22) == expected_state
+    assert display.value(22.001) is None
 
 
 async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recovery(
@@ -536,12 +657,12 @@ async def test_ha_defaults_identity_availability_unknown_mode_reload_and_recover
         assert state.attributes["options"] == ["heating", "blank", "cooling"]
         assert "state_class" not in state.attributes
         assert "unit_of_measurement" not in state.attributes
-        clock.now = 121.001
+        clock.now = 122.001
         assert not probe.available
         assert probe.native_value is None
-        for now in (122, 127, 132, 137):
+        for now in (123, 128, 133, 138):
             await receive_at(all_sources, now)
-            if now == 122:
+            if now == 123:
                 assert hass.states.get(entity_id).state == "unavailable"
         assert hass.states.get(entity_id).state == expected_state
         # A rejected-mode-only chunk yields no typed readings, yet must notify HA.
@@ -678,16 +799,16 @@ async def test_silent_stream_publishes_unavailable_at_scheduled_source_deadline(
         await receive_at(all_sources, 16)
         # Updating only mode cannot extend the older remaining source receipts.
         await receive_at(sources[0], 17)
-        assert runtime.bde_display.expires_at == start + 22
+        assert runtime.bde_display.expires_at == start + 23
         assert_one_expiry_timer()
         await advance_to(20)
         updates_at_general_tick = len(diagnostics_updates)
-        assert runtime.timer.when() == pytest.approx(start + 22.001, abs=0.00001)
+        assert runtime.timer.when() == pytest.approx(start + 23.001, abs=0.00001)
         await advance_to(21.002)
         assert hass.states.get(registered.entity_id).state == expected_state
-        await advance_to(21.999)
+        await advance_to(22.999)
         assert hass.states.get(registered.entity_id).state == expected_state
-        await advance_to(22.002)
+        await advance_to(23.002)
         # The stored HA state changes during a completely silent receive stream.
         assert hass.states.get(registered.entity_id).state == "unavailable"
         assert runtime.bde_display.expires_at is None
@@ -963,7 +1084,7 @@ def test_blank_qualifies_only_on_actual_receipt_at_the_stability_boundary(
     assert display.value(15) is None
     feed(BLANK_SOURCES[3], 15)
     assert display.value(15) == "blank"
-    assert display.expires_at == pytest.approx(20.999)
+    assert display.expires_at == pytest.approx(21.999)
 
 
 @pytest.mark.parametrize(
