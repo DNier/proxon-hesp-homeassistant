@@ -72,6 +72,8 @@ class ProxonRuntime:
         self._next_general_expiry: float | None = None
         self.writer: asyncio.StreamWriter | None = None
         self.application_bytes_sent = 0
+        self.clock_bytes_attempted = 0
+        self.clock_bytes_confirmed = 0
         self.clock_sync_status = "idle"
         self.clock_sync_target: str | None = None
         self._clock_pending: asyncio.Future | None = None
@@ -133,13 +135,21 @@ class ProxonRuntime:
                                     reading.key, reading.value
                                 )
                             self.values[reading.key] = (reading, now)
+                        pending = self._clock_pending
+                        if pending is not None and not pending.done():
+                            latest_calendar = next(
+                                (
+                                    reading.value
+                                    for reading in reversed(readings)
+                                    if reading.key == "uptime"
+                                ),
+                                None,
+                            )
                             if (
-                                reading.key == "uptime"
-                                and self._clock_pending is not None
-                                and not self._clock_pending.done()
-                                and reading.value in self._clock_expected
+                                self.decoder.last_calendar_valid
+                                and latest_calendar in self._clock_expected
                             ):
-                                self._clock_pending.set_result(True)
+                                pending.set_result(True)
                         delay = 1
                         self.last_error = None
                         self.ready.set()
@@ -246,15 +256,24 @@ class ProxonRuntime:
         self._notify_diagnostics()
         try:
             # No await between checking the connection and the single write.
+            self.clock_bytes_attempted += len(frame)
             writer.write(frame)
             self.application_bytes_sent += len(frame)
             async with asyncio.timeout(20):
                 await writer.drain()
                 confirmed = await pending
-            if not confirmed:
+            latest = self.get("uptime")
+            if (
+                not confirmed
+                or self.writer is not writer
+                or not self.decoder.last_calendar_valid
+                or latest is None
+                or latest.value not in self._clock_expected
+            ):
                 raise HomeAssistantError(
-                    "Connection lost; device time update unconfirmed"
+                    "Expected device time was not retained on the same connection"
                 )
+            self.clock_bytes_confirmed += len(frame)
             self.clock_sync_status = "confirmed"
         except asyncio.CancelledError:
             self.clock_sync_status = "unconfirmed"
@@ -385,6 +404,8 @@ class ProxonRuntime:
             "statistics": counters,
             "fresh_keys": sorted(key for key in self.values if self.get(key)),
             "application_bytes_sent": self.application_bytes_sent,
+            "clock_bytes_attempted": self.clock_bytes_attempted,
+            "clock_bytes_confirmed": self.clock_bytes_confirmed,
             "clock_sync_status": self.clock_sync_status,
             "clock_sync_target": self.clock_sync_target,
         }
