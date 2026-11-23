@@ -35,6 +35,14 @@ UPPER_GREEN_LED_CONTEXTS = {
     ("eco_winter", "1a130082"): True,
     ("comfort", "1a130080"): True,
 }
+# These additional optical references include valves and positive compressor
+# speed. Keep their complete contexts instead of generalizing a status bit.
+CONTEXT_GREEN_LED_CONTEXTS = frozenset(
+    {
+        ("eco_winter", "12930082", "27000000"),
+        ("eco_winter", "12110082", "27000000"),
+    }
+)
 # Explicit continuity assumption, not an independently observed LED mapping.
 INFERRED_GREEN_LED_CONTEXTS = frozenset(
     {("eco_winter", "1a130092"), ("eco_winter", "12130092")}
@@ -145,7 +153,7 @@ class BdeDisplay:
         if (
             self._p2_reference
             and self._supports_green_led
-            and key in (*MODE_STATUS_SOURCE_KEYS, "compressor_rpm")
+            and key in (*MODE_STATUS_SOURCE_KEYS, "compressor_rpm", "raw_006c")
         ):
             self._update_green_led(key, previous, reading, now)
         return (
@@ -286,6 +294,21 @@ class BdeDisplay:
         latest = max(mode[1], status[1])
         deadline = min(mode[1], status[1]) + MAX_LED_SOURCE_AGE
         basis = "display_reference"
+        valves = self._sources.get("raw_006c")
+        if (
+            state is None
+            and positive_rpm
+            and valves is not None
+            and 0 <= now - valves[1] <= MAX_LED_SOURCE_AGE
+            and (*context, valves[0].value) in CONTEXT_GREEN_LED_CONTEXTS
+        ):
+            state = True
+            latest = max(latest, rpm[1], valves[1])
+            deadline = min(
+                deadline,
+                rpm[1] + MAX_LED_SOURCE_AGE,
+                valves[1] + MAX_LED_SOURCE_AGE,
+            )
         if state is None and context in INFERRED_GREEN_LED_CONTEXTS:
             if self._led_on_continuity and positive_rpm:
                 latest = max(latest, rpm[1])

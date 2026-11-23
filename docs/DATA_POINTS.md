@@ -555,7 +555,7 @@ phases require separate evidence.
 ## Upper green BDE LED
 
 The optional diagnostic binary sensor `bde_green_led` mirrors the upper green
-LED within four display-backed contexts for the P2 with LT-ZIM V1.6 and
+LED within the documented display-backed contexts for the P2 with LT-ZIM V1.6 and
 BDE Comfort. Enable **P2 reference BDE display** in the integration options
 on that hardware. A FWT 2-R capture contains the same Comfort frame pair
 without a corresponding optical reference. The shared transport profile does
@@ -567,6 +567,14 @@ not identify the panel or establish the meaning of the LED.
 | Eco Winter | `0x82001312` | Lit |
 | Eco Winter | `0x8200131A` (since 0.16.14) | Lit |
 | Comfort | `0x8000131A` | Lit |
+
+**From 0.16.19:** Two additional Eco Winter references admit the complete status words
+`0x82009312` (`12930082`) and `0x82001112` (`12110082`) only with the complete
+valve word `0x27` (`27000000`) and finite positive compressor RPM. Mode,
+status, valves and RPM must all be fresh within eight seconds. A different
+valve word, stopped compressor or stale source leaves these two contexts
+unavailable. They do not establish a general meaning for bit 15 or a rule
+based on compressor speed alone.
 
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
@@ -584,8 +592,8 @@ complete words are not independently photographed LED references. The
 assumption is restricted by the exact context and freshness, with no fixed
 total duration cap while those conditions continue.
 
-The entity exposes `state_basis=display_reference` for the four observed
-pairs and `state_basis=inferred_continuity` with Home Assistant's
+The entity exposes `state_basis=display_reference` for the observed
+contexts and `state_basis=inferred_continuity` with Home Assistant's
 `assumed_state=true` for the two inferred contexts. Missing, invalid, expired
 or unassigned data, an explicit Off context, a mode change or disconnect
 breaks continuity. Starting or reconnecting directly in a Bit-28 context
@@ -599,6 +607,15 @@ words `0x9200131A` and `0x92001312` have no direct optical LED reference;
 the continuity rule above is an explicit assumption. The LED was also observed
 lit with the operating field blank and reported compressor speed zero. The
 general interpretation of individual status bits remains open.
+
+Each additional full context has an original main-page reference aligned
+through received device-calendar messages across its whole possible displayed
+minute. The images show Eco Winter, level 2, Heizbetrieb and the lit upper
+LED, with the exact status/valve words and positive speed throughout the
+bracket. A later compatible pre-stop photo album has only an approximate
+shared send time; it is not another exact timestamp or a Bit-28 reference.
+The LED reference does not add `0x82001112` to the operating-display rules:
+the original bracket starts before that sensor's 15-second qualification.
 
 ## Bounded BDE operating-display indication (0.16.0)
 

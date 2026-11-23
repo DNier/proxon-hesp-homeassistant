@@ -3,6 +3,22 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.19 – Grüne BDE-LED in weiteren Eco-Winter-Zuständen
+
+- Die optionale **Obere grüne BDE-LED** zeigt am ausgewählten P2-Referenzgerät
+  in zwei weiteren belegten Eco-Winter-Konstellationen bei laufendem Verdichter
+  **Ein** statt **Nicht verfügbar**. Diese Zuordnungen beruhen auf direkten
+  Fotobelegen und werden als `state_basis: display_reference` ausgewiesen.
+- Die neuen Fälle berücksichtigen zusätzlich das vollständige Ventilwort und
+  die Verdichterdrehzahl. Betriebsart, Status, Ventilwort und positive Drehzahl
+  müssen jeweils innerhalb der letzten acht Sekunden empfangen worden sein.
+  Abweichende oder veraltete Quellen bleiben unverfügbar.
+
+Bestehende Entitäten und Aktivierungseinstellungen bleiben erhalten. Die
+gespeicherte Historie wird nicht rückwirkend geändert. Nach der Installation
+über HACS Home Assistant neu starten und benötigte flüchtige Aufnahmen vorher
+sichern. [Bedingungen und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DATA_POINTS.md#upper-green-bde-led).
+
 ## 0.16.18 – Grüne BDE-LED mit gekennzeichneter Fortführung
 
 - Die optionale **Obere grüne BDE-LED** kann in Eco Winter ein zuvor belegtes
