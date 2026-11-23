@@ -978,6 +978,92 @@ def led_stream():
 
 
 LED_BIT28_LEVEL2 = checked(STATUS[:8] + bytes.fromhex("12130092"))
+LED_PRESTOP_LEVEL2 = checked(STATUS[:8] + bytes.fromhex("12110082"))
+
+
+@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+def test_additional_optical_led_context_requires_all_fresh_sources(led_stream, status):
+    display, feed = led_stream
+    feed(MODE + status, 0)
+    assert display.green_led(0) is None
+    feed(RPM, 1)
+    assert display.green_led(1) is None
+    feed(VALVES, 2)
+    assert display.green_led(2) is True
+    assert display.green_led_basis(2) == "display_reference"
+    assert display.green_led_expires_at == 8
+    assert display.green_led(8.000001) is None
+
+
+@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("expired", (MODE, VALVES, RPM, "status"))
+def test_additional_optical_led_expires_with_each_required_source(
+    led_stream, status, expired
+):
+    display, feed = led_stream
+    sources = (MODE, status, VALVES, RPM)
+    feed(b"".join(sources), 0)
+    assert display.green_led(0) is True
+    omitted = status if expired == "status" else expired
+    feed(b"".join(frame for frame in sources if frame != omitted), 7)
+    assert display.green_led(8) is True
+    assert display.green_led(8.000001) is None
+    feed(b"".join(frame for frame in sources if frame != omitted), 8.1)
+    assert display.green_led(8.1) is None
+
+
+@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+def test_additional_optical_led_rejects_other_valves_and_zero_rpm(led_stream, status):
+    display, feed = led_stream
+    feed(MODE + status + VALVES + RPM, 0)
+    assert display.green_led(0) is True
+    feed(A7, 1)
+    assert display.green_led(1) is None
+    feed(VALVES, 2)
+    assert display.green_led(2) is True
+    feed(STOPPED, 3)
+    assert display.green_led(3) is None
+    feed(RPM, 4)
+    assert display.green_led(4) is True
+    feed(checked(VALVES[:8] + bytes.fromhex("25000000")), 5)
+    assert display.green_led(5) is None
+
+
+@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
+    led_stream, status
+):
+    display, feed = led_stream
+    feed(MODE + status + VALVES + RPM, 0)
+    assert display.green_led(0) is True
+    assert display.value(0) is None
+    if status == LED_PRESTOP_LEVEL2:
+        stabilize(feed, sources=(MODE, status, VALVES, RPM))
+        assert display.value(15) is None
+    display.configure_p2_reference(False)
+    feed(MODE + status + VALVES + RPM, 16)
+    assert display.green_led(16) is None
+    display.configure_p2_reference(True)
+    feed(status, 17)
+    assert display.green_led(17) is None
+
+
+@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+def test_additional_optical_led_does_not_admit_neighboring_status_words(
+    led_stream, status
+):
+    display, feed = led_stream
+    feed(MODE + status + VALVES + RPM, 0)
+    for bit in (0, 2, 5, 6, 7, 14, 17, 24):
+        payload = (int.from_bytes(status[8:-2], "little") ^ (1 << bit)).to_bytes(
+            4, "little"
+        )
+        feed(checked(status[:8] + payload), 1)
+        assert display.green_led(1) is None
+    feed(MODE + status + VALVES + RPM, 2)
+    assert display.green_led(2) is True
+    feed(bytes.fromhex("1180000a020000040300caef"), 3)
+    assert display.green_led(3) is None
 
 
 @pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT28_LEVEL2))
