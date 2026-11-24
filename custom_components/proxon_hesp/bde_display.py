@@ -41,6 +41,7 @@ CONTEXT_GREEN_LED_CONTEXTS = frozenset(
     {
         ("eco_winter", "12930082", "27000000"),
         ("eco_winter", "12110082", "27000000"),
+        ("eco_winter", "1a930082", "27000000"),
     }
 )
 # Explicit continuity assumption, not an independently observed LED mapping.

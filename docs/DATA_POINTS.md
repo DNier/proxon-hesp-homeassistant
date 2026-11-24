@@ -576,6 +576,16 @@ valve word, stopped compressor or stale source leaves these two contexts
 unavailable. They do not establish a general meaning for bit 15 or a rule
 based on compressor speed alone.
 
+**From 0.16.20:** The exact Eco Winter / `0x8200931A` (`1a930082`) / valve
+`0x27` (`27000000`) context uses the same finite positive RPM and individual
+eight-second freshness requirements. Its main-page reference shows the upper
+LED lit. Preserved passive frame brackets agree at the nominal send time;
+Recorder history retains the complete context throughout the displayed minute
+and the surrounding interval. The photo's send time is approximate, rather
+than an exact exposure timestamp.
+This LED-only context does not add a fan-level, operating-display or actuator
+interpretation.
+
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
 eight seconds. This LED-only limit covers observed unchanged-source intervals
@@ -608,9 +618,9 @@ the continuity rule above is an explicit assumption. The LED was also observed
 lit with the operating field blank and reported compressor speed zero. The
 general interpretation of individual status bits remains open.
 
-Each additional full context has an original main-page reference aligned
-through received device-calendar messages across its whole possible displayed
-minute. The images show Eco Winter, level 2, Heizbetrieb and the lit upper
+The two 0.16.19 contexts have original main-page references aligned
+through received device-calendar messages across each image's whole possible
+displayed minute. The images show Eco Winter, level 2, Heizbetrieb and the lit upper
 LED, with the exact status/valve words and positive speed throughout the
 bracket. A later compatible pre-stop photo album has only an approximate
 shared send time; it is not another exact timestamp or a Bit-28 reference.
