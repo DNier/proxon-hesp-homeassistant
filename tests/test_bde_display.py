@@ -979,9 +979,11 @@ def led_stream():
 
 LED_BIT28_LEVEL2 = checked(STATUS[:8] + bytes.fromhex("12130092"))
 LED_PRESTOP_LEVEL2 = checked(STATUS[:8] + bytes.fromhex("12110082"))
+LED_BIT15_LEVEL3 = checked(STATUS[:8] + bytes.fromhex("1a930082"))
+ADDITIONAL_LED_STATUSES = (STATUS_82009312, LED_PRESTOP_LEVEL2, LED_BIT15_LEVEL3)
 
 
-@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
 def test_additional_optical_led_context_requires_all_fresh_sources(led_stream, status):
     display, feed = led_stream
     feed(MODE + status, 0)
@@ -995,7 +997,7 @@ def test_additional_optical_led_context_requires_all_fresh_sources(led_stream, s
     assert display.green_led(8.000001) is None
 
 
-@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
 @pytest.mark.parametrize("expired", (MODE, VALVES, RPM, "status"))
 def test_additional_optical_led_expires_with_each_required_source(
     led_stream, status, expired
@@ -1012,7 +1014,7 @@ def test_additional_optical_led_expires_with_each_required_source(
     assert display.green_led(8.1) is None
 
 
-@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
 def test_additional_optical_led_rejects_other_valves_and_zero_rpm(led_stream, status):
     display, feed = led_stream
     feed(MODE + status + VALVES + RPM, 0)
@@ -1029,7 +1031,18 @@ def test_additional_optical_led_rejects_other_valves_and_zero_rpm(led_stream, st
     assert display.green_led(5) is None
 
 
-@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
+@pytest.mark.parametrize("value", (-1, float("nan"), float("inf"), 10001))
+def test_additional_optical_led_rejects_invalid_rpm(led_stream, status, value):
+    display, feed = led_stream
+    feed(MODE + status + VALVES + RPM, 0)
+    assert display.green_led(0) is True
+    feed(checked(RPM[:8] + struct.pack("<f", value)), 1)
+    assert display.green_led(1) is None
+    assert display.green_led_basis(1) is None
+
+
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
 def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
     led_stream, status
 ):
@@ -1037,9 +1050,14 @@ def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
     feed(MODE + status + VALVES + RPM, 0)
     assert display.green_led(0) is True
     assert display.value(0) is None
-    if status == LED_PRESTOP_LEVEL2:
+    if status in (LED_PRESTOP_LEVEL2, LED_BIT15_LEVEL3):
         stabilize(feed, sources=(MODE, status, VALVES, RPM))
         assert display.value(15) is None
+        assert display.fan_level_confirmed(15) == (status == LED_BIT15_LEVEL3)
+    if status == LED_BIT15_LEVEL3:
+        assert all(
+            reading.key != "controller_fan_level" for reading in Decoder().feed(status)
+        )
     display.configure_p2_reference(False)
     feed(MODE + status + VALVES + RPM, 16)
     assert display.green_led(16) is None
@@ -1048,13 +1066,13 @@ def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
     assert display.green_led(17) is None
 
 
-@pytest.mark.parametrize("status", (STATUS_82009312, LED_PRESTOP_LEVEL2))
+@pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
 def test_additional_optical_led_does_not_admit_neighboring_status_words(
     led_stream, status
 ):
     display, feed = led_stream
     feed(MODE + status + VALVES + RPM, 0)
-    for bit in (0, 2, 5, 6, 7, 14, 17, 24):
+    for bit in (0, 2, 5, 6, 7, 14, 17, 24, 28):
         payload = (int.from_bytes(status[8:-2], "little") ^ (1 << bit)).to_bytes(
             4, "little"
         )
@@ -1171,10 +1189,11 @@ def test_led_eight_second_limit_covers_observed_unchanged_poll_intervals(
     assert display.green_led_basis(last_gap + 8.000001) is None
 
 
-async def test_fan_level_9200131a_requires_fresh_preceding_eco_winter(hass, frames):
+@pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT15_LEVEL3))
+async def test_p2_fan_level_requires_fresh_preceding_eco_winter(hass, frames, status):
     comfort = bytes.fromhex("1180000a020000040300caef")
     adjacent = checked(STATUS[:8] + bytes.fromhex("12130092"))
-    corrupted = STATUS_9200131A[:-1] + bytes([STATUS_9200131A[-1] ^ 1])
+    corrupted = status[:-1] + bytes([status[-1] ^ 1])
     loop = asyncio.get_running_loop()
     start = float(int(loop.time()))
     clock = SimpleNamespace(now=start)
@@ -1222,35 +1241,35 @@ async def test_fan_level_9200131a_requires_fresh_preceding_eco_winter(hass, fram
         patch.object(loop, "time", lambda: clock.now),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await receive_at(1, STATUS_9200131A + MODE, "unavailable")
+        await receive_at(1, status + MODE, "unavailable")
         await receive_at(2, corrupted, "unavailable")
-        await receive_at(3, STATUS_9200131A, "3")
+        await receive_at(3, status, "3")
         runtime = entry.runtime_data
         assert runtime.get_bde_operating_display() is None
         assert runtime.get_bde_green_led() is None
         await receive_at(4.25, comfort + MODE, "unavailable")
-        await receive_at(5, STATUS_9200131A, "3")
+        await receive_at(5, status, "3")
         await receive_at(6, adjacent, "unavailable")
-        await receive_at(7, STATUS_9200131A, "3")
+        await receive_at(7, status, "3")
         await advance_to(10)  # Earlier general maintenance tick.
         assert runtime.timer.when() == pytest.approx(start + 10.251, abs=0.00001)
         await advance_to(10.252)
         assert hass.states.is_state(registered.entity_id, "unavailable")
-        await receive_at(11, STATUS_9200131A + MODE, "unavailable")
-        await receive_at(12, STATUS_9200131A, "3")
+        await receive_at(11, status + MODE, "unavailable")
+        await receive_at(12, status, "3")
         await receive_at(13, MODE + STATUS, "2")
         await receive_at(14, comfort + STATUS, "2")
-        await receive_at(15, STATUS_9200131A, "unavailable")
-        await receive_at(16, MODE + STATUS_9200131A, "3")
+        await receive_at(15, status, "unavailable")
+        await receive_at(16, MODE + status, "3")
         first_reader.feed_eof()
         await hass.async_block_till_done()
         assert hass.states.is_state(registered.entity_id, "unavailable")
         await advance_to(17.002)
         await asyncio.sleep(0)
-        await receive_at(18, STATUS_9200131A + MODE, "unavailable", next_reader)
-        await receive_at(19, STATUS_9200131A, "3", next_reader)
+        await receive_at(18, status + MODE, "unavailable", next_reader)
+        await receive_at(19, status, "3", next_reader)
         runtime.capture.start()
-        await receive_at(20, STATUS_9200131A, "3", next_reader)
+        await receive_at(20, status, "3", next_reader)
         capture_state = runtime.capture.started, runtime.capture.size
 
         async def set_variant(enabled):
@@ -1266,21 +1285,24 @@ async def test_fan_level_9200131a_requires_fresh_preceding_eco_winter(hass, fram
             assert hass.states.is_state(registered.entity_id, "unavailable")
 
         await set_variant(False)
-        await receive_at(21, MODE + STATUS_9200131A, "unavailable", next_reader)
+        await receive_at(21, MODE + status, "unavailable", next_reader)
         capture_state = runtime.capture.started, runtime.capture.size
         await set_variant(True)
-        await receive_at(22, STATUS_9200131A + MODE, "unavailable", next_reader)
-        await receive_at(23, STATUS_9200131A, "3", next_reader)
+        await receive_at(22, status + MODE, "unavailable", next_reader)
+        await receive_at(23, status, "3", next_reader)
         assert runtime.diagnostics()["application_bytes_sent"] == 0
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_fan_level_9200131a_requires_the_observed_transport_profile(hass):
+@pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT15_LEVEL3))
+async def test_p2_fan_level_requires_the_observed_transport_profile(hass, status):
     runtime = ProxonRuntime(
         hass, "gateway.test", 4196, profile="other", p2_reference_display=True
     )
     runtime.connected = True
-    for reading in runtime.decoder.feed(MODE + STATUS_9200131A):
+    readings = runtime.decoder.feed(MODE + status)
+    assert all(reading.key != "controller_fan_level" for reading in readings)
+    for reading in readings:
         runtime.values[reading.key] = (reading, asyncio.get_running_loop().time())
     assert runtime.bde_display.fan_level_expires_at is None
     assert runtime.get("controller_fan_level") is None

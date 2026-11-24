@@ -37,7 +37,7 @@ little-endian order unless stated otherwise.
 | Compressor running | Derived from validated compressor speed | Boolean | On above 0 rpm, off at 0; same freshness as speed. Does not identify heating, cooling, defrost or PTC activity |
 | Bypass switching state | 0160 / C / 1 | Boolean, 00 or 01 | Reported switching state; not measured flap position |
 | Intensive ventilation active | 01F8 / P / 4 | Bit 6 of uint32 | Activation, automatic end and manual-level-4 counterexample checked; other bits ignored |
-| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fifteen exact words plus one fresh Eco Winter context; disabled by default |
+| Controller fan level | 0208 / C / 4 | Allowlisted uint32 words | Fifteen exact words plus two P2-only fresh Eco Winter contexts; disabled by default |
 | Current supply/extract fan control | 00D7 / C / 8 plus fresh same-direction 00D2/00D3 stages | Matched configured stage / % | Raw control divided by 100 must match a fresh stage; each channel independent; no voltage, airflow or fan-level inference; disabled by default |
 | Configured fan stages | 00D2, 00D3 / C / 16 each | Four float32 / % each | Supply/extract stage 1–4; community app corroboration, finite 0–100; disabled by default |
 | Cooling threshold | 0110 / C / 4 | float32 / °C | Service-app and recorded-value corroboration; receive guard 0–100, not a manufacturer setting range; raw decoding retained internally |
@@ -248,6 +248,15 @@ reference BDE display** enabled, the word produces level 3 when a preceding
 Eco Winter mode and this status are both fresh within six seconds. A profile
 or mode change, stale mode, or reconnect requires a new matching status.
 The operating-display and LED rules use their own contexts.
+
+Version 0.16.20 adds displayed level 3 for the complete word `0x8200931A`
+(payload `1a930082`, identity `224000/0208/4`) through the same P2-only path.
+The original main-page reference shows Eco Winter and level 3. Preserved passive
+frame brackets agree at the approximate send time; Recorder retains the exact
+word across the displayed minute and the surrounding interval. This reference
+does not derive level 3 from requested level, fan percentages or compressor
+speed. Fresh preceding Eco Winter mode and status within six seconds are
+required; the general decoder allowlist is unchanged.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
@@ -576,6 +585,16 @@ valve word, stopped compressor or stale source leaves these two contexts
 unavailable. They do not establish a general meaning for bit 15 or a rule
 based on compressor speed alone.
 
+**From 0.16.20:** The exact Eco Winter / `0x8200931A` (`1a930082`) / valve
+`0x27` (`27000000`) context uses the same finite positive RPM and individual
+eight-second freshness requirements. Its main-page reference shows the upper
+LED lit. Preserved passive frame brackets agree at the nominal send time;
+Recorder history retains the complete context throughout the displayed minute
+and the surrounding interval. The photo's send time is approximate, rather
+than an exact exposure timestamp.
+The separate P2-only fan-level rule has its own six-second requirements. This
+LED context does not add an operating-display or actuator interpretation.
+
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
 eight seconds. This LED-only limit covers observed unchanged-source intervals
@@ -608,9 +627,9 @@ the continuity rule above is an explicit assumption. The LED was also observed
 lit with the operating field blank and reported compressor speed zero. The
 general interpretation of individual status bits remains open.
 
-Each additional full context has an original main-page reference aligned
-through received device-calendar messages across its whole possible displayed
-minute. The images show Eco Winter, level 2, Heizbetrieb and the lit upper
+The two 0.16.19 contexts have original main-page references aligned
+through received device-calendar messages across each image's whole possible
+displayed minute. The images show Eco Winter, level 2, Heizbetrieb and the lit upper
 LED, with the exact status/valve words and positive speed throughout the
 bracket. A later compatible pre-stop photo album has only an approximate
 shared send time; it is not another exact timestamp or a Bit-28 reference.

@@ -45,8 +45,8 @@ Keep the existing integration entry.
   [BDE operating display](docs/BDE_DISPLAY_EVIDENCE.md) reports **Heating** or
   **Blank operating field** for specific verified Eco Winter conditions. The
   **P2 reference BDE display** integration option enables the upper green LED
-  interpretation, one cooling context and one additional controller fan-level
-  context on the reference P2.
+  interpretation, one cooling context and additional controller fan-level
+  contexts on the reference P2.
 - Capture [diagnostic recordings](docs/DIAGNOSTICS.md) over the existing
   connection or monitor [heating rooms](docs/ROOMS.md) with existing HA entities.
 - Align the [device clock](docs/CLOCK_SYNC.md) using the optional button or the
