@@ -49,7 +49,8 @@ INFERRED_GREEN_LED_CONTEXTS = frozenset(
     {("eco_winter", "1a130092"), ("eco_winter", "12130092")}
 )
 MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
-FAN_LEVEL_THREE_WORD = "1a130092"
+# Exact P2 references requiring a fresh preceding Eco Winter mode receipt.
+P2_CONTROLLER_FAN_LEVELS = {"1a130092": 3, "1a930082": 3}
 
 
 class BdeDisplay:
@@ -174,7 +175,7 @@ class BdeDisplay:
             mode = self._sources.get("operating_mode")
             self._fan_level_status_confirmed = (
                 reading is not None
-                and reading.value == FAN_LEVEL_THREE_WORD
+                and reading.value in P2_CONTROLLER_FAN_LEVELS
                 and mode is not None
                 and mode[0].value == "eco_winter"
                 and 0 <= now - mode[1] <= MAX_SOURCE_AGE

@@ -27,7 +27,7 @@ Das Projekt wird unabhängig von Zimmermann entwickelt. [English overview](https
   zeigt **Heizbetrieb** und **Betriebsfeld leer** in belegten
   Eco-Winter-Konstellationen. Die Integrationsoption **BDE-Anzeige für
   P2-Referenzgerät** gibt für die geprüfte P2-Anlage die Auswertung der oberen
-  grünen LED, einen Kühlzustand und eine weitere Regler-Luftstufe frei.
+  grünen LED, einen Kühlzustand und weitere Zustände der Regler-Luftstufe frei.
 - Manuelle und automatische [Diagnoseaufnahmen](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/DIAGNOSTICS.md)
   zur Fehlersuche und für Vergleiche mit dem BDE.
 - Optionale [Heizraum-Überwachung](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/ROOMS.md)

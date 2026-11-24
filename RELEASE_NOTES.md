@@ -3,17 +3,21 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
-## 0.16.20 – Weitere belegte Eco-Winter-Konstellation für die grüne LED
+## 0.16.20 – Grüne LED und Luftstufe 3 in weiterer Eco-Winter-Konstellation
 
 - Die optionale **Obere grüne BDE-LED** zeigt am ausgewählten P2-Referenzgerät
   in einer weiteren durch Foto und Rohmitschnitt belegten Eco-Winter-Konstellation
   bei laufendem Verdichter **Ein** statt **Nicht verfügbar**. Die Zuordnung wird
   als `state_basis: display_reference` ausgewiesen.
-- Die Ergänzung gilt für das vollständige Status- und Ventilwort. Betriebsart,
+- **Regler-Luftstufe** erkennt in der zusätzlich belegten Eco-Winter-Konstellation
+  **Stufe 3**. Auch diese Ergänzung setzt die Auswahl des P2-Referenzgeräts
+  voraus. Betriebsart und Status müssen innerhalb der letzten sechs Sekunden
+  empfangen worden sein; nach einem Moduswechsel ist ein neuer passender Status
+  erforderlich.
+- Die LED-Ergänzung gilt für das vollständige Status- und Ventilwort. Betriebsart,
   Status, Ventilwort und positive Verdichterdrehzahl müssen jeweils innerhalb
   der letzten acht Sekunden empfangen worden sein. Unbekannte Kombinationen
-  bleiben unverfügbar. Es entsteht keine neue PTC-, Luftstufen- oder
-  Heiz-/Kühlzuordnung.
+  bleiben unverfügbar. Es entsteht keine neue PTC- oder Heiz-/Kühlzuordnung.
 
 Bestehende Entitäten und Aktivierungseinstellungen bleiben erhalten. Die
 gespeicherte Historie wird nicht rückwirkend geändert. Nach der Installation
