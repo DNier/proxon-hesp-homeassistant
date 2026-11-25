@@ -1,8 +1,9 @@
 # Bounded BDE operating-display indication
 
 The optional diagnostic enum sensor **BDE operating display** reports `heating`
-(German: **Heizbetrieb**) for three exact source combinations as of 0.16.9 and,
-from 0.16.5, `blank` (German: **Betriebsfeld leer**) for a separate exact
+(German: **Heizbetrieb**) for three original source combinations and, from
+0.16.21, two additional P2-only combinations. From 0.16.5, it reports `blank`
+(German: **Betriebsfeld leer**) for a separate exact
 source combination. The same entity reports `cooling` (German:
 **Kühlbetrieb**) for one confirmed Comfort combination. The entity is
 disabled by default. Each state describes the display label on the reference
@@ -15,11 +16,13 @@ All identities, lengths and original checksums are validated by the existing
 receiver. The combination is intentionally finite; no individual status bit is
 promoted to a heating flag.
 
-| State | `118000/020A/2` | Complete `224000/0208/4` | Complete `224000/006C/4` | `224000/051C/4` |
-| --- | --- | --- | --- | --- |
-| `heating` | `2` / Eco Winter | `0x82001312` (`12130082`), `0x8200131A` (`1a130082`), or `0x82009312` (`12930082`, since 0.16.9) | `0x27` (`27000000`) | Finite, validated speed above zero |
-| `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero |
-| `cooling` | `3` / Comfort | `0x80001522` (`22150080`) | `0x0227` (`27020000`) | Finite, validated speed above zero |
+| State | `118000/020A/2` | Complete `224000/0208/4` | Complete `224000/006C/4` | `224000/051C/4` | P2 reference option required |
+| --- | --- | --- | --- | --- | --- |
+| `heating` | `2` / Eco Winter | `0x82001312` (`12130082`), `0x8200131A` (`1a130082`), or `0x82009312` (`12930082`, since 0.16.9) | `0x27` (`27000000`) | Finite, validated speed above zero | No |
+| `heating` (from 0.16.21) | `2` / Eco Winter | `0x8200931A` (`1a930082`) | `0x27` (`27000000`) | Finite, validated speed above zero | Yes |
+| `heating` (from 0.16.21) | `2` / Eco Winter | `0x92009312` (`12930092`) | `0xA7` (`a7000000`) | Finite, validated speed above zero | Yes |
+| `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero | No |
+| `cooling` | `3` / Comfort | `0x80001522` (`22150080`) | `0x0227` (`27020000`) | Finite, validated speed above zero | Yes |
 
 For the Eco Winter operating display, each source must be fresh within seven
 seconds and receipts must form a coherent context. The Comfort cooling display
@@ -28,16 +31,18 @@ keeps its six-second source limit. Initial qualification still requires at least
 property cannot create new proof.
 
 An already qualified heating label remains available when the status changes
-between the three admitted heating combinations while every required source
-stays fresh and valid. This does not extend the admitted words. A transition
+between the heating combinations admitted for the active display profile while
+every required source stays fresh and valid. This does not extend the admitted
+words or allow a different valve word. A transition
 to blank or cooling, an unassigned context, an expired or invalid source,
 disconnect or restart invalidates the indication and starts a new qualification
 window. There is no grace period beyond the source deadline. The green LED,
 the mode-dependent fan-level indication and general telemetry retain their
 separate freshness limits.
 
-Other combinations are unavailable, including other complete level-3 status
-words, uncorroborated startup/stop contexts and the longer bit-28 phases. Unavailable never means that the BDE display is
+Other combinations are unavailable, including unassigned complete level-3 status
+words, uncorroborated startup/stop contexts and unassigned bit-28 combinations.
+Unavailable never means that the BDE display is
 blank, that the heat pump is off or that heating has stopped. There is no fallback
 to the last label, operating mode alone, a valve bit or warm supply air.
 
@@ -54,6 +59,8 @@ bracket for a heating or cooling label. The tracker starts labelling after
 | --- | --- |
 | `0x82001312 / 0x27` | Four BDE heating readings match qualified intervals. |
 | `0x8200131A / 0x27` | Two BDE heating readings match qualified intervals at level 3. A separate interval in the same recording overlaps `0x8200111A`, so it supplies no additional label. |
+| `0x8200931A / 0x27` | A separately timed main-page photograph shows Heizbetrieb, level 3 and the lit LED; the received context remains unchanged throughout the device minute. The label is P2-only. |
+| `0x92009312 / 0xA7` | A phone photo-information minute, user timing confirmation and independently received device clock agree. The whole minute has the same words and positive speed; the main page shows Heizbetrieb, level 2 and the lit LED. The label is P2-only. |
 | `0x9200131A / 0x27` or `/ 0xA7` | The reviewed intervals leave an unresolved word transition or have insufficient independent references. Both combinations remain unassigned. |
 
 Count independent display episodes rather than matching raw windows. Raw
@@ -75,6 +82,30 @@ reception with positive speed. The public regression tests use one minimal
 recorded status frame and synthetic combinations with the existing vectors.
 The difference from `0x82001312` establishes this complete word only. The
 neighboring words remain subject to their own display evidence.
+
+### Additional P2 heating contexts (0.16.21)
+
+Two separate main-page photographs support the additional complete contexts in
+the table. Device-clock observations independently agree with each visible
+minute; the accepted mode, status and valve words stay unchanged throughout
+those minutes with positive compressor speed. The transmitted JPEGs contain
+no camera exposure seconds. These are minute-bounded references, not exact
+transition timestamps. The comparison uses native decoded Recorder receipts;
+it is not an original wire-frame replay.
+
+The level-2 reference's associated switching-state image has no clock. It
+shows MV-Abtau Off, while the received valve indication changes from On to
+Off after the main-page minute. The individual exposure times and possible
+display-update delay remain unresolved. That image is not forced onto the
+main-page context and establishes no synchronized PTC or valve reference.
+
+Both new heating contexts use the existing seven-second Eco Winter source
+limit and 15-second initial qualification. The LED's separate eight-second
+limit remains unchanged. Level 2 is additionally available only for the
+complete P2 Eco Winter / `12930092` / `a7000000` / positive-RPM context, with
+all four sources fresh within seven seconds. It does not become a generic
+word-only fan rule. Existing word-only P2 fan rules retain their six-second
+limit. No received interval is presented as permanently fresh telemetry.
 
 ## Blank-field evidence
 

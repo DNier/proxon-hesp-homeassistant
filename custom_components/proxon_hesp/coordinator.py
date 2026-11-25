@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .bde_display import P2_CONTROLLER_FAN_LEVELS, BdeDisplay
+from .bde_display import P2_CONTEXT_FAN_WORDS, P2_CONTROLLER_FAN_LEVELS, BdeDisplay
 from .capture import DURATION, Capture
 from .const import PROFILE, STALE_SECONDS
 from .event_capture import EventCapture
@@ -365,12 +365,12 @@ class ProxonRuntime:
         now = time.monotonic()
         if key == "controller_fan_level" and self.profile == PROFILE:
             status = self.values.get("raw_0208")
-            if status is not None and status[0].value in P2_CONTROLLER_FAN_LEVELS:
-                return (
-                    Reading(key, P2_CONTROLLER_FAN_LEVELS[status[0].value])
-                    if self.bde_display.fan_level_confirmed(now)
-                    else None
-                )
+            if status is not None and (
+                status[0].value in P2_CONTROLLER_FAN_LEVELS
+                or status[0].value in P2_CONTEXT_FAN_WORDS
+            ):
+                level = self.bde_display.fan_level(now)
+                return Reading(key, level) if level is not None else None
         item = self.values.get(key)
         return item[0] if item is not None and now - item[1] < STALE_SECONDS else None
 

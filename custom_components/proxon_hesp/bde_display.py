@@ -24,6 +24,13 @@ HEATING_CONTEXTS = frozenset(
         ("eco_winter", 0x82009312, 0x27),
     }
 )
+# Additional complete references are limited to the selected P2 display.
+P2_HEATING_CONTEXTS = frozenset(
+    {
+        ("eco_winter", 0x8200931A, 0x27),
+        ("eco_winter", 0x92009312, 0xA7),
+    }
+)
 
 BLANK_CONTEXT = ("eco_winter", 0x8000100A, 0x25)
 COOLING_CONTEXT = ("comfort", 0x80001522, 0x0227)
@@ -42,6 +49,7 @@ CONTEXT_GREEN_LED_CONTEXTS = frozenset(
         ("eco_winter", "12930082", "27000000"),
         ("eco_winter", "12110082", "27000000"),
         ("eco_winter", "1a930082", "27000000"),
+        ("eco_winter", "12930092", "a7000000"),
     }
 )
 # Explicit continuity assumption, not an independently observed LED mapping.
@@ -51,6 +59,11 @@ INFERRED_GREEN_LED_CONTEXTS = frozenset(
 MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
 # Exact P2 references requiring a fresh preceding Eco Winter mode receipt.
 P2_CONTROLLER_FAN_LEVELS = {"1a130092": 3, "1a930082": 3}
+# This reference also depends on the complete valve word and positive RPM.
+P2_CONTEXT_CONTROLLER_FAN_LEVELS = {("eco_winter", "12930092", "a7000000"): 2}
+P2_CONTEXT_FAN_WORDS = frozenset(
+    status for _, status, _ in P2_CONTEXT_CONTROLLER_FAN_LEVELS
+)
 
 
 class BdeDisplay:
@@ -111,6 +124,10 @@ class BdeDisplay:
         was_qualified = self._qualified
         previous_led = self._green_led[0] if self._green_led is not None else None
         previous_led_basis = self._green_led_basis
+        previous_fan_level = self.fan_level(now)
+        fan_deadline = self.fan_level_expires_at
+        if fan_deadline is not None and now > fan_deadline:
+            self._fan_level_status_confirmed = False
         if self.green_led(now) is None:
             self._led_on_continuity = False
         # Check the old snapshot before replacing anything: a new valid batch
@@ -141,8 +158,8 @@ class BdeDisplay:
             elif context != self._context:
                 same_qualified_heating = (
                     self._qualified
-                    and self._context in HEATING_CONTEXTS
-                    and context in HEATING_CONTEXTS
+                    and self._is_heating_context(self._context)
+                    and self._is_heating_context(context)
                 )
                 if not same_qualified_heating:
                     self._reset_stability()
@@ -162,6 +179,7 @@ class BdeDisplay:
             self._qualified != was_qualified
             or self.green_led(now) != previous_led
             or self._green_led_basis != previous_led_basis
+            or self.fan_level(now) != previous_fan_level
         )
 
     def _update_fan_level_context(
@@ -175,18 +193,34 @@ class BdeDisplay:
             mode = self._sources.get("operating_mode")
             self._fan_level_status_confirmed = (
                 reading is not None
-                and reading.value in P2_CONTROLLER_FAN_LEVELS
+                and (
+                    reading.value in P2_CONTROLLER_FAN_LEVELS
+                    or reading.value in P2_CONTEXT_FAN_WORDS
+                )
                 and mode is not None
                 and mode[0].value == "eco_winter"
-                and 0 <= now - mode[1] <= MAX_SOURCE_AGE
+                and 0 <= now - mode[1] <= self._fan_level_source_max_age()
             )
         elif key == "operating_mode" and (
             reading is None
             or reading.value != "eco_winter"
             or previous is None
-            or not 0 <= now - previous[1] <= MAX_SOURCE_AGE
+            or not 0 <= now - previous[1] <= self._fan_level_source_max_age()
         ):
             self._fan_level_status_confirmed = False
+
+    def _fan_level_source_max_age(self) -> float:
+        status = self._sources.get("raw_0208")
+        return (
+            MAX_WINTER_SOURCE_AGE
+            if status is not None and status[0].value in P2_CONTEXT_FAN_WORDS
+            else MAX_SOURCE_AGE
+        )
+
+    def _is_heating_context(self, context: tuple[str, int, int] | None) -> bool:
+        return context in HEATING_CONTEXTS or (
+            self._p2_reference and context in P2_HEATING_CONTEXTS
+        )
 
     def _source_max_age(self) -> float:
         mode = self._sources.get("operating_mode")
@@ -225,7 +259,7 @@ class BdeDisplay:
             )
         except ValueError:
             return None
-        if context in HEATING_CONTEXTS and rpm > 0:
+        if self._is_heating_context(context) and rpm > 0:
             return context
         if (
             self._p2_reference
@@ -346,6 +380,26 @@ class BdeDisplay:
     def fan_level_expires_at(self) -> float | None:
         if not self._fan_level_status_confirmed:
             return None
+        status = self._sources.get("raw_0208")
+        if status is not None and status[0].value in P2_CONTEXT_FAN_WORDS:
+            if len(self._sources) != len(SOURCE_KEYS):
+                return None
+            context = tuple(
+                self._sources[key][0].value
+                for key in ("operating_mode", "raw_0208", "raw_006c")
+            )
+            rpm = self._sources["compressor_rpm"][0].value
+            if (
+                context not in P2_CONTEXT_CONTROLLER_FAN_LEVELS
+                or type(rpm) not in (int, float)
+                or not math.isfinite(rpm)
+                or not 0 < rpm <= 10000
+            ):
+                return None
+            return (
+                min(stamp for _, stamp in self._sources.values())
+                + MAX_WINTER_SOURCE_AGE
+            )
         return (
             min(self._sources[key][1] for key in MODE_STATUS_SOURCE_KEYS)
             + MAX_SOURCE_AGE
@@ -356,10 +410,30 @@ class BdeDisplay:
         deadline = self.fan_level_expires_at
         return (
             deadline is not None
-            and max(self._sources[key][1] for key in MODE_STATUS_SOURCE_KEYS)
+            and max(
+                self._sources[key][1]
+                for key in (
+                    tuple(SOURCE_KEYS.values())
+                    if self._sources["raw_0208"][0].value in P2_CONTEXT_FAN_WORDS
+                    else MODE_STATUS_SOURCE_KEYS
+                )
+            )
             <= now
             <= deadline
         )
+
+    def fan_level(self, now: float) -> int | None:
+        """Return only the P2 word or complete context whose sources are fresh."""
+        if not self.fan_level_confirmed(now):
+            return None
+        status = self._sources["raw_0208"][0].value
+        if status in P2_CONTEXT_FAN_WORDS:
+            context = tuple(
+                self._sources[key][0].value
+                for key in ("operating_mode", "raw_0208", "raw_006c")
+            )
+            return P2_CONTEXT_CONTROLLER_FAN_LEVELS.get(context)
+        return P2_CONTROLLER_FAN_LEVELS.get(status)
 
     def expire(self, now: float) -> bool:
         """Clear an expired candidate and report whether listeners need updating."""

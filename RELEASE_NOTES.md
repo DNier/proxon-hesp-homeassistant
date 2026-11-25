@@ -3,6 +3,30 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.21 – Weitere belegte Heiz-, LED- und Luftstufenanzeigen
+
+- Die **BDE-Betriebsanzeige** erkennt am ausgewählten P2-Referenzgerät
+  **Heizbetrieb** in zwei weiteren durch BDE-Fotos und empfangene Daten belegten
+  Eco-Winter-Konstellationen. Die Betriebsanzeige beschreibt weiterhin den
+  Text am BDE.
+- Die optionale **Obere grüne BDE-LED** zeigt in der zusätzlich belegten
+  Eco-Winter-Konstellation **Ein** mit `state_basis: display_reference`.
+- **Regler-Luftstufe** erkennt in genau dieser vollständigen Konstellation
+  **Stufe 2**. Dafür müssen Betriebsart, Status, Ventilwort und positive
+  Verdichterdrehzahl zusammenpassen und frisch sein.
+
+Die Ergänzungen setzen **BDE-Anzeige für P2-Referenzgerät** voraus.
+Für die neuen Heiz- und Luftstufen-Konstellationen gelten sieben Sekunden
+Quellenalter, für die LED acht Sekunden. Die Heizanzeige benötigt zunächst
+15 Sekunden gültigen Empfang. Andere Kombinationen bleiben unverfügbar;
+PTC-Wohnen und eine allgemeine Bedeutung einzelner Statusbits werden daraus
+nicht abgeleitet.
+
+Bestehende Entitäten und Einstellungen bleiben erhalten. Die Historie wird
+nicht rückwirkend geändert. Nach der Installation über HACS Home Assistant
+neu starten und benötigte flüchtige Aufnahmen vorher sichern.
+[Bedingungen und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
 ## 0.16.20 – Grüne LED und Luftstufe 3 in weiterer Eco-Winter-Konstellation
 
 - Die optionale **Obere grüne BDE-LED** zeigt am ausgewählten P2-Referenzgerät

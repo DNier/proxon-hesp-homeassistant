@@ -74,6 +74,14 @@ def checked(body):
 
 
 STATUS_8200111A = checked(STATUS[:8] + bytes.fromhex("1a110082"))
+# Synthetic frames for complete display-backed payload contexts; replay timing
+# is synthetic and is not an original transport recording.
+STATUS_8200931A = checked(STATUS[:8] + bytes.fromhex("1a930082"))
+STATUS_92009312 = checked(STATUS[:8] + bytes.fromhex("12930092"))
+P2_HEATING_SOURCES = (
+    (MODE, STATUS_8200931A, VALVES, RPM),
+    (MODE, STATUS_92009312, A7, RPM),
+)
 
 
 @pytest.fixture(
@@ -312,6 +320,153 @@ def test_winter_and_led_keep_independent_hard_source_deadlines():
     assert display.green_led(23) is True
     assert display.green_led(23.000001) is None
     assert display.expire(23.000001)
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+def test_complete_p2_references_require_fresh_15_second_heating_proof(
+    led_stream, sources
+):
+    display, feed = led_stream
+    for now in (0, 5, 10, 14.999):
+        feed(b"".join(sources), now)
+        assert display.value(now) is None
+    feed(sources[-1], 15)
+    assert display.value(15) == "heating"
+    assert display.green_led(15) is True
+    assert display.green_led_basis(15) == "display_reference"
+    assert display.fan_level(15) == (2 if sources[1] == STATUS_92009312 else 3)
+    assert all(
+        reading.key != "controller_fan_level" for reading in Decoder().feed(sources[1])
+    )
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+def test_complete_p2_references_remain_disabled_without_display_opt_in(sources):
+    display = BdeDisplay(supports_green_led=True)
+    clock = SimpleNamespace(now=0.0)
+    decoder = Decoder(
+        lambda source, readings: display.observe(source, readings, clock.now)
+    )
+    for clock.now in (0, 5, 10, 15, 20):
+        decoder.feed(b"".join(sources))
+        assert display.value(clock.now) is None
+        assert display.green_led(clock.now) is None
+        assert display.fan_level(clock.now) is None
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+@pytest.mark.parametrize("mode", (0, 1, 3, 4))
+def test_complete_p2_references_do_not_cross_operating_modes(led_stream, sources, mode):
+    display, feed = led_stream
+    other_mode = checked(MODE[:8] + mode.to_bytes(2, "little"))
+    for now in (0, 5, 10, 15, 20):
+        feed(other_mode + b"".join(sources[1:]), now)
+        assert display.value(now) is None
+        assert display.green_led(now) is None
+        assert display.fan_level(now) is None
+
+
+@pytest.mark.parametrize(
+    "sources,valve_word",
+    [
+        (sources, valve_word)
+        for sources in P2_HEATING_SOURCES
+        for valve_word in (0x25, 0x27, 0x67, 0xA7, 0xE7, 0x227)
+        if int.from_bytes(sources[2][8:-2], "little") != valve_word
+    ],
+)
+def test_complete_p2_references_do_not_admit_other_valve_words(
+    led_stream, sources, valve_word
+):
+    display, feed = led_stream
+    valves = checked(VALVES[:8] + valve_word.to_bytes(4, "little"))
+    for now in (0, 5, 10, 15, 20):
+        feed(sources[0] + sources[1] + valves + sources[3], now)
+        assert display.value(now) is None
+        assert display.green_led(now) is None
+        if sources[1] == STATUS_92009312:
+            assert display.fan_level(now) is None
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+@pytest.mark.parametrize("value", (0, -1, float("nan"), float("inf"), 10001))
+def test_complete_p2_references_reject_stopped_or_invalid_rpm(
+    led_stream, sources, value
+):
+    display, feed = led_stream
+    stabilize(feed, sources=sources)
+    assert display.value(15) == "heating"
+    feed(checked(RPM[:8] + struct.pack("<f", value)), 16)
+    assert display.value(16) is None
+    assert display.green_led(16) is None
+    if sources[1] == STATUS_92009312:
+        assert display.fan_level(16) is None
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+@pytest.mark.parametrize("late_source", range(4))
+def test_complete_p2_references_keep_the_existing_seven_second_heating_limit(
+    led_stream, sources, late_source
+):
+    display, feed = led_stream
+    stabilize(feed, sources=sources)
+    for index, source in enumerate(sources):
+        if index != late_source:
+            feed(source, 20)
+    assert display.value(22) == "heating"
+    assert display.value(22.000001) is None
+    if sources[1] == STATUS_92009312:
+        assert display.fan_level_expires_at == 22
+        assert display.fan_level(22) == 2
+        assert display.fan_level(22.000001) is None
+    feed(sources[late_source], 22.000001)
+    assert display.value(22.000001) is None
+
+
+def test_complete_p2_fan_reference_covers_bounded_source_jitter(led_stream):
+    display, feed = led_stream
+    sources = P2_HEATING_SOURCES[1]
+    stabilize(feed, sources=sources)
+    for now in (21.492433, 28.084421, 34.576854):
+        assert display.value(now - 0.001) == "heating"
+        assert display.fan_level(now - 0.001) == 2
+        feed(b"".join(sources), now)
+        assert display.value(now) == "heating"
+        assert display.fan_level(now) == 2
+    assert display.value(41.576854) == "heating"
+    assert display.fan_level(41.576854) == 2
+    assert display.value(41.576855) is None
+    assert display.fan_level(41.576855) is None
+
+
+def test_new_p2_heating_preserves_only_a_qualified_admitted_transition(led_stream):
+    display, feed = led_stream
+    stabilize(feed)
+    feed(b"".join(P2_HEATING_SOURCES[0]), 16)
+    assert display.value(16) == "heating"
+    # Same mode/positive RPM do not admit the mixed, unobserved valve context.
+    feed(STATUS_92009312, 17)
+    assert display.value(17) is None
+    for now in (18, 23, 28, 32.999):
+        feed(b"".join(P2_HEATING_SOURCES[1]), now)
+        assert display.value(now) is None
+    feed(RPM, 33)
+    assert display.value(33) == "heating"
+
+
+@pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
+@pytest.mark.parametrize("bit", (0, 2, 5, 6, 7, 14, 17, 24))
+def test_complete_p2_references_do_not_infer_neighboring_status_words(
+    led_stream, sources, bit
+):
+    display, feed = led_stream
+    word = int.from_bytes(sources[1][8:-2], "little") ^ (1 << bit)
+    status = checked(STATUS[:8] + word.to_bytes(4, "little"))
+    for now in (0, 5, 10, 15, 20):
+        feed(MODE + status + sources[2] + RPM, now)
+        assert display.value(now) is None
+        assert display.green_led(now) is None
+        assert display.fan_level(now) is None
 
 
 def test_future_receipts_and_incoherent_sources_fail_closed(
@@ -1043,7 +1198,7 @@ def test_additional_optical_led_rejects_invalid_rpm(led_stream, status, value):
 
 
 @pytest.mark.parametrize("status", ADDITIONAL_LED_STATUSES)
-def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
+def test_additional_optical_led_keeps_text_and_profile_checks_independent(
     led_stream, status
 ):
     display, feed = led_stream
@@ -1052,7 +1207,7 @@ def test_additional_optical_led_does_not_assign_a_bde_label_or_ignore_profile(
     assert display.value(0) is None
     if status in (LED_PRESTOP_LEVEL2, LED_BIT15_LEVEL3):
         stabilize(feed, sources=(MODE, status, VALVES, RPM))
-        assert display.value(15) is None
+        assert display.value(15) == ("heating" if status == LED_BIT15_LEVEL3 else None)
         assert display.fan_level_confirmed(15) == (status == LED_BIT15_LEVEL3)
     if status == LED_BIT15_LEVEL3:
         assert all(
@@ -1189,6 +1344,103 @@ def test_led_eight_second_limit_covers_observed_unchanged_poll_intervals(
     assert display.green_led_basis(last_gap + 8.000001) is None
 
 
+async def test_p2_full_context_fan_updates_on_valve_rpm_expiry_and_option_changes(
+    hass, frames
+):
+    loop = asyncio.get_running_loop()
+    start = float(int(loop.time()))
+    clock = SimpleNamespace(now=start)
+    reader = asyncio.StreamReader()
+    reader.feed_data(frames["0xe1"])
+
+    @asynccontextmanager
+    async def receiver(*args):
+        yield reader
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="PROXON",
+        unique_id="complete-context-unit",
+        data={"host": "gateway.test", "port": 4196, "profile": PROFILE},
+        options={CONF_P2_REFERENCE_DISPLAY: True},
+    )
+    entry.add_to_hass(hass)
+    registered = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "complete-context-unit_controller_fan_level",
+        config_entry=entry,
+        disabled_by=None,
+    )
+
+    async def advance_to(elapsed):
+        clock.now = start + elapsed
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    async def receive_at(elapsed, data, expected):
+        await advance_to(elapsed)
+        reader.feed_data(data)
+        await hass.async_block_till_done()
+        assert hass.states.is_state(registered.entity_id, expected)
+
+    with (
+        patch("custom_components.proxon_hesp.coordinator.open_receiver", receiver),
+        patch(
+            "custom_components.proxon_hesp.coordinator.time",
+            SimpleNamespace(monotonic=lambda: clock.now),
+        ),
+        patch.object(loop, "time", lambda: clock.now),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await receive_at(1, MODE + STATUS, "2")
+        # Missing dependencies cannot retain the old generic fan value.
+        await receive_at(2, STATUS_92009312, "unavailable")
+        await receive_at(3, RPM, "unavailable")
+        await receive_at(4, A7, "2")
+        await receive_at(5, VALVES, "unavailable")
+        await receive_at(6, A7, "2")
+        await receive_at(7, STOPPED, "unavailable")
+        await receive_at(8, RPM, "2")
+        await advance_to(8.002)
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(9, MODE + STATUS_92009312 + A7 + RPM, "2")
+        await receive_at(15.5, MODE + STATUS_92009312 + A7, "2")
+        runtime = entry.runtime_data
+        assert runtime.timer.when() == pytest.approx(start + 16.001, abs=0.00001)
+        await advance_to(16.002)
+        assert hass.states.is_state(registered.entity_id, "unavailable")
+        await receive_at(17, RPM, "unavailable")
+        await receive_at(18, STATUS_92009312, "2")
+        comfort = bytes.fromhex("1180000a020000040300caef")
+        await receive_at(19, comfort, "unavailable")
+        await receive_at(20, MODE, "unavailable")
+        await receive_at(21, STATUS_92009312, "2")
+        runtime.capture.start()
+        capture_state = runtime.capture.started, runtime.capture.size
+
+        async def set_variant(enabled):
+            form = await hass.config_entries.options.async_init(entry.entry_id)
+            result = await hass.config_entries.options.async_configure(
+                form["flow_id"], {CONF_P2_REFERENCE_DISPLAY: enabled}
+            )
+            assert result["type"] is FlowResultType.CREATE_ENTRY
+            await hass.async_block_till_done()
+            assert entry.runtime_data is runtime
+            assert (runtime.capture.started, runtime.capture.size) == capture_state
+            assert hass.states.is_state(registered.entity_id, "unavailable")
+
+        await set_variant(False)
+        await receive_at(22, MODE + STATUS_92009312 + A7 + RPM, "unavailable")
+        capture_state = runtime.capture.started, runtime.capture.size
+        await set_variant(True)
+        await receive_at(23, STATUS_92009312 + A7 + RPM + MODE, "unavailable")
+        await receive_at(24, STATUS_92009312, "2")
+        assert runtime.diagnostics()["application_bytes_sent"] == 0
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert runtime.timer is None
+
+
 @pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT15_LEVEL3))
 async def test_p2_fan_level_requires_fresh_preceding_eco_winter(hass, frames, status):
     comfort = bytes.fromhex("1180000a020000040300caef")
@@ -1294,7 +1546,7 @@ async def test_p2_fan_level_requires_fresh_preceding_eco_winter(hass, frames, st
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT15_LEVEL3))
+@pytest.mark.parametrize("status", (STATUS_9200131A, LED_BIT15_LEVEL3, STATUS_92009312))
 async def test_p2_fan_level_requires_the_observed_transport_profile(hass, status):
     runtime = ProxonRuntime(
         hass, "gateway.test", 4196, profile="other", p2_reference_display=True
