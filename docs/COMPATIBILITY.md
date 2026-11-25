@@ -23,8 +23,8 @@ Busverkehr ab.
 
 Die Integrationsoption **BDE-Anzeige für P2-Referenzgerät** gilt für die
 oben beschriebene P2. Sie setzt das Modell auf **PROXON P2 (HESP)** und gibt
-die Auswertung der oberen grünen LED, eine belegte Kühlanzeige und eine
-Regler-Luftstufe frei. Die Option ist
+die Auswertung der oberen grünen LED, weitere belegte Heiz- und
+Regler-Luftstufen-Konstellationen sowie eine Kühlanzeige frei. Die Option ist
 standardmäßig aus und lässt sich im laufenden Betrieb ändern.
 
 Das Waveshare-Modell ist die eingesetzte Referenzhardware, keine Voraussetzung

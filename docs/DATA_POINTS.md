@@ -258,6 +258,14 @@ does not derive level 3 from requested level, fan percentages or compressor
 speed. Fresh preceding Eco Winter mode and status within six seconds are
 required; the general decoder allowlist is unchanged.
 
+Version 0.16.21 adds displayed level 2 for the **complete P2 context** Eco
+Winter / `0x92009312` (`12930092`) / valve `0xA7` (`a7000000`) / finite
+positive compressor RPM. All four sources must be fresh and coherent within
+seven seconds. Enable **P2 reference BDE display** for this additional rule.
+A different valve word, mode, expired source or stopped compressor does not
+admit this level. The general decoder and existing six-second P2 word-only
+rules are unchanged.
+
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
 configured stages, as described below. Their availability does not depend on
@@ -593,7 +601,17 @@ Recorder history retains the complete context throughout the displayed minute
 and the surrounding interval. The photo's send time is approximate, rather
 than an exact exposure timestamp.
 The separate P2-only fan-level rule has its own six-second requirements. This
-LED context does not add an operating-display or actuator interpretation.
+LED context did not add an operating-display or actuator interpretation in
+0.16.20. Version 0.16.21 separately admits its exact heating-label context
+under the operating-display qualification rules below.
+
+**From 0.16.21:** The exact Eco Winter / `0x92009312` (`12930092`) / valve
+`0xA7` (`a7000000`) / finite positive RPM context also reports the LED lit
+as `display_reference`. The P2 option and individual eight-second source
+limits apply. Its main-page photograph shows the green LED, Heizbetrieb and
+level 2; the received context remains unchanged throughout the device minute. This is a
+direct optical reference for this complete context, not a generalized Bit-28
+rule or a reference for a neighboring status or valve word.
 
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
@@ -642,6 +660,9 @@ The optional diagnostic enum `bde_operating_display` reports `heating` for
 Eco Winter with full `224000/0208/4=0x82001312`, `0x8200131A` or, from 0.16.9,
 `0x82009312`. Each requires full `224000/006C/4=0x27` and fresh positive
 `224000/051C/4` compressor speed.
+From 0.16.21, **P2 reference BDE display** additionally admits two exact Eco
+Winter heating contexts: `0208=0x8200931A` / `006C=0x27` and
+`0208=0x92009312` / `006C=0xA7`, both with finite positive compressor RPM.
 From 0.16.5 the same entity additionally reports `blank` only for Eco Winter,
 full `0208=0x8000100A`, full `006C=0x25` and finite compressor speed exactly zero.
 Two independent device-minute-backed references support this blank-label
@@ -655,9 +676,12 @@ for Comfort with full
 support this exact combination. All three sources must arrive after the
 current Comfort mode's first or changed receipt.
 
-All four sources must meet the six-second freshness/coherency bound and each
-complete combination must remain valid for 15 seconds of actual receptions.
-Every context change, including heating to blank or the reverse, starts a new
-qualification window. Other combinations are unavailable. The existing entity
+All four Eco Winter sources must meet the seven-second freshness/coherency
+bound; Comfort cooling retains its six-second bound. Initial qualification
+requires 15 seconds of actual valid receptions. Already qualified heating
+continues between admitted heating contexts for the active display profile
+while every source remains fresh and valid. Changes to blank or cooling,
+unassigned contexts and invalid or expired sources start a new qualification
+window. Other combinations are unavailable. The existing entity
 identity, opt-in setting and general telemetry freshness are preserved.
 [Evidence and regression scope](BDE_DISPLAY_EVIDENCE.md).
