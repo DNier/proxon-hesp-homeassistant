@@ -125,10 +125,13 @@ The existing offline inventory is prepared for these narrowly bounded forms:
 - Header `224000`, metadata DP `0033`, `0034`, `0038` or `0039`, length byte `00`,
   exactly 128 payload bytes, and a valid original checksum. Upper ID bits are
   retained as a candidate offset, including for `0039` at offset zero.
-- Header `108000` to the same metadata points, two payload bytes exactly `0100`
-  (uint16 count **1**). This follows Martin's reported request form; **64 entries
-  in a reply do not establish a request count of 64**. Other counts are unsupported
-  by the page auditor. Other frame families still require zero reserved bytes.
+- Header `108000` to the same metadata points, two payload bytes `0100`
+  (uint16 count **1**) or `4000` (count **64**). Count 1 preserves Martin's
+  reported form; count 64 follows the author's explicit
+  [query example and paging report](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147).
+  Requests are validated as received; reply size never rewrites 1 to 64.
+  Other counts remain unsupported. Other frame families still
+  require zero reserved bytes.
 
 This does not generalize the length-byte wrap rule to every identity, accept
 empty confirmations as 128-byte replies, or change the production decoder.
@@ -153,6 +156,22 @@ new entity, automatic discovery or firmware change is introduced. The existing
 temperature candidates and production `03B7` mapping are unchanged.
 
 See [input formats and usage](OFFLINE_ANALYSIS.md#metadata-replies-and-follow-up-pages).
+
+## Separate 163-entry controller snapshot
+
+The upstream [LT catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
+reports 163 entries from a P 2H-L at address 2, using offsets 0, 64 and 99.
+It contains interpreted payload values and access labels, not original timed
+QUERY/RESPONSE pairs. Long arrays are explicitly truncated after 32 bytes.
+It is a separate external source; neither missing wire frames nor missing array
+elements may be reconstructed from its table. The original recorded fixture and
+the conservative `catalog_length=null` result are unchanged. Its type, mask and
+unit codes do not grant write access or transfer meanings between node 2 and 30.
+
+The author reports collecting a complete checksum-valid 138-byte response across
+USB chunks and using a 250 ms waiting window per query. That timing is an observed
+acquisition setting on his sole-master setup, not a proven minimum, electrical
+bus-free condition or coordination mechanism with an attached BDE.
 
 ## Grenzen des Exports
 

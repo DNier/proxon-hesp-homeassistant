@@ -19,6 +19,15 @@ und Payloadlänge bleiben Teil jeder Zuordnung.
 | Aktives Heizen/Kühlen: `224000/0208/4` | Bit 8 tritt bei Heizen und Kühlen auf; Bits 9/10 fallen teilweise vor Verdichterstopp. Bit 28 fehlt bei bestätigter Kühlung. | Keine belastbare Betriebszustandsanzeige aus diesen Einzelbits. |
 | Eco-Luftstufe Zeitplan/fest | Auto in Eco Sommer/Winter folgt einem nutzerdefinierten Wochenzeitplan. Gleiche numerische Stufe kann Zeitplan- und feste Auswahl darstellen. In Komfort/Ofen bestimmt die Steuerung die Stufe ohne diese Auswahl. | Auswahl und Zeitplan nicht aus Rohstellwert oder Stufe ableiten. |
 
+Der Upstream-Autor hat seine frühere Aussage **„0191=1 bedeutet Wärmeelemente
+freigegeben“** [ausdrücklich zurückgenommen](https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7189097549).
+Seine Vergleichsfolge änderte gleichzeitig die Betriebsart; PTC-Wohnen wurde
+nicht abgelesen. Sie belegt weder einen gespeicherten Freigabewert noch eine
+ausschließliche Betriebsartenkodierung. Die oben genannten Kandidaten bleiben
+ungeklärt. `0191` im LT-Katalog an Adresse 2 bezeichnet zudem eine andere
+Identität als das Zwei-Byte-Wort an Adresse 30.
+[Adress- und Nutzlängengrenze (Englisch)](ADDRESS_EVIDENCE.md)
+
 ## Ergänzende Belege aus natürlichem Winterbetrieb
 
 Passive Winteraufnahmen zeigen `03B6` und `0191` Bit 0 vor der ersten positiven

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from tools.address_analysis import decode_header
-from tools.frame_observations import METADATA_POINTS
+from tools.frame_observations import METADATA_POINTS, METADATA_QUERY_PAYLOADS
 
 
 def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> dict:
@@ -83,7 +83,7 @@ def inventory(
             header[:3] == b"\x10\x80\x00"
             and dp in METADATA_POINTS
             and header[7] == 4
-            and frame[8:10] == b"\x01\x00"
+            and frame[8:10].hex() in METADATA_QUERY_PAYLOADS
         )
         if (
             (selector and not (extended_metadata or metadata_query))

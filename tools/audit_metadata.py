@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from tools.address_analysis import analyze_exchanges
+from tools.frame_observations import METADATA_QUERY_PAYLOADS
 from tools.inventory_capture import METADATA_POINTS, inventory, load_capture
 
 PAGE_FORMAT = "proxon-metadata-pages-1"
@@ -126,11 +127,12 @@ def _paged_columns(source):
                 "expected 1 -> 2 QUERY or 2 -> 1 RESPONSE"
             )
         if group["header"] == "108000" and (
-            group["payload_bytes"] != 2 or group["values"] != ["0100"]
+            group["payload_bytes"] != 2
+            or any(value not in METADATA_QUERY_PAYLOADS for value in group["values"])
         ):
             raise ValueError(
                 "Unsupported metadata query count; "
-                "only uint16 count 1 (0100) is prepared"
+                "only uint16 counts 1 (0100) and 64 (4000) are prepared"
             )
         if group["header"] == "224000" and group["payload_bytes"] != 128:
             raise ValueError(
@@ -203,7 +205,9 @@ def _paged_columns(source):
         "framing": "checksum_validated_candidate_metadata_pages",
         "semantics": "unconfirmed_type_mask_and_unit_codes",
         "selector_interpretation": "candidate_element_offset",
-        "query_count": "0100: uint16 count 1; other counts unsupported",
+        "query_count": (
+            "0100: uint16 count 1; 4000: uint16 count 64; other counts unsupported"
+        ),
         "catalog_length": None,
         "catalog_completeness": (
             "unknown; pages and unanswered queries do not prove the end of a catalog"

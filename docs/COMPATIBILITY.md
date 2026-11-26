@@ -105,9 +105,18 @@ Wiederanschließen kehrte der Verkehr zurück. Ein Steuerungstest fand nicht sta
 ## Busabschnitt
 
 In der P2-Referenzkonfiguration ist das BDE mit PTC-X1 verbunden. Der passive
-HESP-Abgriff liegt zwischen **PTC-X2 und Hauptplatine-X5**. Dieser Abschnitt ist
-vom direkten BDE-PTC-Anschluss zu unterscheiden. Ergebnisse eines Abschnitts
-belegen nicht automatisch Protokoll und elektrische Eigenschaften eines anderen.
+HESP-Abgriff liegt zwischen **PTC-X2 und Hauptplatine**. Die bisherigen Aufnahmen
+führen die Hauptplatinenseite als „X5“. Der Upstream-Autor ordnet sie anhand
+seiner Werksfotos und der Referenzfotos dagegen **X6** zu und hat seine eigene
+Anschlussdokumentation korrigiert. Diese nachträgliche Zuordnung ist hier nicht
+unabhängig elektrisch bestätigt; historische Aufnahmebezeichnungen bleiben
+erhalten. [Korrektur und Geltungsbereich](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147)
+
+Für seine Anlage nennt er 9600 Baud zwischen BDE und PTC-X1, 19200 Baud zwischen
+PTC-X2 und Hauptplatine sowie X7 als zusätzlichen Zugang zum selben HESP-Bus.
+Dies ist keine bestätigte Belegung anderer Revisionen. Der direkte BDE-PTC-
+Anschluss bleibt ein eigener Abschnitt; Ergebnisse eines Abschnitts belegen
+nicht automatisch Protokoll und elektrische Eigenschaften eines anderen.
 
 Steckerbezeichnungen unterscheiden sich je nach Revision. Belegungen nicht aus
 Kabelfarben, Steckerbezeichnungen oder Fotos anderer Anlagen ableiten.
