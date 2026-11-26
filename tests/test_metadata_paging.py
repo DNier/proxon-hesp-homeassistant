@@ -31,12 +31,144 @@ def records(*wire):
     return [{"elapsed_ms": i * 10, "hex": raw.hex()} for i, raw in enumerate(wire)]
 
 
-def source(offsets=(0, 64, 86), points=POINTS):
+def source(offsets=(0, 64, 86), points=POINTS, *, count=1):
     wire = []
     for offset in offsets:
         for point in points:
-            wire.extend((frame(point, offset, query=True), frame(point, offset)))
+            wire.extend(
+                (frame(point, offset, query=True, count=count), frame(point, offset))
+            )
     return {"format": PAGE_FORMAT, "frames": records(*wire)}
+
+
+def test_published_reconstructed_count_64_query_matches_existing_crc_and_inventory():
+    # Markus's published reconstruction is a compatibility vector, not an
+    # original timed wire recording or evidence for a corresponding response.
+    raw = bytes.fromhex("10800033000000044000aece")
+    assert checksum(raw[:-2]) == int.from_bytes(raw[-2:], "little") == 0xCEAE
+    report = inventory(records(raw), include_frame_observations=True)
+    assert report["frames"] == 1
+    assert report["unparsed_bytes"] == 0
+    assert report["groups"]["108000/0x0033/2"]["values"] == ["4000"]
+    assert analyze_exchanges(report)["counts"]["pairs"] == 0
+
+
+def test_count_64_pages_merge_overlapping_offset_99_without_proving_catalog_length():
+    # Synthetic coverage of the reported request/offset form; this is not
+    # Markus's missing original 163-entry QUERY/RESPONSE recording.
+    data = source(offsets=(0, 64, 99), count=64)
+    before = copy.deepcopy(data)
+    result = audit_metadata(data)
+    assert data == before
+    assert len(result["pages"]) == 12
+    assert [page["offset"] for page in result["pages"]] == [0] * 4 + [64] * 4 + [99] * 4
+    assert all(page["entries"] == 64 for page in result["pages"])
+    assert result["rows"][-1] == {
+        "index": 162,
+        "dp": "0x00A2",
+        "type_code": "0x00A2",
+        "mask_code": "0x00A2",
+        "unit_code": "0x00A2",
+    }
+    assert result["missing_ranges"] == {f"0x{point:04X}": [] for point in POINTS}
+    assert result["required_columns_aligned_over_observed_extent"] is True
+    assert result["catalog_length"] is None
+    assert result["selector_interpretation"] == "candidate_element_offset"
+    assert "°C" not in json.dumps(result)
+
+
+def test_legacy_and_count_64_queries_can_share_a_group_after_separate_replies():
+    data = {
+        "format": PAGE_FORMAT,
+        "frames": records(
+            frame(0x0033, query=True),
+            frame(0x0033),
+            frame(0x0033, query=True, count=64),
+            frame(0x0033),
+        ),
+    }
+    result = audit_metadata(data)
+    assert len(result["pages"]) == 2
+    assert len(result["rows"]) == 64
+    assert result["catalog_length"] is None
+    assert result["query_count"] == (
+        "0100: uint16 count 1; 4000: uint16 count 64; other counts unsupported"
+    )
+
+
+def test_count_64_query_and_long_reply_keep_checksum_framing_at_every_split():
+    wire = frame(0x0039, 99, query=True, count=64) + frame(0x0039, 99)
+    expected = audit_metadata(
+        {"format": PAGE_FORMAT, "chunks": [{"elapsed_ms": 42, "hex": wire.hex()}]}
+    )
+    assert expected["pages"][0]["register_id"] == "0x00630039"
+    assert expected["pages"][0]["entries"] == 64
+    for split in range(len(wire) + 1):
+        assert (
+            audit_metadata(
+                {
+                    "format": PAGE_FORMAT,
+                    "chunks": [
+                        {"elapsed_ms": 42, "hex": wire[:split].hex()},
+                        {"elapsed_ms": 42, "hex": wire[split:].hex()},
+                    ],
+                }
+            )
+            == expected
+        )
+
+
+@pytest.mark.parametrize("offset", [0, 64])
+@pytest.mark.parametrize("count", [0, 2, 63, 65, 0x4000, 0xFFFF])
+def test_other_query_counts_are_rejected_with_or_without_selector(offset, count):
+    data = {
+        "format": PAGE_FORMAT,
+        "frames": records(frame(0x0033, offset, query=True, count=count)),
+    }
+    before = copy.deepcopy(data)
+    with pytest.raises(ValueError):
+        audit_metadata(data)
+    assert data == before
+
+
+@pytest.mark.parametrize("offset", [0, 64])
+@pytest.mark.parametrize(
+    "payload", [b"", b"\x40", b"\x40\x00\x00", b"\x40\x00\x00\x00"]
+)
+def test_count_64_looking_payloads_require_exact_uint16_width(offset, payload):
+    header = frame(0x0033, offset, query=True, count=64)[:7]
+    body = header + bytes([len(payload) * 2]) + payload
+    raw = body + checksum(body).to_bytes(2, "little")
+    with pytest.raises(ValueError):
+        audit_metadata({"format": PAGE_FORMAT, "frames": records(raw)})
+
+
+@pytest.mark.parametrize("counts", [(1, 64), (64, 1), (64, 64)])
+def test_different_query_counts_do_not_disambiguate_overlapping_same_page(counts):
+    wire = (
+        frame(0x0033, 64, query=True, count=counts[0]),
+        frame(0x0033, 64, query=True, count=counts[1]),
+        frame(0x0033, 64),
+    )
+    with pytest.raises(ValueError, match="overlapping_request"):
+        audit_metadata({"format": PAGE_FORMAT, "frames": records(*wire)})
+
+
+def test_unanswered_count_64_query_is_visible_without_extending_observed_catalog():
+    data = source(offsets=(0,), count=64)
+    data["frames"].append(
+        {"elapsed_ms": 100, "hex": frame(0x0033, 99, query=True, count=64).hex()}
+    )
+    result = audit_metadata(data)
+    assert result["unanswered_queries"] == [
+        {
+            "register_id": "0x00630033",
+            "query_frame_index": 8,
+            "reason": "end_of_capture",
+        }
+    ]
+    assert result["observed_extent"] == 64
+    assert result["catalog_length"] is None
 
 
 def test_page_inventory_preserves_legacy_zero_keys_and_complete_offset_identity():
@@ -85,7 +217,8 @@ def test_new_page_forms_retain_crc_and_do_not_accept_any_single_bit_corruption(p
         frame(0x0033, 64, header="234000"),
         frame(0x0033, 64, values=[1, 2]),
         frame(0x0040, 64),
-        frame(0x0033, 64, query=True, count=64),
+        frame(0x0040, 64, query=True, count=64),
+        frame(0x0033, 64, query=True, count=65),
         frame(0x0033, 64, query=True, count=0),
         frame(0x0033, 64, query=True, header="108007"),
     ],
@@ -105,11 +238,12 @@ def test_units_zero_selector_response_is_not_an_empty_confirmation():
     assert result["groups"]["234000/0x0039/0"]["payload_bytes"] == 0
 
 
-def test_address_matcher_uses_the_whole_register_id_when_pages_interleave():
+@pytest.mark.parametrize("counts", [(1, 1), (1, 64), (64, 1), (64, 64)])
+def test_address_matcher_uses_the_whole_register_id_when_pages_interleave(counts):
     report = inventory(
         records(
-            frame(0x0033, query=True),
-            frame(0x0033, 64, query=True),
+            frame(0x0033, query=True, count=counts[0]),
+            frame(0x0033, 64, query=True, count=counts[1]),
             frame(0x0033, 64),
             frame(0x0033),
         ),
@@ -160,7 +294,7 @@ def test_full_identity_overrides_forged_derived_fields():
         ("224000/0x0040051C/4", "00000000"),
         ("e24100/0x00400033/128", "0000" * 64),
         ("234000/0x00400033/0", ""),
-        ("108000/0x00400033/2", "4000"),
+        ("108000/0x00400033/2", "4100"),
         ("224000/0x00400033/2", "0100"),
     ],
 )
@@ -202,10 +336,11 @@ def test_chunks_accept_multiframe_blocks_and_preserve_actual_completion_times():
 
 
 @pytest.mark.parametrize("wrapper", ["bare", "capture", "diagnostics"])
+@pytest.mark.parametrize("count", [1, 64])
 def test_capture_cli_uses_existing_wrappers_without_rewriting_source(
-    tmp_path, monkeypatch, wrapper
+    tmp_path, monkeypatch, wrapper, count
 ):
-    data = {"chunks": source(offsets=(0,))["frames"]}
+    data = {"chunks": source(offsets=(0,), count=count)["frames"]}
     if wrapper == "capture":
         data = {"capture": data}
     elif wrapper == "diagnostics":
@@ -335,7 +470,7 @@ def test_unanswered_query_and_late_capture_boundary_never_prove_catalog_end():
         ),
         ([frame(0x0033, query=True), frame(0x0033, 64)], "wrong_data_point"),
         ([frame(0x0033, query=True, header="108007")], "participant"),
-        ([frame(0x0033, query=True, count=64)], "count"),
+        ([frame(0x0033, query=True, count=65)], "count"),
         ([frame(0x0033, query=True), frame(0x0033, values=[1, 2])], "64 uint16"),
     ],
 )

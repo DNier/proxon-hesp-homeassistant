@@ -46,12 +46,20 @@ It does not prove the cause of a particular unsuccessful experiment. Do not use
 continuous competing writes to force a desired value. The successful calendar
 correction does not establish equivalent ownership for other settings.
 
-The upstream [data-point reference at commit `0c51513`](https://github.com/markusmauch/proxon-hesp/blob/0c5151342299084db0f57836f5bbd140822e7e33/docs/dp-referenz.md#L105)
-reports effective repeated writes at about 1.5-second intervals on its reference
-installation. This is an author-reported observation, without a published
-matched TX/RX trace, panel-selection reference and recovery after repetition
-ends. It does not establish a generic command-ownership mechanism or justify
-adding recurring writes to this integration.
+The upstream author's [operating-context clarification](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147)
+describes a daemon acting as the sole master with the BDE disconnected. It sends
+mode, fan level, room temperature and target temperature every five seconds.
+The author reports confused responses when both masters transmitted and mutes
+the daemon before reconnecting the BDE. This limits the earlier
+[repeated-write report](https://github.com/markusmauch/proxon-hesp/blob/0c5151342299084db0f57836f5bbd140822e7e33/docs/dp-referenz.md#L105):
+it does not demonstrate coordinated access or persistent setting adoption with
+the BDE connected. A reverse path to the BDE was not investigated. Neither
+repeated competing writes nor replacement of the BDE is implemented here.
+
+The published [163-entry controller catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
+uses interpreted access labels such as `W-User` and `W-Inst`. These labels alone
+establish neither a usable SET contract nor ownership, displayed adoption or
+recovery. Its payload-only snapshot cannot replace timed original TX/RX frames.
 
 The [ESP32 sender at commit `eed1173`](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/eed1173fae88a4bbdd43c1bc7adbcb78f695d3a3/ESP32_Proxon_P1_RS485_Sniffer.ino#L535)
 arms transmission after received traffic and sends from a received-message

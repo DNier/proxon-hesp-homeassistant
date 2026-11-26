@@ -67,6 +67,31 @@ The readback establishes the displayed settings for the tested profile. Sensor
 location, control logic and editable ranges remain unverified. The diagnostics
 expire under the usual 30-second freshness rule. No queries or writes are added.
 
+An upstream [P 2H-L observation report](https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7189097549)
+corroborates a room-start difference of 0.4 K and continuous operation associated
+with fresh-air temperature at or below 2.0 °C on that installation. Its ten-day
+summary is additional author-reported control context, not a complete algorithm
+or a controller/BDE trace from the reference P2. The existing entities and their
+units therefore remain unchanged.
+
+## Additional controller-catalog candidates
+
+The upstream [163-entry LT catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
+is a payload-only snapshot from a P 2H-L at address 2, operated without its BDE.
+The author marks most meanings as unconfirmed and truncates long arrays after
+32 bytes. These entries remain research candidates:
+
+| DP | Reported value | Interpretation boundary |
+| --- | --- | --- |
+| `015F` | 12, four bytes | Proposed fresh-air bypass threshold; supported by reconstructed seasonal behaviour, not an isolated parameter-change test or an original reply from the reference P2 |
+| `0104` | `[115, 125]`, eight bytes | Proposed compressor cut-off temperatures; no demonstrated trip or protection contract |
+| `0229` / `022A` | 21 / 21 | Does not establish secondary-room measurements or controls on the reference P2; keep the separate FWT observations scoped |
+
+The reported T13 readings up to 111 °C also expose a 90 °C rejection filter in
+the author's daemon. This integration already accepts the existing temperature
+block up to 150 °C as a receive sanity bound, not an equipment operating limit.
+[Temperature encoding and freshness](TEMPERATURE_EVIDENCE.md)
+
 ## Current fan control percentages (0.15.0)
 
 The optional `fan_supply_control_percent` and `fan_extract_control_percent`

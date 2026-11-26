@@ -56,6 +56,15 @@ their distinct identities: `118000/01F8` and `118000/03B6` address 2, whereas
 are possible, but neither this routing nor an empty confirmation establishes a
 PTC state or physical heating effect.
 
+The upstream [P 2H-L controller catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
+explicitly concerns address **2**. Its four-byte `0191` entry is labelled T6;
+it is not the two-byte `118007/0191` SET to address **30**. Likewise, the author's
+[four-byte `224000/0194` example](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147)
+must not replace the retained two-byte reply from 30. The full header, direction,
+DP and payload length remain mandatory even when a catalog supplies a familiar
+number or temperature label. The catalog's one-byte `0232=1` has no interpretation
+label and does not define heat demand or an alias to a status bit.
+
 ## Offline exchange candidates
 
 The existing inventory remains the only wire parser. Address analysis consumes

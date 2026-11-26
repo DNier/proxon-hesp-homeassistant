@@ -357,9 +357,12 @@ full original frames, selectors and timestamps. Aggregated values without those
 sources cannot be turned into verified page exchanges; request the missing
 originals instead of inventing request frames or times.
 
-Only metadata QUERY header `108000`, payload `0100` (count **1**), and RESPONSE
-header `224000` with 128 payload bytes are prepared. Do not convert the request
-count to 64 just because a reply contains 64 entries. An optional
+Only metadata QUERY header `108000`, payload `0100` (count **1**) or `4000`
+(count **64**), and RESPONSE header `224000` with 128 payload bytes are prepared.
+The second form follows the upstream author's explicit
+[query example](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147).
+Preserve the actual argument; do not convert count 1 to 64 just because a reply
+contains 64 entries. Other request counts remain unsupported. An optional
 `max_response_ms` input field changes the conservative pairing bound from its
 1,000 ms default; it is not a measured bus latency or a retry policy. Preserve
 equal TCP timestamps and original frame order. Do not synthesize timestamps to

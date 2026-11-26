@@ -3,6 +3,26 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.22 – 64er-Metadatenanfragen und präzisierte Quellenbewertung
+
+- Die **Offline-Auswertung** verarbeitet Metadatenanfragen mit dem
+  Zwei-Byte-Argument `4000` für 64 Elemente. Die bisherige Form `0100`
+  bleibt unterstützt. Dies gilt für `0033`, `0034`, `0038` und `0039`,
+  einschließlich Folgeseiten mit Offset.
+- Die Zuordnung berücksichtigt weiterhin die vollständige Telegrammidentität,
+  Richtung und Prüfsumme. Fragmentierte Antworten und überlappende Seiten
+  werden geprüft; widersprüchliche oder mehrdeutige Zuordnungen bleiben
+  abgewiesen. Empfangene Seiten beweisen keine vollständige Geräteliste.
+- Die Dokumentation berücksichtigt die zurückgenommene externe Zuordnung
+  von `0191` zur PTC-Freigabe, trennt gleich nummerierte Datenpunkte an
+  verschiedenen Teilnehmern und präzisiert die Quellenlage zu Busanschlüssen,
+  Betrieb ohne BDE, Heizschwellen und weiteren Parameterkandidaten.
+
+Bestehende Entitäten, Einstellungen und Sensorzuordnungen bleiben erhalten.
+Die Erweiterung verändert keine Originalaufnahmen und löst keine zusätzliche
+Anlagenabfrage oder Schreiboperation aus.
+[Metadaten-Auswertung und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/METADATA_EVIDENCE.md).
+
 ## 0.16.21 – Weitere belegte Heiz-, LED- und Luftstufenanzeigen
 
 - Die **BDE-Betriebsanzeige** erkennt am ausgewählten P2-Referenzgerät

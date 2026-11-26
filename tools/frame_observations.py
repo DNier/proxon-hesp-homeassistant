@@ -7,6 +7,9 @@ _IDENTITY = re.compile(
 )
 _HEX = re.compile(r"(?:[a-fA-F0-9]{2})*")
 METADATA_POINTS = frozenset((0x0033, 0x0034, 0x0038, 0x0039))
+# Retain the previously reported request and the separately reported 64-element
+# request. Neither argument proves how many elements a controller will return.
+METADATA_QUERY_PAYLOADS = frozenset(("0100", "4000"))
 
 
 def integer(value, name, *, minimum=0, maximum=None):
@@ -52,7 +55,11 @@ def frames(report):
         if selector and not (
             register_id & 0xFFFF in METADATA_POINTS
             and (
-                (header == "108000" and size == 2 and raw.lower() == "0100")
+                (
+                    header == "108000"
+                    and size == 2
+                    and raw.lower() in METADATA_QUERY_PAYLOADS
+                )
                 or (header == "224000" and size == 128)
             )
         ):
