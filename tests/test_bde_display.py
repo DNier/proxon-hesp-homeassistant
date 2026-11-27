@@ -372,7 +372,7 @@ def test_complete_p2_references_do_not_cross_operating_modes(led_stream, sources
     [
         (sources, valve_word)
         for sources in P2_HEATING_SOURCES
-        for valve_word in (0x25, 0x27, 0x67, 0xA7, 0xE7, 0x227)
+        for valve_word in (0x25, 0x27, 0x67, 0xA7, 0xC7, 0xE7, 0x227)
         if int.from_bytes(sources[2][8:-2], "little") != valve_word
         and not (sources[1] == STATUS_92009312 and valve_word in (0x27, 0xA7))
     ],
@@ -382,10 +382,15 @@ def test_complete_p2_references_do_not_admit_other_valve_words(
 ):
     display, feed = led_stream
     valves = checked(VALVES[:8] + valve_word.to_bytes(4, "little"))
+    led_reference = (sources[1][8:-2].hex(), valve_word) in {
+        ("1a930082", 0x67),
+        ("12930092", 0xC7),
+        ("12930092", 0xE7),
+    }
     for now in (0, 5, 10, 15, 20):
         feed(sources[0] + sources[1] + valves + sources[3], now)
         assert display.value(now) is None
-        assert display.green_led(now) is None
+        assert display.green_led(now) is (True if led_reference else None)
         if sources[1] == STATUS_92009312:
             assert display.fan_level(now) is None
 
@@ -1234,8 +1239,8 @@ def test_additional_optical_led_does_not_admit_neighboring_status_words(
     display, feed = led_stream
     feed(MODE + status + VALVES + RPM, 0)
     for bit in (0, 2, 5, 6, 7, 14, 17, 24, 28):
-        # 12930092/27 now has its own independent display reference.
-        if status == STATUS_82009312 and bit == 28:
+        # These complete bit-28 contexts now have their own LED observations.
+        if status in (STATUS_82009312, LED_BIT15_LEVEL3) and bit == 28:
             continue
         payload = (int.from_bytes(status[8:-2], "little") ^ (1 << bit)).to_bytes(
             4, "little"

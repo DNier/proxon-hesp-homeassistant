@@ -637,6 +637,18 @@ extend the existing inferred-continuity word set. Only the last combination
 also adds the independently documented heating-label and level-2 rules; the
 other three add no operating-display, fan or PTC interpretation.
 
+**From 0.16.24:** The directly reported continuously green LED across the
+extended November observation also admits the finite Eco Winter and Comfort
+status/valve combinations listed in
+[the complete comparison](BDE_DISPLAY_EVIDENCE.md#extended-observation-and-comfort-comparison).
+These include Comfort `1a930080 / 27000000` and `1a930090 / a7000000`, as well
+as the separately listed short valve-pulse contexts. All four required sources
+must actually arrive within eight seconds and RPM must be finite and positive.
+The LED reports `display_reference`, without `assumed_state`; the observation
+is not treated as an inference. The apparent Comfort `1a930082` snapshot at the
+mode change is excluded because it retains the preceding Eco Winter status.
+Heating-label, fan-level and PTC interpretations remain separate.
+
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
 eight seconds. This LED-only limit covers observed unchanged-source intervals
