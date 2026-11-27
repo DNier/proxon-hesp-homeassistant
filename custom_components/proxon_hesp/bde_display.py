@@ -77,6 +77,8 @@ CONTEXT_GREEN_LED_CONTEXTS = frozenset(
         ("comfort", "1a930090", "a7000000"),
         ("comfort", "1a930090", "c7000000"),
         ("comfort", "1a930090", "e7000000"),
+        # Two separate optical Stove references with PTC displayed On/Off.
+        ("stove", "1a930080", "27000000"),
     }
 )
 # Explicit continuity assumption, not an independently observed LED mapping.

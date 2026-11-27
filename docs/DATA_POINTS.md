@@ -649,6 +649,13 @@ is not treated as an inference. The apparent Comfort `1a930082` snapshot at the
 mode change is excluded because it retains the preceding Eco Winter status.
 Heating-label, fan-level and PTC interpretations remain separate.
 
+**From 0.16.25:** Two separate reference-P2 recordings additionally show
+the upper LED green in Stove with `0208=1a930080`, `006C=27000000` and finite
+positive RPM, once with PTC-Wohnen On and once Off. Only this complete tuple
+is added under the existing P2/freshness checks; other Stove words and a
+general mode-independent bit-8 rule remain unassigned.
+[Stove evidence and limits](BDE_DISPLAY_EVIDENCE.md#additional-stove-led-reference-01625).
+
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
 eight seconds. This LED-only limit covers observed unchanged-source intervals

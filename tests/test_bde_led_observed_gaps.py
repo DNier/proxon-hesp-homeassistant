@@ -51,6 +51,7 @@ VALVES_C7 = synthetic_payload(VALVES, bytes.fromhex("c7000000"))
 VALVES_E7 = synthetic_payload(VALVES, bytes.fromhex("e7000000"))
 UNOBSERVED_VALVES = synthetic_payload(VALVES, bytes.fromhex("25000000"))
 COMFORT = synthetic_payload(MODE, bytes.fromhex("0300"))
+STOVE = synthetic_payload(MODE, bytes.fromhex("0400"))
 ECO_SUMMER = synthetic_payload(MODE, bytes.fromhex("0100"))
 DARK_STATUS = synthetic_payload(STATUS, bytes.fromhex("0a100080"))
 OBSERVED_CONTEXTS = (
@@ -77,6 +78,7 @@ OBSERVED_CONTEXTS = (
     (COMFORT, STATUS_1A930090, VALVES_A7, RPM),
     (COMFORT, STATUS_1A930090, VALVES_C7, RPM),
     (COMFORT, STATUS_1A930090, VALVES_E7, RPM),
+    (STOVE, STATUS_1A930080, VALVES, RPM),
 )
 
 
@@ -106,6 +108,7 @@ OBSERVED_CONTEXTS = (
         "comfort-1a930090-a7",
         "comfort-1a930090-c7",
         "comfort-1a930090-e7",
+        "stove-1a930080-27",
     ),
 )
 def context(request):
@@ -198,6 +201,28 @@ def test_winter_to_comfort_requires_a_new_status_and_handles_observed_valve_chan
     assert display.green_led(4) is None
     feed(STATUS_12930090, 4.1)
     assert display.green_led(4.1) is True
+
+
+def test_stove_requires_its_own_receipt_and_does_not_inherit_other_green_words(stream):
+    display, feed = stream
+    feed(COMFORT + STATUS_1A930080 + VALVES + RPM, 0)
+    assert display.green_led(0) is True
+    # An identical status value still needs a new receipt after the mode change.
+    feed(STOVE, 1)
+    assert display.green_led(1) is None
+    feed(STATUS_1A930080, 1.1)
+    assert display.green_led(1.1) is True
+    assert display.green_led_basis(1.1) == "display_reference"
+    assert display.value(1.1) is None
+    # Both words retain bit 8; Comfort's extra reference is not a Stove proof.
+    feed(STATUS_1A930090, 2)
+    assert display.green_led(2) is None
+    feed(STATUS_1A930080, 3)
+    assert display.green_led(3) is True
+    feed(VALVES_A7, 4)
+    assert display.green_led(4) is None
+    feed(VALVES, 5)
+    assert display.green_led(5) is True
 
 
 @pytest.mark.parametrize(

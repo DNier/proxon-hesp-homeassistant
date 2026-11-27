@@ -216,6 +216,33 @@ observation does not make missing telemetry current. These additions establish
 neither a heating label nor new fan/PTC semantics. Existing independently
 confirmed fan-level rules remain unchanged.
 
+## Additional Stove LED reference (0.16.25)
+
+Two separately recorded reference-P2 BDE episodes show the upper LED green
+in Stove mode with full status `1a930080` (`0x8000931A`), valve word
+`27000000` (`0x27`) and finite positive compressor RPM. The displayed
+PTC-Wohnen state is On in one recording and Off in the other. The retained
+mode/status/valve/RPM receipts remain within six seconds across both optical
+brackets; their complete original streams have valid checksums and no unparsed
+bytes. This is an optical Stove reference, rather than an inference from the
+matching Comfort status word.
+
+Version 0.16.25 admits only this complete Stove tuple, with the selected
+P2 display and the existing individual eight-second source limits. A mode
+change requires a new status receipt even when Comfort and Stove share the
+same payload. The reference adds no heating text, fan-level or PTC meaning.
+Other Stove status/valve combinations remain unassigned.
+
+Bit 8 is set in the observed green Stove word and the admitted Eco Winter and
+Comfort words. A separately observed dark Stove episode instead has
+`1a920080`, valve `a7000000` and zero RPM. Its camera alignment is weaker and
+the valve/RPM context also differs; it is not a new Off mapping or a controlled
+single-bit contrast. An independent visible LED transition with sufficiently
+precise complete receiver timing is still needed for a general bit rule.
+Positive RPM is an admission condition for this finite reference, not a
+necessary condition for the physical LED: other retained optical references
+show green at zero RPM.
+
 ## Observed availability gaps (November 2026)
 
 Reference observations reviewed on 26 and 27 November show coverage gaps in

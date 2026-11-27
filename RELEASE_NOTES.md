@@ -3,6 +3,29 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.25 – Grüne BDE-LED im Ofenbetrieb
+
+- Die optionale **Obere grüne BDE-LED** erkennt am ausgewählten
+  P2-Referenzgerät eine zusätzlich belegte Konstellation im **Ofenbetrieb**.
+  Bei `0208=1a930080`, `006C=27000000` und gültiger positiver
+  Verdichterdrehzahl zeigt sie **Ein** mit `state_basis: display_reference`
+  statt **Nicht verfügbar**. Zwei getrennte BDE-Aufnahmen zeigen diese
+  grüne LED, einmal mit PTC-Wohnen Ein und einmal Aus.
+- Die Auswahl **BDE-Anzeige für P2-Referenzgerät** und die bestehenden
+  Quellenfristen gelten weiter: Betriebsart, Status, Ventilwort und Drehzahl
+  müssen jeweils innerhalb von acht Sekunden empfangen worden sein.
+  Nach einem Moduswechsel ist ein neuer Status erforderlich, auch wenn
+  Komfort und Ofen denselben Statuswert verwenden.
+- Die Zuordnung betrifft genau diese Ofen-Konstellation. Eine allgemeine
+  LED-Regel aus Bit 8, weitere Ofen-Konstellationen oder neue Heiztext-,
+  Lüfter- und PTC-Zuordnungen werden daraus nicht abgeleitet.
+
+Bestehende Entitäts-IDs und Einstellungen bleiben erhalten. Die Historie wird
+nicht rückwirkend geändert. Es entstehen keine neuen Anlagenabfragen oder
+Schreibfunktionen. Nach der Installation über HACS Home Assistant neu starten
+und benötigte flüchtige Aufnahmen vorher sichern.
+[Ofen-Beleg und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md#additional-stove-led-reference-01625).
+
 ## 0.16.24 – Grüne BDE-LED in Eco Winter und Komfort
 
 - Die optionale **Obere grüne BDE-LED** erkennt am ausgewählten
