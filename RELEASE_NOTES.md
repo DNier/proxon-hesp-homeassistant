@@ -16,10 +16,10 @@ GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
   Originalaufnahmen reproduzieren fehlende Zuordnungen auch bei frischen
   Quellen und bestehender Verbindung. Im Komfortmodus werden unter anderem
   `1a930080 / 27000000` und `1a930090 / a7000000` jetzt als **Ein** erkannt.
-- Für diese neuen vollständigen Kontexte bleiben die Auswahl
+- Für diese neuen vollständigen Kontexte sind die Auswahl
   **BDE-Anzeige für P2-Referenzgerät**, frische Betriebsart,
   passende Status- und Ventilworte sowie eine gültige positive Verdichterdrehzahl
-  bleiben erforderlich. Jede Quelle muss innerhalb von acht Sekunden
+  weiterhin erforderlich. Jede Quelle muss innerhalb von acht Sekunden
   empfangen worden sein. Bei Verbindungsverlust bleibt die Entität
   **Nicht verfügbar**, auch wenn die physische LED weiter leuchtet.
 
