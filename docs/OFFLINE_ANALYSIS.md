@@ -303,6 +303,9 @@ not establish frame boundaries for embedded patterns.
 
 ## Metadata replies and follow-up pages
 
+Negative-response handling is an unreleased offline addition. It does not change
+the integration's live receiver or add a transmission action.
+
 ```sh
 uv run python -m tools.audit_metadata input.json --output tmp/metadata-audit.json
 ```
@@ -357,10 +360,13 @@ full original frames, selectors and timestamps. Aggregated values without those
 sources cannot be turned into verified page exchanges; request the missing
 originals instead of inventing request frames or times.
 
-Only metadata QUERY header `108000`, payload `0100` (count **1**) or `4000`
-(count **64**), and RESPONSE header `224000` with 128 payload bytes are prepared.
-The second form follows the upstream author's explicit
-[query example](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147).
+Supported metadata forms are QUERY header `108000`, payload `0100` (count **1**)
+or `4000` (count **64**), RESPONSE header `224000` with 128 payload bytes, and
+the narrowly recorded negative response `244000` with two payload bytes `0100`.
+All refer to `0033`, `0034`, `0038` or `0039` and retain their complete register
+ID, including the selector. The count-64 form, follow-up pages and negative
+answers now have [original recorded evidence](METADATA_EVIDENCE.md) from the
+[P 2H-L export](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0).
 Preserve the actual argument; do not convert count 1 to 64 just because a reply
 contains 64 entries. Other request counts remain unsupported. An optional
 `max_response_ms` input field changes the conservative pairing bound from its
@@ -370,23 +376,42 @@ claim independently timed pairs or combine different recordings into one stream.
 
 The result includes source page indices and full IDs, raw hexadecimal DP/type/
 mask/unit codes, identical-overlap merging, explicit missing half-open index
-ranges, duplicate replies, and unanswered queries. Ambiguous requests, unmatched
+ranges, duplicate replies, unanswered queries, and separate `negative_responses`.
+Each negative entry retains the DP, full register ID, offset, query and response
+frame indices, receipt interval and uninterpreted `payload_hex`. The exchange
+matcher requires a preceding supported QUERY with reversed endpoints and the
+same full register ID, within the same inclusive response bound. A negative
+answer consumes that candidate request; it does not add catalog entries or
+become an unanswered query. Other type-4 shapes remain outside this association.
+The code `0100` has no approved general error meaning.
+
+Ambiguous requests, unmatched
 responses, conflicting overlaps, invalid checksums and truncated frames are
 errors. A required missing column or page makes
 `required_columns_aligned_over_observed_extent` false; absent optional units are
 reported separately. Missing values stay `null`, not zero. `observed_extent` is
 only the greatest covered index plus one. **`catalog_length` remains `null` even
 when every observed position is covered**; neither a timeout nor a 64-entry page
-establishes the end of the catalog. No type, permission or physical unit is
-inferred from a code.
+establishes the end of the catalog. Negative answers likewise cannot establish
+catalog length: a request could exceed an allowed page range without describing
+every available operating data point. A recording containing only matched
+negative answers returns empty rows, zero observed extent and unaligned required
+columns. No type, permission or physical unit is inferred from a code.
 
 The existing parser now retains nonzero metadata offsets in full-ID group keys
 such as `224000/0x00400033/128`. Offset-zero keys and the five-field frame
-observation format are unchanged. Other frame families still require zero
-reserved bytes. This is conservative offline preparation based on the reported
-FWT 2-R paging scheme; actual follow-up-page and `0039` captures are still missing.
-The original recorded fixture covers only zero-offset `0033`/`0034`/`0038`; all
-paging/unit regression frames are explicitly synthetic. See
+observation format are unchanged. Nonzero selectors also remain intact on the
+recorded negative form, for example `244000/0x00640033/2`. Other frame families
+still require zero reserved bytes. Original regression vectors now supplement
+the synthetic paging and ambiguity cases. The P 2H-L recording covers 163
+consistent positions across all four columns; known operating points are absent
+from those lists, so this is not a complete catalog of all HESP data points.
+
+For this source, use the last `RXRAW` chunk completing an answer as its receipt
+time. The tool's later `RX` line marks the end of a fixed waiting window and must
+not be used as the answer's reception time. Fixture times retain relative order
+and intervals rounded to whole milliseconds. The documented 250 ms acquisition
+window is not a proven minimum or bus coordination policy. See
 [recorded evidence and boundaries](METADATA_EVIDENCE.md).
 
 ## Lüfterkennlinien vergleichen

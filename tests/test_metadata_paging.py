@@ -31,6 +31,11 @@ def records(*wire):
     return [{"elapsed_ms": i * 10, "hex": raw.hex()} for i, raw in enumerate(wire)]
 
 
+def negative(point=0x0033, offset=100):
+    """Synthetic counterexamples use only the recorded negative payload shape."""
+    return frame(point, offset, values=[1], header="244000")
+
+
 def source(offsets=(0, 64, 86), points=POINTS, *, count=1):
     wire = []
     for offset in offsets:
@@ -169,6 +174,208 @@ def test_unanswered_count_64_query_is_visible_without_extending_observed_catalog
     ]
     assert result["observed_extent"] == 64
     assert result["catalog_length"] is None
+
+
+@pytest.mark.parametrize("point", POINTS)
+def test_negative_metadata_response_is_separate_from_pages_and_unanswered(point):
+    data = source(offsets=(0,), count=64)
+    data["frames"].extend(
+        [
+            {"elapsed_ms": 100, "hex": frame(point, 100, query=True, count=64).hex()},
+            {"elapsed_ms": 128, "hex": negative(point).hex()},
+        ]
+    )
+    before = copy.deepcopy(data)
+    result = audit_metadata(data)
+    assert data == before
+    assert result["negative_responses"] == [
+        {
+            "dp": f"0x{point:04X}",
+            "register_id": f"0x0064{point:04X}",
+            "offset": 100,
+            "query_frame_index": 8,
+            "response_frame_index": 9,
+            "delta_ms": 28,
+            "payload_hex": "0100",
+        }
+    ]
+    assert result["unanswered_queries"] == []
+    assert len(result["pages"]) == 4
+    assert result["observed_extent"] == 64
+    assert len(result["rows"]) == 64
+    assert result["catalog_length"] is None
+
+
+@pytest.mark.parametrize("offset", [0, 100])
+@pytest.mark.parametrize("count", [1, 64])
+def test_negative_only_report_preserves_identity_without_inventing_catalog(
+    offset, count
+):
+    result = audit_metadata(
+        {
+            "format": PAGE_FORMAT,
+            "frames": records(
+                frame(0x0039, offset, query=True, count=count),
+                negative(0x0039, offset),
+            ),
+        }
+    )
+    assert result["negative_responses"][0]["register_id"] == f"0x{offset:04X}0039"
+    assert result["negative_responses"][0]["offset"] == offset
+    assert result["pages"] == result["rows"] == result["unanswered_queries"] == []
+    assert result["observed_extent"] == 0
+    assert result["required_columns_aligned_over_observed_extent"] is False
+    assert result["units_present"] is False
+    assert result["catalog_length"] is None
+
+
+def test_negative_reply_and_query_keep_fragmentation_and_crc_at_every_split():
+    wire = frame(0x0039, 100, query=True, count=64) + negative(0x0039)
+    expected = audit_metadata(
+        {"format": PAGE_FORMAT, "chunks": [{"elapsed_ms": 42, "hex": wire.hex()}]}
+    )
+    for split in range(len(wire) + 1):
+        assert (
+            audit_metadata(
+                {
+                    "format": PAGE_FORMAT,
+                    "chunks": [
+                        {"elapsed_ms": 42, "hex": wire[:split].hex()},
+                        {"elapsed_ms": 42, "hex": wire[split:].hex()},
+                    ],
+                }
+            )
+            == expected
+        )
+    for bit in range(len(wire) * 8):
+        corrupted = bytearray(wire)
+        corrupted[bit // 8] ^= 1 << (bit % 8)
+        with pytest.raises(ValueError):
+            audit_metadata({"format": PAGE_FORMAT, "frames": records(corrupted)})
+    for length in range(len(negative())):
+        assert inventory(records(negative()[:length]))["frames"] == 0
+    assert Decoder().feed(wire) == []
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        frame(0x0040, 100, values=[1], header="244000"),
+        frame(0x0033, 100, values=[1], header="344000"),
+        frame(0x0033, 100, values=[1], header="244007"),
+        frame(0x0033, 100, values=[0], header="244000"),
+        frame(0x0033, 100, values=[2], header="244000"),
+        frame(0x0033, 100, values=[], header="244000"),
+        frame(0x0033, 100, values=[1, 0], header="244000"),
+    ],
+)
+def test_negative_selector_extension_rejects_other_routes_codes_and_payload_shapes(raw):
+    assert inventory(records(raw))["unparsed_bytes"] == len(raw)
+    with pytest.raises(ValueError):
+        audit_metadata({"format": PAGE_FORMAT, "frames": records(raw)})
+
+
+@pytest.mark.parametrize("offset", [0, 100])
+@pytest.mark.parametrize(
+    "wire,reason",
+    [
+        (lambda offset: [negative(offset=offset)], "orphan_reply"),
+        (
+            lambda offset: [
+                frame(0x0033, offset, query=True),
+                negative(offset=offset + 1),
+            ],
+            "wrong_data_point",
+        ),
+        (
+            lambda offset: [
+                frame(0x0033, offset, query=True),
+                frame(0x0033, offset, query=True),
+                negative(offset=offset),
+            ],
+            "overlapping_request",
+        ),
+    ],
+)
+def test_negative_orphan_wrong_offset_and_ambiguous_exchange_are_rejected(
+    offset, wire, reason
+):
+    with pytest.raises(ValueError, match=reason):
+        audit_metadata({"format": PAGE_FORMAT, "frames": records(*wire(offset))})
+
+
+def test_late_negative_metadata_response_is_rejected_instead_of_a_catalog_end():
+    with pytest.raises(ValueError, match="late_reply"):
+        audit_metadata(
+            {
+                "format": PAGE_FORMAT,
+                "frames": [
+                    {"elapsed_ms": 0, "hex": frame(0x0033, 100, query=True).hex()},
+                    {"elapsed_ms": 1001, "hex": negative().hex()},
+                ],
+            }
+        )
+
+
+def test_identical_negative_duplicate_is_visible_without_another_page_or_negative():
+    result = audit_metadata(
+        {
+            "format": PAGE_FORMAT,
+            "frames": records(frame(0x0033, 100, query=True), negative(), negative()),
+        }
+    )
+    assert len(result["negative_responses"]) == 1
+    assert result["duplicate_reply_frames"] == [2]
+    assert result["pages"] == []
+
+
+@pytest.mark.parametrize("first_negative", [False, True])
+def test_conflicting_positive_and_negative_reply_is_rejected(first_negative):
+    replies = [frame(0x0033, 100), negative()]
+    if first_negative:
+        replies.reverse()
+    with pytest.raises(ValueError, match="duplicate_reply"):
+        audit_metadata(
+            {
+                "format": PAGE_FORMAT,
+                "frames": records(frame(0x0033, 100, query=True), *replies),
+            }
+        )
+
+
+@pytest.mark.parametrize("first_negative", [False, True])
+@pytest.mark.parametrize("prior_queries", [1, 2])
+def test_old_opposite_reply_after_repeated_same_page_queries_is_not_a_duplicate(
+    first_negative, prior_queries
+):
+    """An earlier pair must not hide a contradiction to the latest paired query."""
+    first = negative() if first_negative else frame(0x0033, 100)
+    latest = frame(0x0033, 100) if first_negative else negative()
+    wire = []
+    for _ in range(prior_queries):
+        wire.extend([frame(0x0033, 100, query=True, count=64), first])
+    wire.extend([frame(0x0033, 100, query=True, count=64), latest, first])
+    with pytest.raises(ValueError, match="duplicate_reply"):
+        audit_metadata({"format": PAGE_FORMAT, "frames": records(*wire)})
+
+
+@pytest.mark.parametrize("first_negative", [False, True])
+@pytest.mark.parametrize("prior_queries", [1, 2])
+def test_repeated_same_page_queries_allow_only_the_latest_identical_reply_duplicate(
+    first_negative, prior_queries
+):
+    """Independent differing replies remain visible; the latest duplicate is safe."""
+    first = negative() if first_negative else frame(0x0033, 100)
+    latest = frame(0x0033, 100) if first_negative else negative()
+    wire = []
+    for _ in range(prior_queries):
+        wire.extend([frame(0x0033, 100, query=True, count=64), first])
+    wire.extend([frame(0x0033, 100, query=True, count=64), latest, latest])
+    result = audit_metadata({"format": PAGE_FORMAT, "frames": records(*wire)})
+    assert len(result["pages"]) == (1 if first_negative else prior_queries)
+    assert len(result["negative_responses"]) == (prior_queries if first_negative else 1)
+    assert result["unanswered_queries"] == []
+    assert result["duplicate_reply_frames"] == [2 * (prior_queries + 1)]
 
 
 def test_page_inventory_preserves_legacy_zero_keys_and_complete_offset_identity():

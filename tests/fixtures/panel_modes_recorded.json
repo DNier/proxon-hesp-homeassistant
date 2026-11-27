@@ -1,0 +1,26 @@
+{
+  "source_url": "https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83",
+  "source_revision": "ba888e35a475906bf6cf9070eed2edf697b66f83",
+  "source_file": "bde_modi_20260713.txt",
+  "scope": "Selected original frames in source order, with intervening frames omitted. Mode labels follow the author's BDE selection reference. No original or synthetic timestamps, adapter paths or calendar values are included. Raw states do not establish heat-element permission or physical output.",
+  "frames": [
+    {"label": "eco_summer_mode_set", "hex": "1180000a020000040100a3ee"},
+    {"label": "eco_summer_mode_ack", "hex": "2340000a02000000fe35"},
+    {"label": "unmapped_panel_state_zero", "hex": "1180002c020000040000df8f"},
+    {"label": "panel_flags_zero", "hex": "118000f80100000800000000a1fd"},
+    {"label": "eco_winter_mode_set", "hex": "1180000a020000040200366f"},
+    {"label": "eco_winter_mode_ack", "hex": "2340000a02000000fe35"},
+    {"label": "eco_winter_controller_state", "hex": "118000b60300000800000000a62c"},
+    {"label": "eco_winter_node30_state", "hex": "11800791010000040000dbd5"},
+    {"label": "stove_mode_set", "hex": "1180000a0200000404008d6c"},
+    {"label": "stove_mode_ack", "hex": "2340000a02000000fe35"},
+    {"label": "stove_controller_state", "hex": "118000b603000008010000009229"},
+    {"label": "stove_node30_state", "hex": "118007910100000401002755"},
+    {"label": "comfort_mode_set", "hex": "1180000a020000040300caef"},
+    {"label": "comfort_mode_ack", "hex": "2340000a02000000fe35"},
+    {"label": "comfort_controller_state_cleared", "hex": "118000b60300000800000000a62c"},
+    {"label": "comfort_node30_state_cleared", "hex": "11800791010000040000dbd5"},
+    {"label": "off_mode_set", "hex": "1180000a0200000400005f6e"},
+    {"label": "off_mode_ack", "hex": "2340000a02000000fe35"}
+  ]
+}

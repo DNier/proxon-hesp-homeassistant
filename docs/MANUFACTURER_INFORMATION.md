@@ -66,3 +66,20 @@ Der Vergleich stützt die Bedeutung des BDE für den Empfang. BDE-Trennung und
 Neustart änderten gleichzeitig zwei Bedingungen. Die genaue Rolle des BDE
 beim Sendetakt sowie die Steuerbarkeit ohne BDE bleiben offen. Die Installation
 setzt ein angeschlossenes BDE voraus.
+
+## Ergänzender Community-Bericht zum Betrieb ohne BDE
+
+Markus Mauch berichtet für seine P 2H-L einen seit Juli laufenden eigenen
+Master an X7 bei abgezogenem BDE, ohne beobachtete Fehler. Ohne Sender bleibt
+der Bus laut seinem Bericht still; die Hauptplatine beantwortet aktive
+Anfragen trotzdem. Seine Senderbeschreibung nennt außerdem einen zyklischen
+Zustandssatz und einen Rückfallzustand bei ausbleibenden Telegrammen.
+[Autorenbericht](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7196777234)
+· [Gepinnte Beschreibung](https://github.com/markusmauch/proxon-hesp/blob/0eb5a2a33234893a8fafdbfae56ade6f0c510da4/docs/anlage.md#betrieb-ohne-bedienpanel)
+
+Der bereitgestellte November-Mitschnitt belegt die Antworten auf Leseanfragen.
+Für den längerfristigen Schreibbetrieb fehlen zeitmarkierte Übernahme-,
+Ausfall- und Wiederanlaufbelege. Die beschriebene SET-Reihenfolge weicht zudem
+vom Juli-Originalmitschnitt ab. Diese externen Beobachtungen erweitern den
+unterstützten Integrationsbetrieb nicht; BDE-Ersatz und PTC-Freigabe bleiben
+ungeklärt. [Belege und Gegenprobe (Englisch)](CONTROL_EVIDENCE.md#reported-panel-replacement-on-a-p-2h-l)

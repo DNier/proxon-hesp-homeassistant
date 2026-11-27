@@ -2,7 +2,8 @@
 
 The optional diagnostic enum sensor **BDE operating display** reports `heating`
 (German: **Heizbetrieb**) for three original source combinations and, from
-0.16.21, two additional P2-only combinations. From 0.16.5, it reports `blank`
+0.16.21, two additional P2-only combinations. Version 0.16.23 adds a third
+P2-only combination. From 0.16.5, it reports `blank`
 (German: **Betriebsfeld leer**) for a separate exact
 source combination. The same entity reports `cooling` (German:
 **Kühlbetrieb**) for one confirmed Comfort combination. The entity is
@@ -21,6 +22,7 @@ promoted to a heating flag.
 | `heating` | `2` / Eco Winter | `0x82001312` (`12130082`), `0x8200131A` (`1a130082`), or `0x82009312` (`12930082`, since 0.16.9) | `0x27` (`27000000`) | Finite, validated speed above zero | No |
 | `heating` (from 0.16.21) | `2` / Eco Winter | `0x8200931A` (`1a930082`) | `0x27` (`27000000`) | Finite, validated speed above zero | Yes |
 | `heating` (from 0.16.21) | `2` / Eco Winter | `0x92009312` (`12930092`) | `0xA7` (`a7000000`) | Finite, validated speed above zero | Yes |
+| `heating` (from 0.16.23) | `2` / Eco Winter | `0x92009312` (`12930092`) | `0x27` (`27000000`) | Finite, validated speed above zero | Yes |
 | `blank` | `2` / Eco Winter | `0x8000100A` (`0a100080`) | `0x25` (`25000000`) | Finite, validated speed exactly zero | No |
 | `cooling` | `3` / Comfort | `0x80001522` (`22150080`) | `0x0227` (`27020000`) | Finite, validated speed above zero | Yes |
 
@@ -61,6 +63,7 @@ bracket for a heating or cooling label. The tracker starts labelling after
 | `0x8200131A / 0x27` | Two BDE heating readings match qualified intervals at level 3. A separate interval in the same recording overlaps `0x8200111A`, so it supplies no additional label. |
 | `0x8200931A / 0x27` | A separately timed main-page photograph shows Heizbetrieb, level 3 and the lit LED; the received context remains unchanged throughout the device minute. The label is P2-only. |
 | `0x92009312 / 0xA7` | A phone photo-information minute, user timing confirmation and independently received device clock agree. The whole minute has the same words and positive speed; the main page shows Heizbetrieb, level 2 and the lit LED. The label is P2-only. |
+| `0x92009312 / 0x27` | Two separate P2 episodes show Heizbetrieb, level 2 and the lit LED. An approximate-minute reference and later offset-bearing camera originals align with native status/valve receipts and positive reported speed. Original mode/RPM receipt timing is not retained, so historical 15-second qualification is not asserted. |
 | `0x9200131A / 0x27` or `/ 0xA7` | The reviewed intervals leave an unresolved word transition or have insufficient independent references. Both combinations remain unassigned. |
 
 Count independent display episodes rather than matching raw windows. Raw
@@ -89,15 +92,19 @@ Two separate main-page photographs support the additional complete contexts in
 the table. Device-clock observations independently agree with each visible
 minute; the accepted mode, status and valve words stay unchanged throughout
 those minutes with positive compressor speed. The transmitted JPEGs contain
-no camera exposure seconds. These are minute-bounded references, not exact
-transition timestamps. The comparison uses native decoded Recorder receipts;
-it is not an original wire-frame replay.
+no camera exposure seconds; the original 0.16.21 comparison therefore used
+minute-bounded references. Later inspection of the camera originals refined
+the level-2 episode's nominal exposure times. The comparison still uses native
+decoded Recorder receipts rather than an original wire-frame replay, and
+exposure precision does not establish calibrated transition timing.
 
-The level-2 reference's associated switching-state image has no clock. It
-shows MV-Abtau Off, while the received valve indication changes from On to
-Off after the main-page minute. The individual exposure times and possible
-display-update delay remain unresolved. That image is not forced onto the
-main-page context and establishes no synchronized PTC or valve reference.
+The level-2 reference's associated switching-state image has no visible clock.
+Later inspection of the camera originals resolved the nominal exposure order:
+the switching-state image was taken after the main-page image, with the received
+valve indication changing from On to Off between them. MV-Abtau Off on that
+later page therefore does not contradict the earlier main-page context.
+Camera-to-receiver synchronization and display-update delay remain unmeasured;
+the images do not establish a synchronized PTC or valve reference.
 
 Both new heating contexts use the existing seven-second Eco Winter source
 limit and 15-second initial qualification. The LED's separate eight-second
@@ -106,6 +113,65 @@ complete P2 Eco Winter / `12930092` / `a7000000` / positive-RPM context, with
 all four sources fresh within seven seconds. It does not become a generic
 word-only fan rule. Existing word-only P2 fan rules retain their six-second
 limit. No received interval is presented as permanently fresh telemetry.
+
+### Additional P2 heating and level-2 context (0.16.23)
+
+Two independent episodes on the reference P2 show Eco Winter, **Heizbetrieb**,
+level 2 and a lit upper LED with the complete status/valve combination
+`12930092 / 27000000`. One uses a confirmed approximate device-minute bracket;
+the later episode uses offset-bearing camera-original exposure times. Native
+status and valve receipts bracket the later photographs with the same complete
+words, and Recorder retains positive compressor-speed changes. Requested fan
+level remains a separate quantity and is not the level-2 reference.
+
+This exact context admits the literal heating label and displayed level 2 only
+with **P2 reference BDE display** enabled. All four actually received sources
+must be fresh and coherent within seven seconds. Initial heating qualification
+still requires 15 seconds of valid reception. Already qualified heating can
+continue through changes between `12930092 / a7000000` and
+`12930092 / 27000000` while all required sources stay valid and fresh.
+
+The retained history does not expose original mode/RPM receipt times at the
+photographs. Positive published RPM and status/valve receipt brackets do not
+constitute a complete wire replay or retroactive qualification. The runtime
+guards remain necessary. The `12930080 / 27000000`, `12930082 / 67000000` and
+`12930082 / 47000000` LED additions establish neither a heating label nor a
+new fan or PTC state.
+
+## Observed availability gaps (November 2026)
+
+Reference observations reviewed on 26 and 27 November show coverage gaps in
+the pre-0.16.23 contexts. An unavailable LED entity
+can coincide with a visibly green LED, both with a dark screen and with a lit
+main page. The later photo sequence shows **Heizbetrieb** during the interval
+bracketed by two HA screenshots of the same unavailable LED state. A missing
+operating label is therefore not a necessary companion of the LED availability
+gap. Subsequent native history confirms that the LED, operating-display and
+controller-fan entities were all unavailable during the later photographs;
+the complete status/valve words were `12930092 / 27000000`.
+
+A separately exposed switching-state page in the sequence shows the LED green
+with Bypass, PTC-Wohnen, MV-Abtau, MV-Vorwärme and MV-Heizen/Kühlen all Off.
+The main and switching pages were photographed at different times; they do not
+establish a simultaneous discrepancy or equate the heating label with an
+actuator state.
+
+The original camera timestamps include an offset, whereas the screenshots do
+not. Their nominal timing and visible date/minute context agree, but clock
+synchronization was not measured. Each short photo sequence is one episode,
+and still images do not establish continuous illumination between exposures.
+The reviewed evidence does not establish original mode/RPM receipt timing at
+the later exposures. Version 0.16.23 admits the exact context under the existing
+runtime freshness requirements, without asserting a historical qualification
+replay or a general status-bit interpretation.
+
+The earlier retained interval brackets green-LED photos with status payload
+`12930080` (`0x80009312`) and valve payload `27000000` (`0x27`). That status
+word is now admitted only for the LED with this exact valve word, Eco Winter
+and fresh positive RPM. The retained status and valve receipts do not establish
+original mode/RPM freshness at the exposures. Its payloads are not assumed for
+the later photo sequence and add no operating-display or fan interpretation.
+See [LED availability and source limits](DATA_POINTS.md#upper-green-bde-led).
 
 ## Blank-field evidence
 

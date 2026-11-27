@@ -262,9 +262,15 @@ Version 0.16.21 adds displayed level 2 for the **complete P2 context** Eco
 Winter / `0x92009312` (`12930092`) / valve `0xA7` (`a7000000`) / finite
 positive compressor RPM. All four sources must be fresh and coherent within
 seven seconds. Enable **P2 reference BDE display** for this additional rule.
-A different valve word, mode, expired source or stopped compressor does not
-admit this level. The general decoder and existing six-second P2 word-only
-rules are unchanged.
+Version 0.16.23 additionally admits valve `0x27` (`27000000`) with the same
+status, mode, positive-RPM and seven-second source requirements. Two separate
+P2 episodes show level 2 in this exact context, including one with
+offset-bearing original camera times and matching status/valve receipts.
+Requested fan level is not its optical validation source. Original mode/RPM
+receipt timing is not retained at the photographs; the runtime must still
+receive all four fresh sources. Other valve words, a different mode, expired
+sources or a stopped compressor do not admit this level. The general decoder
+and existing six-second P2 word-only rules are unchanged.
 
 This allowlist does not establish a general status-bit mapping. Current fan
 control percentages have separate validation based on fresh same-direction
@@ -613,6 +619,24 @@ level 2; the received context remains unchanged throughout the device minute. Th
 direct optical reference for this complete context, not a generalized Bit-28
 rule or a reference for a neighboring status or valve word.
 
+**From 0.16.23:** Four further exact Eco Winter status/valve combinations report
+the LED lit with `state_basis=display_reference` on the selected P2 reference:
+
+| Complete `224000/0208/4` payload | Complete `224000/006C/4` payload | Evidence scope |
+| --- | --- | --- |
+| `12930080` | `27000000` | Offset-bearing green-LED photographs within an unavailable history interval, with matching status/valve receipt brackets. |
+| `12930082` | `67000000` | Passive valve-pulse interval and contemporaneous observer report that the LED remained green. Later photos do not retrospectively photograph the pulse. |
+| `12930082` | `47000000` | The same observed pulse, not an additional independent photo episode. |
+| `12930092` | `27000000` | Two independent P2 episodes with a green LED, literal Heizbetrieb and displayed level 2. |
+
+Mode, complete status and valve words, and finite positive compressor RPM must
+all have actually arrived within eight seconds. Stale sources, different words
+or zero speed do not admit these new contexts. A mode change still requires a
+new status receipt. These finite additions do not define individual bits or
+extend the existing inferred-continuity word set. Only the last combination
+also adds the independently documented heating-label and level-2 rules; the
+other three add no operating-display, fan or PTC interpretation.
+
 **From 0.16.18:** Both checksum-validated sources, `118000 / 020A / 2` for
 mode and `224000 / 0208 / 4` for status, must have arrived within the last
 eight seconds. This LED-only limit covers observed unchanged-source intervals
@@ -654,6 +678,31 @@ shared send time; it is not another exact timestamp or a Bit-28 reference.
 The LED reference does not add `0x82001112` to the operating-display rules:
 the original bracket starts before that sensor's 15-second qualification.
 
+### Observed coverage gaps (November 2026)
+
+Reference observations reviewed on 26 and 27 November document a physically
+green upper LED while the pre-0.16.23 HA LED entity is unavailable. In the later sequence,
+two screenshots of the same unavailable history entry bracket four original
+device photos. The LED is visibly green on the dark screen, the main page
+showing **Heizbetrieb**, and the switching-state page with all five displayed
+switching states Off. Thus an unavailable LED entity does not imply an unlit physical
+LED or a missing operating label. The two pages were exposed separately and
+do not establish a simultaneous heating/actuator discrepancy.
+
+Each photo sequence is one episode, not four independent reference contexts.
+Camera originals provide nominal offset-bearing exposure times; screenshot
+offsets and camera-to-HA synchronization remain unmeasured. Still photographs
+do not prove continuous illumination or a blink pattern. Earlier repeated
+unavailable history intervals have no corresponding physical LED reference.
+The native Recorder comparison confirms `12930092 / 27000000` throughout the
+later exposures, positive reported RPM and unavailable LED, operating-display
+and controller-fan entities. The fresh status/valve receipt brackets do not
+establish original mode/RPM receipt times or historical 15-second qualification.
+Version 0.16.23 fills the exact missing context while retaining runtime source
+freshness and continuity requirements. It does not retrospectively correct
+history or establish a general meaning for individual status bits.
+[Operating-display evidence and availability limits](BDE_DISPLAY_EVIDENCE.md#observed-availability-gaps-november-2026).
+
 ## Bounded BDE operating-display indication (0.16.0)
 
 The optional diagnostic enum `bde_operating_display` reports `heating` for
@@ -663,6 +712,12 @@ Eco Winter with full `224000/0208/4=0x82001312`, `0x8200131A` or, from 0.16.9,
 From 0.16.21, **P2 reference BDE display** additionally admits two exact Eco
 Winter heating contexts: `0208=0x8200931A` / `006C=0x27` and
 `0208=0x92009312` / `006C=0xA7`, both with finite positive compressor RPM.
+Version 0.16.23 additionally admits `0208=0x92009312` / `006C=0x27` under the
+same P2-only positive-RPM requirements. Two separate episodes support the
+literal label and level 2. The seven-second source bound and 15-second initial
+heating qualification remain in force. Qualified heating may continue between
+the admitted `0xA7` and `0x27` valve contexts while all four sources remain
+fresh and valid; the photographs are not retroactive qualification replays.
 From 0.16.5 the same entity additionally reports `blank` only for Eco Winter,
 full `0208=0x8000100A`, full `006C=0x25` and finite compressor speed exactly zero.
 Two independent device-minute-backed references support this blank-label

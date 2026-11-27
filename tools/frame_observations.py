@@ -12,6 +12,16 @@ METADATA_POINTS = frozenset((0x0033, 0x0034, 0x0038, 0x0039))
 METADATA_QUERY_PAYLOADS = frozenset(("0100", "4000"))
 
 
+def is_metadata_negative_response(header, point, size, payload):
+    """Recognize only the recorded node-2 metadata type-4 payload shape."""
+    return (
+        header == "244000"
+        and point in METADATA_POINTS
+        and size == 2
+        and payload.lower() == "0100"
+    )
+
+
 def integer(value, name, *, minimum=0, maximum=None):
     """Validate a bounded integer without accepting booleans as numbers."""
     if (
@@ -61,6 +71,9 @@ def frames(report):
                     and raw.lower() in METADATA_QUERY_PAYLOADS
                 )
                 or (header == "224000" and size == 128)
+                or is_metadata_negative_response(
+                    header, register_id & 0xFFFF, size, raw
+                )
             )
         ):
             raise ValueError(

@@ -29,6 +29,7 @@ P2_HEATING_CONTEXTS = frozenset(
     {
         ("eco_winter", 0x8200931A, 0x27),
         ("eco_winter", 0x92009312, 0xA7),
+        ("eco_winter", 0x92009312, 0x27),
     }
 )
 
@@ -50,6 +51,11 @@ CONTEXT_GREEN_LED_CONTEXTS = frozenset(
         ("eco_winter", "12110082", "27000000"),
         ("eco_winter", "1a930082", "27000000"),
         ("eco_winter", "12930092", "a7000000"),
+        # Exact green-LED observations during reported availability gaps.
+        ("eco_winter", "12930080", "27000000"),
+        ("eco_winter", "12930082", "67000000"),
+        ("eco_winter", "12930082", "47000000"),
+        ("eco_winter", "12930092", "27000000"),
     }
 )
 # Explicit continuity assumption, not an independently observed LED mapping.
@@ -60,7 +66,10 @@ MODE_STATUS_SOURCE_KEYS = ("operating_mode", "raw_0208")
 # Exact P2 references requiring a fresh preceding Eco Winter mode receipt.
 P2_CONTROLLER_FAN_LEVELS = {"1a130092": 3, "1a930082": 3}
 # This reference also depends on the complete valve word and positive RPM.
-P2_CONTEXT_CONTROLLER_FAN_LEVELS = {("eco_winter", "12930092", "a7000000"): 2}
+P2_CONTEXT_CONTROLLER_FAN_LEVELS = {
+    ("eco_winter", "12930092", "a7000000"): 2,
+    ("eco_winter", "12930092", "27000000"): 2,
+}
 P2_CONTEXT_FAN_WORDS = frozenset(
     status for _, status, _ in P2_CONTEXT_CONTROLLER_FAN_LEVELS
 )

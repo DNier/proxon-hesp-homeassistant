@@ -117,8 +117,10 @@ Martin's [FWT 2-R report in discussion #6](https://github.com/DNier/proxon-hesp-
 proposes that the upper 16 bits of a metadata register ID select an **element
 offset**, with 64 uint16 entries in each reply. His adapter additionally reads
 `0039` as an array of unit codes. The recorded fixture validates zero-offset
-`0033`, `0034` and `0038`. The proposed page selectors and units remain
-unverified against recorded QUERY/RESPONSE pairs.
+`0033`, `0034` and `0038`. Markus Mauch's later
+[P 2H-L recording](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83)
+adds original count-64 QUERY/RESPONSE pairs for all four lists, including
+nonzero offsets. Unit codes are recorded; their meanings remain candidates.
 
 The existing offline inventory is prepared for these narrowly bounded forms:
 
@@ -127,11 +129,13 @@ The existing offline inventory is prepared for these narrowly bounded forms:
   retained as a candidate offset, including for `0039` at offset zero.
 - Header `108000` to the same metadata points, two payload bytes `0100`
   (uint16 count **1**) or `4000` (count **64**). Count 1 preserves Martin's
-  reported form; count 64 follows the author's explicit
+  reported form; count 64 is now supported by the original recording below,
+  in addition to the author's earlier
   [query example and paging report](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7190339147).
   Requests are validated as received; reply size never rewrites 1 to 64.
   Other counts remain unsupported. Other frame families still
-  require zero reserved bytes.
+  require zero reserved bytes, apart from the narrowly observed metadata
+  type-4 replies described below.
 
 This does not generalize the length-byte wrap rule to every identity, accept
 empty confirmations as 128-byte replies, or change the production decoder.
@@ -149,29 +153,73 @@ queries visible. Missing column/page ranges are explicit. `catalog_length` stays
 complete device catalog. An optional `0039` column contains raw `unit_code`
 values only; type, mask and unit meanings and write permissions are not approved.
 
-All new offset/`0039` regression examples are **synthetic**, including the
-0/64/86 overlapping-last-page example. They verify offline handling, not actual
-FWT/P2 compatibility, list length, access rights or units. No bus query, sender,
-new entity, automatic discovery or firmware change is introduced. The existing
-temperature candidates and production `03B7` mapping are unchanged.
+The earlier offset/`0039` regression examples, including the 0/64/86
+overlapping-last-page case, remain **synthetic**. The separate
+[`metadata_pages_recorded.json`](../tests/fixtures/metadata_pages_recorded.json)
+fixture contains original requests and replies from the P 2H-L recording.
+Neither source establishes FWT compatibility, access rights or unit meanings.
+These offline tools introduce no bus query, sender, entity or automatic
+discovery. Production mappings, including `03B7`, remain unchanged.
 
 See [input formats and usage](OFFLINE_ANALYSIS.md#metadata-replies-and-follow-up-pages).
 
-## Separate 163-entry controller snapshot
+## Recorded list pages and negative replies (26 November 2026)
+
+The [source recording and READMEs](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83),
+shared in [upstream PR #2](https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7196275110),
+describe a P 2H-L with LT-ZIM V1.6 and PTC 4× V1.2 at X7, 19200 8N1.
+The firmware version is unknown. Its BDE was disconnected and the author's
+daemon stopped; the acquisition tool was the sole sender and sent only QUERYs.
+
+For each of `0033`, `0034`, `0038` and `0039`, count-64 queries at element
+offsets **0, 64, 96, 98 and 99** receive checksum-valid 138-byte type-2
+responses. Overlapping entries agree. The combined pages cover absolute
+indices **0–162**, with 163 entries in every column and no gaps. The first
+64 entries of `0033`, `0034` and `0038` match the earlier recorded fixture.
+This replaces the previously unverified page-selector example with recorded
+evidence for this installation.
+
+At offsets **100, 104, 112 and 128**, all four lists return a checksum-valid
+12-byte **type-4** frame: header `244000`, the same complete register ID,
+length byte `04` and raw payload `0100`. They are observed negative replies
+to these metadata queries; the specific meaning of code `0100` is unknown.
+The acquisition script labels those windows `NO_RESPONSE_TYP2` because no
+type-2 reply arrived. That label does not mean silence or a timeout.
+
+Version 0.16.23 pairs these replies in offline address analysis as
+`query_metadata_negative_response`, with scoped `metadata_negative_response`
+counts. The metadata auditor additionally lists the matched raw replies in
+`negative_responses` and keeps the failed queries visible. Negative replies
+supply no list entries. Matching still requires reversed
+endpoints and the full register ID, and ambiguous or interrupted exchanges
+remain unresolved. Other type-4 payloads and routes gain no interpretation.
+
+The observed list range ends at index 162. This is not a complete inventory
+of the device's protocol: operating points such as `0208`, `020A`, `03B6`
+and `03B7` are absent from `0033`, although they occur in the separate BDE
+recording. Consequently `catalog_length` remains `null`. Type, mask and unit
+codes do not establish a universal wire type or write permission. For example,
+type code `0204` accompanies recorded one-, two-, four- and eight-byte replies,
+including `0232`, `022C`, `0227` and `0241` respectively.
+
+The tool reads for a fixed **250 ms after every QUERY** and then sends the
+next query. `RXRAW` timestamps mark the received USB chunks; `RX` timestamps
+mark the end of that waiting window after frame assembly. Receipt comparisons
+must use `RXRAW`, not `RX`. The fixture retains the TX and frame-completing
+RXRAW order and relative timing at whole-millisecond resolution, without the
+original start time. These acquisition settings establish neither a minimum
+response wait nor coordination with an attached BDE.
+
+## Earlier payload-only snapshot
 
 The upstream [LT catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
 reports 163 entries from a P 2H-L at address 2, using offsets 0, 64 and 99.
-It contains interpreted payload values and access labels, not original timed
-QUERY/RESPONSE pairs. Long arrays are explicitly truncated after 32 bytes.
-It is a separate external source; neither missing wire frames nor missing array
-elements may be reconstructed from its table. The original recorded fixture and
-the conservative `catalog_length=null` result are unchanged. Its type, mask and
-unit codes do not grant write access or transfer meanings between node 2 and 30.
-
-The author reports collecting a complete checksum-valid 138-byte response across
-USB chunks and using a 250 ms waiting window per query. That timing is an observed
-acquisition setting on his sole-master setup, not a proven minimum, electrical
-bus-free condition or coordination mechanism with an attached BDE.
+It contains interpreted payload values and access labels. Long arrays are
+explicitly truncated after 32 bytes. The later recording above supplies original
+wire frames and complete payloads in a separate acquisition; missing values
+from the earlier snapshot are not reconstructed from its interpreted table.
+Its type, mask and unit labels do not grant write access or transfer meanings
+between node 2 and 30.
 
 ## Grenzen des Exports
 
