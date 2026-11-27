@@ -3,6 +3,32 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.24 – Grüne BDE-LED in Eco Winter und Komfort
+
+- Die optionale **Obere grüne BDE-LED** erkennt am ausgewählten
+  P2-Referenzgerät weitere direkt beobachtete Konstellationen in
+  **Eco Winter** und **Komfort**, einschließlich der kurzen Ventilwechsel.
+  Bei passenden frischen Quellen zeigt sie **Ein** mit
+  `state_basis: display_reference` statt **Nicht verfügbar**.
+- Die durchgehend grüne LED in einem 46-stündigen Beobachtungszeitraum im
+  November ist eine direkte Beobachtung. Die vollständige
+  HA-Historie ordnet die Ausfälle den jeweiligen Status- und Ventilworten zu.
+  Originalaufnahmen reproduzieren fehlende Zuordnungen auch bei frischen
+  Quellen und bestehender Verbindung. Im Komfortmodus werden unter anderem
+  `1a930080 / 27000000` und `1a930090 / a7000000` jetzt als **Ein** erkannt.
+- Für diese neuen vollständigen Kontexte sind die Auswahl
+  **BDE-Anzeige für P2-Referenzgerät**, frische Betriebsart,
+  passende Status- und Ventilworte sowie eine gültige positive Verdichterdrehzahl
+  weiterhin erforderlich. Jede Quelle muss innerhalb von acht Sekunden
+  empfangen worden sein. Bei Verbindungsverlust bleibt die Entität
+  **Nicht verfügbar**, auch wenn die physische LED weiter leuchtet.
+
+Bestehende Entitäts-IDs und Einstellungen bleiben erhalten. Die Historie wird
+nicht rückwirkend geändert. Es entstehen keine neuen Anlagenabfragen oder
+Schreibfunktionen. Nach einem HACS-Update muss die Integration neu geladen
+werden, damit die neue Laufzeitzuordnung gilt.
+[BDE-Anzeigen und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md).
+
 ## 0.16.23 – BDE-Anzeigen bei LED-Ausfällen und negative Metadatenantworten
 
 - Die optionale **Obere grüne BDE-LED** erkennt am ausgewählten

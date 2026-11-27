@@ -11,7 +11,7 @@ SOURCE_KEYS = {
     "raw_051c": "compressor_rpm",
 }
 MAX_SOURCE_AGE = 6.0
-# LED-only tolerance for observed unchanged source intervals up to 7.479 s.
+# LED-only tolerance for observed unchanged source intervals below eight seconds.
 MAX_LED_SOURCE_AGE = 8.0
 # Bounded tolerance for observed Eco Winter poll intervals above six seconds.
 MAX_WINTER_SOURCE_AGE = 7.0
@@ -56,6 +56,27 @@ CONTEXT_GREEN_LED_CONTEXTS = frozenset(
         ("eco_winter", "12930082", "67000000"),
         ("eco_winter", "12930082", "47000000"),
         ("eco_winter", "12930092", "27000000"),
+        # Continuous on observations paired with complete receiver captures.
+        ("eco_winter", "1a930092", "27000000"),
+        ("eco_winter", "1a930092", "a7000000"),
+        # Direct continuous green-LED observation, 25–27 November 2026.
+        ("eco_winter", "12930090", "27000000"),
+        ("eco_winter", "12930090", "a7000000"),
+        ("eco_winter", "12930090", "c7000000"),
+        ("eco_winter", "12930090", "e7000000"),
+        ("eco_winter", "12930092", "c7000000"),
+        ("eco_winter", "12930092", "e7000000"),
+        ("eco_winter", "1a930082", "67000000"),
+        ("eco_winter", "1a930092", "47000000"),
+        ("eco_winter", "1a930092", "67000000"),
+        ("eco_winter", "1a930092", "e7000000"),
+        ("comfort", "1a930080", "27000000"),
+        ("comfort", "1a930080", "47000000"),
+        ("comfort", "1a930080", "67000000"),
+        ("comfort", "1a930090", "27000000"),
+        ("comfort", "1a930090", "a7000000"),
+        ("comfort", "1a930090", "c7000000"),
+        ("comfort", "1a930090", "e7000000"),
     }
 )
 # Explicit continuity assumption, not an independently observed LED mapping.

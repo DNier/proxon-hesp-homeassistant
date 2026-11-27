@@ -138,6 +138,84 @@ guards remain necessary. The `12930080 / 27000000`, `12930082 / 67000000` and
 `12930082 / 47000000` LED additions establish neither a heating label nor a
 new fan or PTC state.
 
+## Further green LED contexts (0.16.24)
+
+A direct user observation establishes that the upper green LED remained lit
+through the reported availability gaps. A complete passive receiver capture
+from the running 0.16.23 integration reproduces two of those gaps with the
+gateway connected. Both contain Eco Winter status `1a930092`; the exact valve
+words are `27000000` and `a7000000`, with valid positive compressor speed.
+All four required sources continue to arrive within eight seconds. The
+largest source interval in the retained capture is 7.607 seconds. These gaps
+are therefore missing LED assignments rather than expired source data.
+
+Version 0.16.24 admits these two complete contexts only for the selected P2
+display, using `state_basis: display_reference`. The `27000000` combination
+recurs in two distinct gaps; the `a7000000` combination is retained within
+one of them. This difference in the number of occurrences remains part of the
+evidence. No heating text, controller fan level, PTC state or general status-bit
+meaning is assigned from the LED observation.
+
+A separate gap coincides with loss of the gateway connection and other HA
+telemetry. The reported physical LED can remain on during that gap, but the
+integration cannot determine its current state without incoming data. It
+continues to report unavailable on disconnect, expired or invalid sources,
+other modes, unsupported words and display-profile changes. Historical states
+are not rewritten. Public receiver regressions use synthetic combinations and
+receipt timing; the complete original capture remains private.
+
+### Extended observation and Comfort comparison
+
+The reference user directly observed the LED continuously green throughout
+a 46-hour observation in November 2026, including every HA availability gap.
+This is a reported physical observation,
+not an inferred continuity state. A complete, paginated Recorder read covers
+the entire 46-hour window and retains 247 LED rows, 263 status-entity
+rows, 195 valve-entity rows and 15,445 RPM rows. Each of the status and valve
+series includes five unavailable rows. No LED Off state is
+recorded. The 125 unavailable rows form 122 continuous unavailable periods;
+attribute updates can divide one period into several rows.
+
+The retained complete words add the following finite LED references in 0.16.24,
+with fresh positive RPM and the selected P2 display required throughout:
+
+| Mode | Complete `224000/0208/4` payload | Admitted complete `224000/006C/4` payloads |
+| --- | --- | --- |
+| Eco Winter | `12930090` | `27000000`, `a7000000`, `c7000000`, `e7000000` |
+| Eco Winter | `12930092` | `c7000000`, `e7000000` |
+| Eco Winter | `1a930082` | `67000000` |
+| Eco Winter | `1a930092` | `27000000`, `47000000`, `67000000`, `a7000000`, `e7000000` |
+| Comfort | `1a930080` | `27000000`, `47000000`, `67000000` |
+| Comfort | `1a930090` | `27000000`, `a7000000`, `c7000000`, `e7000000` |
+
+After the switch to Comfort, the old integration's LED remains
+unavailable through the end of the window. The words `1a930082` / `1a930080`
+and `1a930092` / `1a930090` differ by `0x02000000` (bit 25), and the retained
+contexts share several valve words and positive RPM. Eco Winter itself also
+contains `12930080` and `12930090`; the difference does not establish a general
+mode or LED bit. Only the listed mode/status/valve tuples are admitted.
+
+Immediately after the mode change, Recorder briefly retains the prior
+Eco Winter word `1a930082`. That cached combination is excluded from Comfort:
+the first newly received Comfort status is `1a930080`. A mode change continues
+to require a new status receipt before the LED becomes available.
+
+Complete original receiver windows inside the observation interval and a
+separate current passive snapshot reproduce unknown Comfort contexts while
+all required sources are fresh. They include `1a930080 / 27000000` and
+`1a930090 / a7000000` or `/ 27000000`. Recorder preserves state changes rather
+than every unchanged source receipt, so it does not prove uninterrupted source
+freshness for the whole 46 hours. No unrecorded wire interval is reconstructed.
+Original recordings, exact household timestamps and the complete interval
+matrix remain private.
+
+All new references use `state_basis: display_reference` without
+`assumed_state`. The existing eight-second deadlines, invalid-value rejection,
+connection reset and display-profile checks remain in force. The physical LED
+observation does not make missing telemetry current. These additions establish
+neither a heating label nor new fan/PTC semantics. Existing independently
+confirmed fan-level rules remain unchanged.
+
 ## Observed availability gaps (November 2026)
 
 Reference observations reviewed on 26 and 27 November show coverage gaps in

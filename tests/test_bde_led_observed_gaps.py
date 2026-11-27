@@ -39,23 +39,74 @@ def synthetic_payload(frame: bytes, payload: bytes) -> bytes:
 STATUS_12930082 = synthetic_payload(STATUS, bytes.fromhex("12930082"))
 STATUS_12930080 = synthetic_payload(STATUS, bytes.fromhex("12930080"))
 STATUS_12930092 = synthetic_payload(STATUS, bytes.fromhex("12930092"))
+STATUS_12930090 = synthetic_payload(STATUS, bytes.fromhex("12930090"))
+STATUS_1A930082 = synthetic_payload(STATUS, bytes.fromhex("1a930082"))
+STATUS_1A930092 = synthetic_payload(STATUS, bytes.fromhex("1a930092"))
+STATUS_1A930080 = synthetic_payload(STATUS, bytes.fromhex("1a930080"))
+STATUS_1A930090 = synthetic_payload(STATUS, bytes.fromhex("1a930090"))
 VALVES_67 = synthetic_payload(VALVES, bytes.fromhex("67000000"))
 VALVES_47 = synthetic_payload(VALVES, bytes.fromhex("47000000"))
 VALVES_A7 = synthetic_payload(VALVES, bytes.fromhex("a7000000"))
+VALVES_C7 = synthetic_payload(VALVES, bytes.fromhex("c7000000"))
+VALVES_E7 = synthetic_payload(VALVES, bytes.fromhex("e7000000"))
 UNOBSERVED_VALVES = synthetic_payload(VALVES, bytes.fromhex("25000000"))
 COMFORT = synthetic_payload(MODE, bytes.fromhex("0300"))
+ECO_SUMMER = synthetic_payload(MODE, bytes.fromhex("0100"))
 DARK_STATUS = synthetic_payload(STATUS, bytes.fromhex("0a100080"))
 OBSERVED_CONTEXTS = (
     (MODE, STATUS_12930080, VALVES, RPM),
     (MODE, STATUS_12930082, VALVES_67, RPM),
     (MODE, STATUS_12930082, VALVES_47, RPM),
     (MODE, STATUS_12930092, VALVES, RPM),
+    (MODE, STATUS_1A930092, VALVES, RPM),
+    (MODE, STATUS_1A930092, VALVES_A7, RPM),
+    (MODE, STATUS_12930090, VALVES, RPM),
+    (MODE, STATUS_12930090, VALVES_A7, RPM),
+    (MODE, STATUS_12930090, VALVES_C7, RPM),
+    (MODE, STATUS_12930090, VALVES_E7, RPM),
+    (MODE, STATUS_12930092, VALVES_C7, RPM),
+    (MODE, STATUS_12930092, VALVES_E7, RPM),
+    (MODE, STATUS_1A930082, VALVES_67, RPM),
+    (MODE, STATUS_1A930092, VALVES_47, RPM),
+    (MODE, STATUS_1A930092, VALVES_67, RPM),
+    (MODE, STATUS_1A930092, VALVES_E7, RPM),
+    (COMFORT, STATUS_1A930080, VALVES, RPM),
+    (COMFORT, STATUS_1A930080, VALVES_47, RPM),
+    (COMFORT, STATUS_1A930080, VALVES_67, RPM),
+    (COMFORT, STATUS_1A930090, VALVES, RPM),
+    (COMFORT, STATUS_1A930090, VALVES_A7, RPM),
+    (COMFORT, STATUS_1A930090, VALVES_C7, RPM),
+    (COMFORT, STATUS_1A930090, VALVES_E7, RPM),
 )
 
 
 @pytest.fixture(
     params=OBSERVED_CONTEXTS,
-    ids=("12930080-27", "12930082-67", "12930082-47", "12930092-27"),
+    ids=(
+        "12930080-27",
+        "12930082-67",
+        "12930082-47",
+        "12930092-27",
+        "1a930092-27",
+        "1a930092-a7",
+        "winter-12930090-27",
+        "winter-12930090-a7",
+        "winter-12930090-c7",
+        "winter-12930090-e7",
+        "winter-12930092-c7",
+        "winter-12930092-e7",
+        "winter-1a930082-67",
+        "winter-1a930092-47",
+        "winter-1a930092-67",
+        "winter-1a930092-e7",
+        "comfort-1a930080-27",
+        "comfort-1a930080-47",
+        "comfort-1a930080-67",
+        "comfort-1a930090-27",
+        "comfort-1a930090-a7",
+        "comfort-1a930090-c7",
+        "comfort-1a930090-e7",
+    ),
 )
 def context(request):
     return request.param
@@ -118,6 +169,37 @@ def test_morning_valve_transition_and_long_fresh_phase_keep_the_led_on(stream):
     assert display.green_led(109.000001) is None
 
 
+def test_winter_to_comfort_requires_a_new_status_and_handles_observed_valve_changes(
+    stream,
+):
+    display, feed = stream
+    feed(MODE + STATUS_1A930082 + VALVES + RPM, 0)
+    assert display.green_led(0) is True
+    feed(COMFORT, 1)
+    assert display.green_led(1) is None
+    feed(VALVES_67, 1.1)
+    assert display.green_led(1.1) is None
+    feed(STATUS_1A930080, 1.2)
+    assert display.green_led(1.2) is True
+    assert display.green_led_basis(1.2) == "display_reference"
+    # A fresh Eco Winter word in Comfort is still not a valid Comfort reference.
+    feed(STATUS_1A930082, 1.3)
+    assert display.green_led(1.3) is None
+    feed(STATUS_1A930080 + VALVES, 1.4)
+    assert display.green_led(1.4) is True
+    feed(STATUS_1A930090, 2)
+    for at, valves in ((2.1, VALVES_A7), (2.2, VALVES_C7), (2.3, VALVES_E7)):
+        feed(valves, at)
+        assert display.green_led(at) is True
+        assert display.green_led_basis(at) == "display_reference"
+    feed(VALVES, 3)
+    assert display.green_led(3) is True
+    feed(MODE, 4)
+    assert display.green_led(4) is None
+    feed(STATUS_12930090, 4.1)
+    assert display.green_led(4.1) is True
+
+
 @pytest.mark.parametrize(
     "source_index", range(4), ids=("mode", "status", "valves", "rpm")
 )
@@ -175,14 +257,14 @@ def test_off_mode_changes_and_reset_cannot_reuse_the_previous_reference(
     display, feed = stream
     feed(b"".join(context), 0)
     assert display.green_led(0) is True
-    feed(DARK_STATUS, 1)
+    feed(MODE + DARK_STATUS, 1)
     assert display.green_led(1) is False
     assert display.green_led_basis(1) == "display_reference"
-    feed(context[1], 2)
+    feed(b"".join(context), 2)
     assert display.green_led(2) is True
-    feed(COMFORT, 3)
+    feed(ECO_SUMMER, 3)
     assert display.green_led(3) is None
-    feed(MODE, 4)
+    feed(context[0], 4)
     assert display.green_led(4) is None
     feed(context[1], 5)
     assert display.green_led(5) is True
@@ -190,7 +272,7 @@ def test_off_mode_changes_and_reset_cannot_reuse_the_previous_reference(
     assert display.green_led(5) is None
     feed(context[2] + RPM, 6)
     assert display.green_led(6) is None
-    feed(MODE + context[1], 7)
+    feed(context[0] + context[1], 7)
     assert display.green_led(7) is True
 
 
@@ -225,12 +307,13 @@ def test_only_the_separately_observed_morning_context_assigns_heating_and_fan(
     stream, context
 ):
     display, feed = stream
-    morning = context[1] == STATUS_12930092
+    morning = context[1] == STATUS_12930092 and context[2] == VALVES
+    fan = 3 if context[1] == STATUS_1A930082 else 2 if morning else None
     for at in (0, 5, 10, 15):
         feed(b"".join(context), at)
         assert display.green_led(at) is True
         assert display.value(at) == ("heating" if morning and at == 15 else None)
-        assert display.fan_level(at) == (2 if morning else None)
+        assert display.fan_level(at) == fan
     if morning:
         assert display.value(22) == "heating"
         assert display.value(22.000001) is None
@@ -298,7 +381,7 @@ async def test_ha_receiver_publishes_the_references_and_invalidates_on_disconnec
         patch.object(loop, "time", lambda: clock.now),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        for at, context in enumerate(OBSERVED_CONTEXTS, start=1):
+        for at, context in enumerate(OBSERVED_CONTEXTS[:4], start=1):
             await receive_at(at, b"".join(context), "on")
             state = hass.states.get(registered.entity_id)
             assert state.attributes["state_basis"] == "display_reference"
@@ -325,6 +408,23 @@ async def test_ha_receiver_publishes_the_references_and_invalidates_on_disconnec
         assert hass.states.is_state(
             sensor_entities["bde_operating_display"].entity_id, "heating"
         )
+        await receive_at(113, b"".join(OBSERVED_CONTEXTS[4]), "on")
+        await receive_at(114, VALVES_A7, "on")
+        assert hass.states.get(registered.entity_id).attributes["state_basis"] == (
+            "display_reference"
+        )
+        assert all(
+            hass.states.is_state(entity.entity_id, "unavailable")
+            for entity in sensor_entities.values()
+        )
+        for at, context in enumerate(OBSERVED_CONTEXTS[6:], start=115):
+            await receive_at(at, b"".join(context), "on")
+            state = hass.states.get(registered.entity_id)
+            assert state.attributes["state_basis"] == "display_reference"
+            assert not state.attributes.get("assumed_state", False)
+            assert hass.states.is_state(
+                sensor_entities["bde_operating_display"].entity_id, "unavailable"
+            )
         runtime = entry.runtime_data
         reader.feed_eof()
         await hass.async_block_till_done()
