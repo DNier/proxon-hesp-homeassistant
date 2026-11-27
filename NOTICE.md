@@ -45,6 +45,34 @@ CRC equivalence was independently checked against the existing byte transform.
 The address interpretation is used only by offline analysis and does not assign
 hardware roles or widen production mappings. See docs/ADDRESS_EVIDENCE.md.
 
+Markus Mauch supplied additional original P 2H-L wire evidence in:
+
+- https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7196275110
+- https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83
+
+Selected original QUERY/RESPONSE and type-4 frames are retained in
+`tests/fixtures/metadata_pages_recorded.json`; selected complete controller
+replies are retained in `tests/fixtures/controller_catalog_frames.json`.
+`tests/fixtures/panel_modes_recorded.json` retains selected original July
+mode/confirmation and raw-state frames in source order, without timestamps.
+Changes to presentation: fixture wrappers and source labels were added, the
+metadata time origin was removed and relative TX/frame-completion times were
+quantized to whole milliseconds. Original frame bytes and recorded checksums
+are unchanged. Full logs, adapter paths, device clock values and household
+wall-clock histories are not copied into these fixtures. The accompanying
+offline interpretation does not establish control rights or widen runtime
+entities. See docs/METADATA_EVIDENCE.md and docs/CONTROL_EVIDENCE.md.
+
+The reported long-term sole-master setup and its remaining questions are
+referenced from:
+
+- https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7196777234
+- https://github.com/markusmauch/proxon-hesp/blob/0eb5a2a33234893a8fafdbfae56ade6f0c510da4/docs/anlage.md
+- https://github.com/markusmauch/proxon-hesp/blob/0eb5a2a33234893a8fafdbfae56ade6f0c510da4/docs/offene-punkte.md
+
+These author observations are summarized alongside counterevidence from the
+original BDE recording; no master implementation is included.
+
 ## Logo
 
 The supplied PROXON logo in `custom_components/proxon_hesp/brand/` is used

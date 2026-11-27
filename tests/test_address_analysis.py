@@ -35,6 +35,7 @@ def report(*items, **options):
 def assert_accounting(result):
     counts = result["counts"]
     known = sum(counts[key] for key in ("query", "set", "response", "confirm"))
+    known += counts.get("metadata_negative_response", 0)
     assert known == 2 * counts["pairs"] + counts["unmatched"]
     assert counts["pairs"] == len(result["pairs"])
     assert counts["unmatched"] == len(result["unmatched"])
@@ -193,6 +194,97 @@ def test_unknown_frame_retained_without_breaking_other_route():
     unknown = result["unknown_frames"][0]
     assert unknown["address"]["type"] == 15
     assert unknown["address"]["type_name"] == "unknown"
+
+
+def test_only_scoped_metadata_type4_is_correlated_as_a_negative_response():
+    result = analyze_exchanges(
+        report(
+            (0, frame(dp=0x0033, payload=b"\x40\0")),
+            (10, frame(4, 2, 1, dp=0x0033)),
+            (20, frame(4, 2, 1, dp=0x0194)),
+            (30, frame(4, 2, 1, dp=0x0033, payload=b"\x02\0")),
+        )
+    )
+    assert_accounting(result)
+    assert result["counts"]["metadata_negative_response"] == 1
+    assert result["counts"]["unknown"] == 2
+    assert result["pairs"][0]["kind"] == "query_metadata_negative_response"
+    assert result["pairs"][0]["classification"] == "candidate"
+    assert result["pairs"][0]["delta_ms"] == 10
+    assert decode_header("244000")["type_name"] == "unknown"
+
+
+def test_wrong_negative_point_does_not_consume_other_pending_metadata_query():
+    result = analyze_exchanges(
+        report(
+            (0, frame(dp=0x0033, payload=b"\x40\0")),
+            (10, frame(4, 2, 1, dp=0x0034)),
+            (20, frame(4, 2, 1, dp=0x0033)),
+        )
+    )
+    assert_accounting(result)
+    assert result["unmatched"][0]["reason"] == "wrong_data_point"
+    assert result["pairs"][0]["reply"]["frame_index"] == 2
+
+
+@pytest.mark.parametrize("payload", [b"", b"\x02\0", b"\x40", b"\x40\0\0\0"])
+def test_negative_reply_does_not_consume_unsupported_zero_offset_query_payload(payload):
+    result = analyze_exchanges(
+        report(
+            (0, frame(dp=0x0033, payload=payload)),
+            (10, frame(4, 2, 1, dp=0x0033)),
+        )
+    )
+    assert_accounting(result)
+    assert result["pairs"] == []
+    assert {item["reason"] for item in result["unmatched"]} == {
+        "unsupported_query_payload",
+        "end_of_capture",
+    }
+
+
+def test_negative_reply_does_not_confirm_a_set():
+    result = analyze_exchanges(
+        report(
+            (0, frame(1, dp=0x0033)),
+            (10, frame(4, 2, 1, dp=0x0033)),
+            (20, frame(3, 2, 1, dp=0x0033, payload=b"")),
+        )
+    )
+    assert_accounting(result)
+    assert result["unmatched"][0]["reason"] == "wrong_reply_type"
+    assert result["pairs"][0]["kind"] == "set_confirm"
+
+
+@pytest.mark.parametrize("delay,paired", [(0, True), (1000, True), (1001, False)])
+def test_negative_response_keeps_inclusive_deadline(delay, paired):
+    result = analyze_exchanges(
+        report(
+            (0, frame(dp=0x0033)),
+            (delay, frame(4, 2, 1, dp=0x0033)),
+        )
+    )
+    assert_accounting(result)
+    assert bool(result["pairs"]) is paired
+    if not paired:
+        assert {row["reason"] for row in result["unmatched"]} == {
+            "timeout",
+            "late_reply",
+        }
+
+
+def test_negative_reply_respects_continuity_break_and_ambiguity_quarantine():
+    result = analyze_exchanges(
+        report(
+            (0, frame(dp=0x0033)),
+            (10, b"noise"),
+            (20, frame(4, 2, 1, dp=0x0033)),
+        )
+    )
+    assert_accounting(result)
+    assert result["pairs"] == []
+    assert result["continuity_breaks"]
+    assert {item["reason"] for item in result["unmatched"]} == {"continuity_break"}
 
 
 def test_simultaneous_tcp_completion_keeps_wire_order_and_timing_ambiguity():

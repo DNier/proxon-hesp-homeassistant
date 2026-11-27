@@ -9,7 +9,10 @@ import json
 from pathlib import Path
 
 from tools.address_analysis import analyze_exchanges
-from tools.frame_observations import METADATA_QUERY_PAYLOADS
+from tools.frame_observations import (
+    METADATA_QUERY_PAYLOADS,
+    is_metadata_negative_response,
+)
 from tools.inventory_capture import METADATA_POINTS, inventory, load_capture
 
 PAGE_FORMAT = "proxon-metadata-pages-1"
@@ -121,10 +124,17 @@ def _paged_columns(source):
         point = int(group["dp"], 16)
         if point not in METADATA_POINTS:
             continue
-        if group["header"] not in ("108000", "224000"):
+        metadata_negative = all(
+            is_metadata_negative_response(
+                group["header"], point, group["payload_bytes"], value
+            )
+            for value in group["values"]
+        )
+        if group["header"] not in ("108000", "224000") and not metadata_negative:
             raise ValueError(
                 "Metadata frame has unsupported participant or message type; "
-                "expected 1 -> 2 QUERY or 2 -> 1 RESPONSE"
+                "expected 1 -> 2 QUERY, 2 -> 1 RESPONSE or the recorded "
+                "metadata negative response shape"
             )
         if group["header"] == "108000" and (
             group["payload_bytes"] != 2
@@ -142,13 +152,26 @@ def _paged_columns(source):
         if int(row["identity"].split("/")[1], 16) & 0xFFFF in METADATA_POINTS:
             metadata_indices.add(index)
     columns = {point: {} for point in METADATA_POINTS}
-    pages, unanswered, duplicates = [], [], []
+    pages, unanswered, duplicates, negatives = [], [], [], []
     for pair in exchanges["pairs"]:
         request, reply = pair["request"], pair["reply"]
         point = int(reply["dp"], 16)
         if point not in METADATA_POINTS:
             continue
         offset = reply.get("selector_offset", 0)
+        if pair["kind"] == "query_metadata_negative_response":
+            negatives.append(
+                {
+                    "dp": f"0x{point:04X}",
+                    "register_id": f"0x{(offset << 16) | point:08X}",
+                    "offset": offset,
+                    "query_frame_index": request["frame_index"],
+                    "response_frame_index": reply["frame_index"],
+                    "delta_ms": pair["delta_ms"],
+                    "payload_hex": reply["payload_hex"],
+                }
+            )
+            continue
         raw = bytes.fromhex(reply["payload_hex"])
         for i in range(64):
             index, value = offset + i, int.from_bytes(raw[i * 2 : i * 2 + 2], "little")
@@ -182,20 +205,42 @@ def _paged_columns(source):
                     "reason": reason,
                 }
             )
-        elif reason == "duplicate_reply" and any(
-            row["identity"] == pair["reply"]["identity"]
-            and row["payload_hex"] == pair["reply"]["payload_hex"]
-            for pair in exchanges["pairs"]
-        ):
+        elif reason == "duplicate_reply":
+            # The matcher relates a duplicate to the latest completed request
+            # on this route and full register ID. An older matching reply must
+            # not hide a contradictory answer to the current request.
+            previous_reply = max(
+                (
+                    pair["reply"]
+                    for pair in exchanges["pairs"]
+                    if pair["reply"]["frame_index"] < row["frame_index"]
+                    and int(pair["reply"].get("register_id", pair["reply"]["dp"]), 16)
+                    == int(row.get("register_id", row["dp"]), 16)
+                    and pair["reply"]["address"]["source"] == row["address"]["source"]
+                    and pair["reply"]["address"]["destination"]
+                    == row["address"]["destination"]
+                ),
+                key=lambda reply: reply["frame_index"],
+                default=None,
+            )
+            if (
+                previous_reply is None
+                or row["identity"] != previous_reply["identity"]
+                or row["payload_hex"] != previous_reply["payload_hex"]
+            ):
+                raise ValueError(
+                    "Unresolved metadata exchange: duplicate_reply "
+                    f"at frame {row['frame_index']}"
+                )
             duplicates.append(row["frame_index"])
         else:
             raise ValueError(
                 f"Unresolved metadata exchange: {reason} at frame {row['frame_index']}"
             )
-    if not pages:
+    if not pages and not negatives:
         raise ValueError("No unambiguous complete metadata page exchange")
     indices = set().union(*columns.values())
-    extent = max(indices) + 1
+    extent = max(indices, default=-1) + 1
     missing = {
         f"0x{point:04X}": _missing_ranges(values, extent)
         for point, values in sorted(columns.items())
@@ -213,14 +258,14 @@ def _paged_columns(source):
             "unknown; pages and unanswered queries do not prove the end of a catalog"
         ),
         "observed_extent": extent,
-        "required_columns_aligned_over_observed_extent": all(
-            not missing[f"0x{point:04X}"] for point in REQUIRED_COLUMNS
-        ),
+        "required_columns_aligned_over_observed_extent": bool(pages)
+        and all(not missing[f"0x{point:04X}"] for point in REQUIRED_COLUMNS),
         "units_present": bool(columns[0x0039]),
         "missing_ranges": missing,
         "pages": pages,
         "duplicate_reply_frames": duplicates,
         "unanswered_queries": unanswered,
+        "negative_responses": negatives,
         "rows": [
             {
                 "index": index,

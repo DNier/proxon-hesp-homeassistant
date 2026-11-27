@@ -79,7 +79,11 @@ units therefore remain unchanged.
 The upstream [163-entry LT catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
 is a payload-only snapshot from a P 2H-L at address 2, operated without its BDE.
 The author marks most meanings as unconfirmed and truncates long arrays after
-32 bytes. These entries remain research candidates:
+32 bytes in that snapshot. A later
+[original QUERY/RESPONSE recording](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83)
+supplies complete payloads and recorded checksums on the same reported hardware.
+It does not supply a parameter-change or protection experiment. These entries
+remain research candidates:
 
 | DP | Reported value | Interpretation boundary |
 | --- | --- | --- |
@@ -91,6 +95,26 @@ The reported T13 readings up to 111 °C also expose a 90 °C rejection filter in
 the author's daemon. This integration already accepts the existing temperature
 block up to 150 °C as a receive sanity bound, not an equipment operating limit.
 [Temperature encoding and freshness](TEMPERATURE_EVIDENCE.md)
+
+The later controller reply to `0195` is a four-byte float-shaped value above
+90. The T13 label is the author's interpretation; a sensor/display match and
+an alias to a `03B7` channel are not established. Likewise `0191` at address 2
+is a four-byte float-shaped reply, with unresolved sensor and sentinel meanings;
+it is distinct from the two-byte PTC candidate at address 30.
+[Identity boundaries](ADDRESS_EVIDENCE.md)
+
+The `0124` and `0125` responses each contain the full **80-byte** payload,
+structurally interpretable as 20 little-endian float32 values. Their complete
+original frames are retained in
+[`controller_catalog_frames.json`](../tests/fixtures/controller_catalog_frames.json).
+This establishes array length and numeric candidates; element roles, units,
+regulation effects and editable ranges remain unverified. There is no new
+setting entity or array decoder in production.
+
+The same fixture retains the recorded one-byte `0232` reply `01`. Neither its
+metadata type code nor this isolated value establishes a heat-demand flag.
+`0232` does not occur in the supplied BDE mode log. The existing threshold
+entities continue to use their previously corroborated source meanings.
 
 ## Current fan control percentages (0.15.0)
 

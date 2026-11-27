@@ -8,7 +8,12 @@ import heapq
 import re
 from collections import Counter
 
-from tools.frame_observations import frames, integer
+from tools.frame_observations import (
+    METADATA_QUERY_PAYLOADS,
+    frames,
+    integer,
+    is_metadata_negative_response,
+)
 
 TYPE_NAMES = {0: "query", 1: "set", 2: "response", 3: "confirm"}
 _TYPE_COUNT_NAMES = (*TYPE_NAMES.values(), "unknown")
@@ -120,16 +125,24 @@ class _Matcher:
         self.pending_points[(key[0], key[3])] += 1
         heapq.heappush(self.deadlines, (deadline, key))
 
-    def reply(self, key, frame):
+    def reply(self, key, frame, *, kind=None, query_payloads=None):
         if key in self.quarantine:
             self._unmatched(frame, self.quarantine[key][1])
             return
         if key in self.pending:
+            pending = self.pending[key]
+            if query_payloads is not None and (
+                pending["payload_bytes"] != 2
+                or pending["payload_hex"] not in query_payloads
+            ):
+                self._unmatched(frame, "unsupported_query_payload")
+                return
             request = self._remove_pending(key)
             delta = frame["elapsed_ms"] - request["elapsed_ms"]
             self.pairs.append(
                 {
-                    "kind": "query_response" if key[0] == 0 else "set_confirm",
+                    "kind": kind
+                    or ("query_response" if key[0] == 0 else "set_confirm"),
                     "classification": "candidate",
                     "request": request,
                     "reply": frame,
@@ -165,7 +178,7 @@ class _Matcher:
 
 
 def analyze_exchanges(report: dict, *, max_response_ms: int = 1000) -> dict:
-    """Correlate reversed-endpoint QUERY/RESPONSE and SET/CONFIRM candidates.
+    """Correlate QUERY/RESPONSE, SET/CONFIRM and bounded metadata negatives.
 
     All timing, framing, checksum validation and window selection come from the
     inventory. Payload sizes may differ. Lost observation continuity or same-key
@@ -214,7 +227,14 @@ def analyze_exchanges(report: dict, *, max_response_ms: int = 1000) -> dict:
         address = frame["address"]
         source, destination = address["source"], address["destination"]
         name, type_code = address["type_name"], address["type"]
-        counts[name] += 1
+        metadata_negative = is_metadata_negative_response(
+            row["header"], row["dp"], row["payload_bytes"], row["payload_hex"]
+        )
+        if metadata_negative:
+            # This count is shape-specific; decode_header keeps generic type 4
+            # unknown and no other type-4 frame becomes a reply candidate.
+            name = "metadata_negative_response"
+        counts[name] = counts.get(name, 0) + 1
         for participant in (source, destination):
             participants.setdefault(
                 participant, {"address": participant, "sent": 0, "received": 0}
@@ -231,7 +251,7 @@ def analyze_exchanges(report: dict, *, max_response_ms: int = 1000) -> dict:
             },
         )
         route["count"] += 1
-        route["type_counts"][name] += 1
+        route["type_counts"][name] = route["type_counts"].get(name, 0) + 1
         if type_code in (0, 1):
             matcher.request(
                 (type_code, source, destination, row.get("register_id", row["dp"])),
@@ -241,6 +261,13 @@ def analyze_exchanges(report: dict, *, max_response_ms: int = 1000) -> dict:
             matcher.reply(
                 (type_code - 2, destination, source, row.get("register_id", row["dp"])),
                 frame,
+            )
+        elif metadata_negative:
+            matcher.reply(
+                (0, destination, source, row.get("register_id", row["dp"])),
+                frame,
+                kind="query_metadata_negative_response",
+                query_payloads=METADATA_QUERY_PAYLOADS,
             )
         else:
             unknown_frames.append(frame)

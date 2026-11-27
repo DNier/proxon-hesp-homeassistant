@@ -11,7 +11,11 @@ from pathlib import Path
 
 from custom_components.proxon_hesp.hesp.checksum import checksum
 from tools.address_analysis import decode_header
-from tools.frame_observations import METADATA_POINTS, METADATA_QUERY_PAYLOADS
+from tools.frame_observations import (
+    METADATA_POINTS,
+    METADATA_QUERY_PAYLOADS,
+    is_metadata_negative_response,
+)
 
 
 def load_capture(path: Path, *, event: bool = False, event_index: int = -1) -> dict:
@@ -38,8 +42,8 @@ def inventory(
 
     Uses the observed even nibble-length encoding and the narrowly confirmed
     128-byte metadata shape and checksum. Nonzero upper register bits are only
-    admitted for candidate metadata pages; other reserved bytes remain zero.
-    Page offsets and 0039 are prepared offline, not independently recorded here.
+    admitted for metadata pages and their recorded type-4 negative response shape;
+    other reserved bytes remain zero. Codes and catalog completeness stay open.
     Times refer to the chunk completing a frame, not its wire transmission.
     """
     if type(start_ms) is not int or start_ms < 0:
@@ -85,8 +89,14 @@ def inventory(
             and header[7] == 4
             and frame[8:10].hex() in METADATA_QUERY_PAYLOADS
         )
+        metadata_negative = is_metadata_negative_response(
+            header[:3].hex(), dp, size, frame[8:-2].hex()
+        )
         if (
-            (selector and not (extended_metadata or metadata_query))
+            (
+                selector
+                and not (extended_metadata or metadata_query or metadata_negative)
+            )
             or header[7] % 2
             or (size > 112 and not extended_metadata)
             or len(frame) != length

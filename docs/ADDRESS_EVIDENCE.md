@@ -28,7 +28,9 @@ For the three bytes in wire order, let `H = int.from_bytes(header, "little")`:
 | Destination | `(H >> 14) & 0x3FF` | 10 bits |
 
 Type names are candidate `query` (0), `set` (1), `response` (2) and `confirm`
-(3). Other type codes remain unknown and are retained. The ten-bit field bounds
+(3). The recorded metadata rejection below narrowly identifies one type-4
+reply form; other type codes and type-4 meanings remain unknown and are retained.
+The ten-bit field bounds
 are the proposal's representation, not evidence of observed devices at every
 possible address.
 
@@ -63,7 +65,22 @@ it is not the two-byte `118007/0191` SET to address **30**. Likewise, the author
 must not replace the retained two-byte reply from 30. The full header, direction,
 DP and payload length remain mandatory even when a catalog supplies a familiar
 number or temperature label. The catalog's one-byte `0232=1` has no interpretation
-label and does not define heat demand or an alias to a status bit.
+label and does not define heat demand or an alias to a status bit. The later
+[original controller recording](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83)
+confirms four-byte `224000/0191`, `224000/0194` and `224000/0195` replies, as
+well as the one-byte `224000/0232` form. It provides no semantic link to the
+two-byte points routed to 30. Float-shaped temperature candidates, including
+`0191=-30`, retain unresolved sensor location and sentinel/error meanings.
+
+## Recorded metadata type-4 reply
+
+The same P 2H-L recording contains header `244000`: type **4**, source **2**,
+destination **1** under the packed-address interpretation. For metadata DPs
+`0033`, `0034`, `0038` and `0039` at the recorded invalid page offsets, it
+returns the full query register ID and exactly two payload bytes `0100` with
+a valid checksum. This is an observed negative metadata reply, not an empty
+SET confirmation. The exact error-code meaning is unknown; it does not define
+a general type-4 contract. [Pages and acquisition timing](METADATA_EVIDENCE.md#recorded-list-pages-and-negative-replies-26-november-2026).
 
 ## Offline exchange candidates
 
@@ -73,7 +90,12 @@ payload bytes, global frame index and TCP completion timestamp. Unknown addresse
 are inspectable without widening the production decoder's allowlists.
 
 A candidate exchange has a query followed by a response, or a set followed by a
-confirmation, with reversed endpoint addresses and the same DP. A configurable
+confirmation, with reversed endpoint addresses and the same complete register
+ID, including a metadata page selector. The unreleased offline addition pairs
+the narrowly recorded negative metadata replies as
+`query_metadata_negative_response`, with scoped `metadata_negative_response`
+counts. The metadata auditor reports these separately in `negative_responses`;
+they do not supply successful response or list-entry evidence. A configurable
 maximum response delay bounds the search (default 1,000 ms, inclusive). Request
 and reply payload lengths may differ. Unrelated interleaved routes do not merge
 identities. Repeated outstanding requests of the same matching key are ambiguous;

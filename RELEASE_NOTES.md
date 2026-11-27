@@ -3,6 +3,44 @@
 Die Abschnitte beschreiben jeweils den Stand bei Veröffentlichung. Für einen
 GitHub-Release wird ausschließlich der Abschnitt seiner Version verwendet.
 
+## 0.16.23 – BDE-Anzeigen bei LED-Ausfällen und negative Metadatenantworten
+
+- Die optionale **Obere grüne BDE-LED** erkennt am ausgewählten
+  P2-Referenzgerät vier weitere genau belegte Eco-Winter-Konstellationen.
+  Sie zeigt bei passenden frischen Quellen **Ein** mit
+  `state_basis: display_reference` statt **Nicht verfügbar**.
+- Die **BDE-Betriebsanzeige** erkennt **Heizbetrieb**, und **Regler-Luftstufe**
+  erkennt **Stufe 2** in einer dieser zusätzlichen vollständigen
+  Konstellationen. Zwei getrennte BDE-Episoden belegen die Anzeigen.
+  Der Heiztext kann bei durchgehend frischen Quellen zwischen den beiden
+  zugelassenen Ventilworten dieser Konstellation erhalten bleiben.
+- Die Ergänzungen setzen **BDE-Anzeige für P2-Referenzgerät** voraus.
+  Betriebsart, Status, Ventilwort und positive Verdichterdrehzahl müssen für
+  die LED jeweils innerhalb von acht Sekunden empfangen worden sein, für
+  Heiztext und Luftstufe innerhalb von sieben Sekunden. Die erste
+  Heizbestätigung benötigt weiterhin 15 Sekunden gültigen Empfang.
+  Andere Kombinationen bleiben unverfügbar; PTC-Wohnen und allgemeine
+  Statusbit-Bedeutungen werden daraus nicht abgeleitet.
+
+- Die **Offline-Auswertung** erkennt die aufgezeichneteten Typ-4-Antworten
+  `244000` mit Nutzdaten `0100` auf Metadatenanfragen an `0033`, `0034`,
+  `0038` und `0039`. Sie führt diese Antworten getrennt von positiven
+  Listenseiten und unbeantworteten Anfragen auf. Vollständige Register-ID,
+  Seitenoffset und Empfangsreihenfolge bleiben Teil der Zuordnung.
+- Bereinigte Originaltelegramme dokumentieren erfolgreiche Listenseiten bis
+  Index 162, vollständige Array-Antworten und die native Betriebsartenfolge
+  einer P 2H-L. Die Dokumentation erläutert die Grenzen des beobachteten
+  Katalogs und die offenen Bedeutungen der Parameter.
+- Der ergänzende Bericht zum Betrieb ohne Bedienpanel wird mit dem
+  Originalmitschnitt abgeglichen. Abweichende SET-Reihenfolge und variable
+  Panelwerte sind dokumentiert; die PTC-Freigabe bleibt ungeklärt.
+
+Bestehende Entitäts-IDs und Einstellungen bleiben erhalten. Die Historie wird
+nicht rückwirkend geändert. Es entstehen keine neuen Anlagenabfragen oder
+Schreibfunktionen.
+[BDE-Anzeigen und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/BDE_DISPLAY_EVIDENCE.md) ·
+[Metadaten-Auswertung und Grenzen (Englisch)](https://github.com/DNier/proxon-hesp-homeassistant/blob/main/docs/METADATA_EVIDENCE.md).
+
 ## 0.16.22 – 64er-Metadatenanfragen und präzisierte Quellenbewertung
 
 - Die **Offline-Auswertung** verarbeitet Metadatenanfragen mit dem

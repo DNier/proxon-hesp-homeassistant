@@ -81,6 +81,7 @@ STATUS_92009312 = checked(STATUS[:8] + bytes.fromhex("12930092"))
 P2_HEATING_SOURCES = (
     (MODE, STATUS_8200931A, VALVES, RPM),
     (MODE, STATUS_92009312, A7, RPM),
+    (MODE, STATUS_92009312, VALVES, RPM),
 )
 
 
@@ -373,6 +374,7 @@ def test_complete_p2_references_do_not_cross_operating_modes(led_stream, sources
         for sources in P2_HEATING_SOURCES
         for valve_word in (0x25, 0x27, 0x67, 0xA7, 0xE7, 0x227)
         if int.from_bytes(sources[2][8:-2], "little") != valve_word
+        and not (sources[1] == STATUS_92009312 and valve_word in (0x27, 0xA7))
     ],
 )
 def test_complete_p2_references_do_not_admit_other_valve_words(
@@ -444,14 +446,18 @@ def test_new_p2_heating_preserves_only_a_qualified_admitted_transition(led_strea
     stabilize(feed)
     feed(b"".join(P2_HEATING_SOURCES[0]), 16)
     assert display.value(16) == "heating"
-    # Same mode/positive RPM do not admit the mixed, unobserved valve context.
+    # The independently observed 12930092/27 context preserves qualified heat.
     feed(STATUS_92009312, 17)
-    assert display.value(17) is None
-    for now in (18, 23, 28, 32.999):
+    assert display.value(17) == "heating"
+    assert display.fan_level(17) == 2
+    # An unobserved valve word still breaks qualification.
+    feed(checked(VALVES[:8] + bytes.fromhex("67000000")), 18)
+    assert display.value(18) is None
+    for now in (19, 24, 29, 33.999):
         feed(b"".join(P2_HEATING_SOURCES[1]), now)
         assert display.value(now) is None
-    feed(RPM, 33)
-    assert display.value(33) == "heating"
+    feed(RPM, 34)
+    assert display.value(34) == "heating"
 
 
 @pytest.mark.parametrize("sources", P2_HEATING_SOURCES)
@@ -1228,6 +1234,9 @@ def test_additional_optical_led_does_not_admit_neighboring_status_words(
     display, feed = led_stream
     feed(MODE + status + VALVES + RPM, 0)
     for bit in (0, 2, 5, 6, 7, 14, 17, 24, 28):
+        # 12930092/27 now has its own independent display reference.
+        if status == STATUS_82009312 and bit == 28:
+            continue
         payload = (int.from_bytes(status[8:-2], "little") ^ (1 << bit)).to_bytes(
             4, "little"
         )
@@ -1398,7 +1407,10 @@ async def test_p2_full_context_fan_updates_on_valve_rpm_expiry_and_option_change
         await receive_at(2, STATUS_92009312, "unavailable")
         await receive_at(3, RPM, "unavailable")
         await receive_at(4, A7, "2")
-        await receive_at(5, VALVES, "unavailable")
+        await receive_at(5, VALVES, "2")
+        await receive_at(
+            5.5, checked(VALVES[:8] + bytes.fromhex("67000000")), "unavailable"
+        )
         await receive_at(6, A7, "2")
         await receive_at(7, STOPPED, "unavailable")
         await receive_at(8, RPM, "2")

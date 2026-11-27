@@ -59,7 +59,9 @@ repeated competing writes nor replacement of the BDE is implemented here.
 The published [163-entry controller catalog](https://gist.github.com/markusmauch/74b21f6afc79f6bcaea27adcd51bdf61)
 uses interpreted access labels such as `W-User` and `W-Inst`. These labels alone
 establish neither a usable SET contract nor ownership, displayed adoption or
-recovery. Its payload-only snapshot cannot replace timed original TX/RX frames.
+recovery. The later [original read-query recording](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83)
+supplies TX/RX evidence for metadata and controller reads; it contains no SETs
+and adds no control-adoption evidence.
 
 The [ESP32 sender at commit `eed1173`](https://github.com/Mannheim68199/proxon-hesp-esp32/blob/eed1173fae88a4bbdd43c1bc7adbcb78f695d3a3/ESP32_Proxon_P1_RS485_Sniffer.ino#L535)
 arms transmission after received traffic and sends from a received-message
@@ -108,6 +110,65 @@ connection. Disconnecting the BDE and restarting changed two conditions at
 once. The comparison leaves bus initiation and controller behaviour in that
 configuration open. [Manufacturer scope and comparison](MANUFACTURER_INFORMATION.md)
 
+Markus Mauch's [P 2H-L read run](https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7196275110)
+records controller replies to actively sent QUERYs with its BDE disconnected
+and daemon stopped. This establishes solicited read responses on that reported
+setup. The recording begins with read queries and contains no power-on sequence,
+initialization exchange or control write. It does not establish startup without
+the BDE, autonomous operation, coordinated access with the BDE or supported
+replacement of the panel. Its fixed 250 ms acquisition windows also do not
+define a safe transmission schedule. [Original framing and timing](METADATA_EVIDENCE.md#recorded-list-pages-and-negative-replies-26-november-2026).
+
+## Reported panel replacement on a P 2H-L
+
+The author's [follow-up comment](https://github.com/markusmauch/proxon-hesp/issues/1#issuecomment-7196777234)
+and [operating description at `0eb5a2a`](https://github.com/markusmauch/proxon-hesp/blob/0eb5a2a33234893a8fafdbfae56ade6f0c510da4/docs/anlage.md#betrieb-ohne-bedienpanel)
+report a sole master at X7 replacing the disconnected BDE since July, without
+observed faults. This is an author-reported long-term writing setup, separate
+from the supplied November read-only recording. It supplies no master
+implementation or timestamped write-adoption, sender-loss and recovery trace.
+
+The reported state set contains nine node-2 SETs approximately every five
+seconds: `020A`, `00E1`, `0226`, `0227`, `0229`, `022A`, `022C`, `03B6` and
+`01F8`. The last five are described as constant values in the replacement
+sender: 21.0 for `0229` and `022A`, zero for `022C`, `03B6` and `01F8`.
+Their inclusion does not resolve their meaning or establish that every field
+is individually required. In particular, `03B6=0` describes the replacement
+sender's choice: the supplied July BDE sequence contains both 0 and 1, so it
+does not establish an unchanged panel value across modes.
+
+The description calls its sequence the panel's order, but the supplied July
+recording gives a counterexample. Starting each cycle at the mode SET:
+
+- Reported replacement order: `020A → 00E1 → 0226 → 0227 → 0229 → 022A → 022C → 03B6 → 01F8`.
+- Recorded BDE order: `020A → 022C → 01F8 → 00E1 → 03B6 → 0226 → 0227 → 0229 → 022A`.
+
+All 46 complete mode-SET-to-next-mode-SET cycles in that original recording
+have the second order. The nine-point set agrees, but an identical order is
+not established. The untimed July log cannot independently confirm the
+reported five-second period.
+
+When the replacement sender stops, the author reports continued ventilation
+at approximately level 3 and a controller readback `020A=6`; resuming the
+sender reportedly restores the sent state. The time to fallback is explicitly
+unmeasured. There is no original matched readback for value 6, no confirmed
+five-second watchdog, and no new production mode mapping.
+
+The accompanying [remaining questions](https://github.com/markusmauch/proxon-hesp/blob/0eb5a2a33234893a8fafdbfae56ade6f0c510da4/docs/offene-punkte.md#weitere-randbedingungen-der-anlage)
+attribute time programs and night setback to the panel. The controller clock
+and filter countdown reportedly continue without it; automatic clock setting
+is lost, the countdown's relation to that clock is open, and a shutdown after
+filter expiry is reported without a timed boundary. PTC permission at node 30
+without the BDE remains explicitly open for Stove and Comfort. The nine node-2
+SETs do not establish that separate control path.
+
+The author also reports unassignable replies and implausible measurements
+when both masters were active, and will not publish a writing master. These
+sources describe one installation's observations. Coordinated writes with
+an attached BDE, startup, complete panel-function replacement and recovery
+across the integration's supported hardware remain unverified. No additional
+sender or runtime control is introduced.
+
 <a name="offline-review-of-recorded-operating-sequences-3-october-2026"></a>
 
 ## Recorded operating sequences
@@ -131,6 +192,34 @@ a fixed selection at the same numeric level.
 
 See [candidate decisions](STATUS_EVIDENCE.md) and
 [installation-specific fan comparisons](FAN_CURVE_EVIDENCE.md).
+
+## Original P 2H-L BDE mode sequence
+
+The July BDE log supplied in the
+[pinned source Gist](https://gist.github.com/markusmauch/3f1a431a55cc71830be21ca2fd0ba9e0/ba888e35a475906bf6cf9070eed2edf697b66f83)
+was captured passively at X7 with the BDE as sole master. The author reports
+selecting Eco Summer, Eco Winter, Stove, Comfort and Off, and answering Yes
+to the heat-element permission prompt in all three heating modes. Its original
+checksum-valid `118000/020A/2` SETs follow **1 → 2 → 4 → 3 → 0**, corroborating
+the existing mode labels on this installation. Each of the 47 mode SETs is
+immediately followed in frame order by a matching empty confirmation. The log
+has no timestamps, so it establishes neither ACK latency nor mode duration.
+[`panel_modes_recorded.json`](../tests/fixtures/panel_modes_recorded.json) retains
+small selected original frames in source order, without invented timestamps.
+
+`118007/0191/2` remains 0 throughout Eco Winter, becomes 1 in Stove, remains
+1 initially in Comfort and returns to 0 before the Off SET. `118000/03B6/4`
+bit 0 follows the same value sequence. `01F8` and `022C` remain zero, as do
+the bit-1 PTC candidates. The earlier
+[withdrawn permission interpretation](https://github.com/markusmauch/proxon-hesp/pull/2#issuecomment-7189097549)
+therefore remains withdrawn. PTC-Wohnen was not independently read, so these
+messages establish neither stored heat-element permission nor physical output.
+They also do not support a pure mode encoding of `0191`.
+
+`0229` and `022A` remain constant in this log and supply no new secondary-zone
+measurement reference. `0232` is absent, including QUERYs. Its separate November
+readback `01` does not resolve its meaning or justify heat-demand telemetry.
+No additional runtime mapping or control is introduced.
 
 ## Mode-dependent fan selection: reference UI clarification
 
